@@ -32,6 +32,27 @@ Thumbs.db
 # Environment secrets
 .env
 .env.*
+!.env.example
+
+# Node (frontend)
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+
+# 로그 · DB 덤프
+*.sql
+*.db
+*.sqlite3
+
+# 크롤러 수집 데이터 (용량 큼)
+crawler/data/
+*.csv
+!mock/*.csv
+
+# AWS
+*.pem
 
 # Coverage / test
 htmlcov/

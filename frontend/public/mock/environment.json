@@ -1,0 +1,9 @@
+{
+  "observed_at": "2026-08-12T09:00:00+09:00",
+  "uv": { "index": 8, "grade": "매우높음" },
+  "temperature": { "current": 31.2, "feels_like": 34.6, "humidity": 68 },
+  "air": { "pm10": 42, "pm10_grade": "보통", "pm25": 21, "pm25_grade": "보통" },
+  "precipitation": { "type": "none", "probability": 10 },
+  "comment": "자외선이 매우 높아요. 그늘에서 기다릴 수 있는 경로를 추천할게요.",
+  "partial": false
+}

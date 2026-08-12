@@ -1,0 +1,80 @@
+import axios from 'axios'
+import type {
+  Environment,
+  RoutesResponse,
+  WeeklyReport,
+  Me,
+  Place,
+  Shelter,
+  Arrival,
+  Trip,
+} from '../types/api'
+
+// VITE_USE_MOCK=true 면 /mock/*.json 을 읽고, 아니면 실 API(/api/*)를 부른다.
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
+
+const http = axios.create({ baseURL: '/api', timeout: 10000 })
+
+// 게스트/로그인 신원 헤더 부착 (API 명세서 1장)
+http.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token')
+  const deviceId = localStorage.getItem('device_id')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  else if (deviceId) config.headers['X-Device-Id'] = deviceId
+  return config
+})
+
+async function mock<T>(name: string): Promise<T> {
+  const res = await fetch(`/mock/${name}.json`)
+  if (!res.ok) throw new Error(`mock ${name} 없음`)
+  return res.json()
+}
+
+export interface RouteParams {
+  from: string
+  to: string
+  depart_at?: string
+  preset?: string
+  sort?: 'exposure' | 'duration'
+  demo_weather?: string
+}
+
+export const api = {
+  getMe: () =>
+    USE_MOCK ? mock<Me>('me') : http.get<Me>('/me').then((r) => r.data),
+
+  searchPlaces: (q: string, lat?: number, lng?: number) =>
+    USE_MOCK
+      ? mock<{ places: Place[] }>('places').then((d) => d.places)
+      : http.get<{ places: Place[] }>('/places/search', { params: { q, lat, lng } }).then((r) => r.data.places),
+
+  getEnvironment: (lat: number, lng: number) =>
+    USE_MOCK
+      ? mock<Environment>('environment')
+      : http.get<Environment>('/environment', { params: { lat, lng } }).then((r) => r.data),
+
+  getRoutes: (params: RouteParams) =>
+    USE_MOCK
+      ? mock<RoutesResponse>('routes.success')
+      : http.get<RoutesResponse>('/routes', { params }).then((r) => r.data),
+
+  getArrival: (station_id: string, route_id: string) =>
+    USE_MOCK
+      ? mock<Arrival>('arrival.corrected')
+      : http.get<Arrival>('/arrival', { params: { station_id, route_id } }).then((r) => r.data),
+
+  getShelters: (lat: number, lng: number) =>
+    USE_MOCK
+      ? mock<{ shelters: Shelter[] }>('shelters').then((d) => d.shelters)
+      : http.get<{ shelters: Shelter[] }>('/shelters', { params: { lat, lng } }).then((r) => r.data.shelters),
+
+  startTrip: (body: unknown) =>
+    USE_MOCK
+      ? Promise.resolve<Trip>({ trip_id: 't_mock', status: 'in_progress' })
+      : http.post<Trip>('/trips', body).then((r) => r.data),
+
+  getWeeklyReport: (week_of?: string) =>
+    USE_MOCK
+      ? mock<WeeklyReport>('report.weekly')
+      : http.get<WeeklyReport>('/report/weekly', { params: { week_of } }).then((r) => r.data),
+}

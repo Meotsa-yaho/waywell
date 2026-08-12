@@ -1,0 +1,22 @@
+{
+  "period": { "start": "2026-08-10", "end": "2026-08-16" },
+  "today": { "date": "2026-08-12", "outdoor_minutes": 23, "exposure_load": 74, "uv_minutes": 18, "trip_count": 2 },
+  "daily": [
+    { "date": "2026-08-10", "outdoor_minutes": 31, "exposure_load": 88, "uv_minutes": 24, "trip_count": 2 },
+    { "date": "2026-08-11", "outdoor_minutes": 12, "exposure_load": 30, "uv_minutes": 8, "trip_count": 1 },
+    { "date": "2026-08-12", "outdoor_minutes": 23, "exposure_load": 74, "uv_minutes": 18, "trip_count": 2 },
+    { "date": "2026-08-13", "outdoor_minutes": 0, "exposure_load": 0, "uv_minutes": 0, "trip_count": 0 },
+    { "date": "2026-08-14", "outdoor_minutes": 0, "exposure_load": 0, "uv_minutes": 0, "trip_count": 0 },
+    { "date": "2026-08-15", "outdoor_minutes": 0, "exposure_load": 0, "uv_minutes": 0, "trip_count": 0 },
+    { "date": "2026-08-16", "outdoor_minutes": 0, "exposure_load": 0, "uv_minutes": 0, "trip_count": 0 }
+  ],
+  "comparison": {
+    "previous_period": { "start": "2026-08-03", "end": "2026-08-09" },
+    "uv_minutes_change_pct": -40,
+    "outdoor_minutes_change_pct": -22,
+    "exposure_load_change_pct": -35
+  },
+  "coaching": "이번 주 자외선 노출이 지난주보다 40% 줄었어요.",
+  "is_guest": true,
+  "has_data": true
+}
