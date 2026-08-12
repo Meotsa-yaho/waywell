@@ -9,7 +9,7 @@
 
 웨이웰(Waywell)은 대중교통 경로 이용 시 발생하는 **야외 노출 부하(자외선, 미세먼지, 날씨 등)를 최소화하는 경로를 추천**하고, 대기 시간을 실내 활동으로 전환할 수 있도록 지원하는 웰니스 내비게이션 서비스(PWA)입니다.
 
-- **문서 버전:** v1.0
+- **문서 버전:** v1.1
 - **우선순위 규정:** `P0` (MVP 필수) / `P1` (여유 시 구현) / `P2` (제안서/컨셉)
 
 ---
@@ -18,26 +18,91 @@
 
 ### 🐍 Server (Backend)
 
-가상환경(`venv`) 생성 및 활성화 후 아래 명령어를 순서대로 실행합니다.
+`server` 폴더 기준으로 진행합니다.
 
 ```bash
-# 1. 가상환경 활성화 (OS에 맞게 실행)
+# 0. server 폴더로 이동
+cd server
+
+# 1. 가상환경 생성 (최초 1회)
+python -m venv venv
+
+# 2. 가상환경 활성화 (OS에 맞게 실행)
 # Windows: venv\Scripts\activate
 # macOS/Linux: source venv/bin/activate
 
-# 2. 의존성 패키지 설치
+# 3. 의존성 패키지 설치
 pip install -r requirements.txt
 
-# 3. 데이터베이스 마이그레이션
+# 4. 환경변수 파일 생성
+# .env.example을 복사해서 .env 파일을 만들고 값을 채워주세요.
+# Windows: copy .env.example .env
+# macOS/Linux: cp .env.example .env
+
+# 5. 마이그레이션 파일 생성 (모델 변경사항이 있을 때)
+python manage.py makemigrations
+
+# 6. 데이터베이스 마이그레이션 적용
 python manage.py migrate
 
-# 4. 개발 서버 실행
+# 7. 개발 서버 실행
 python manage.py runserver
+
 ```
+
+서버가 정상 실행되면 `http://localhost:8000` 에서 확인할 수 있습니다.
+
+**`.env` 항목** (`server/.env.example` 참고)
+
+| 변수명 | 설명 | 예시 |
+| :--- | :--- | :--- |
+| `DEBUG` | 디버그 모드 여부 | `True` |
+| `SECRET_KEY` | Django 시크릿 키 | `django-insecure-...` |
+| `CORS_ALLOWED_ORIGINS` | CORS 허용 origin | `http://localhost:5173,http://127.0.0.1:5173` |
+
+> ⚠️ `.env`는 `.gitignore`에 포함되어 있어 커밋되지 않습니다.
 
 ### 💻 Client (Frontend)
 
 - TBD
+
+---
+
+## 📁 폴더 구조 (Folder Structure)
+
+
+```text
+waywell/
+├── server/                  # Django 백엔드
+│   ├── manage.py
+│   ├── requirements.txt
+│   ├── .env                 # 로컬 환경변수 (git 미포함)
+│   ├── .env.example         # 환경변수 템플릿 (git 포함)
+│   ├── config/               # 프로젝트 설정 모듈
+│   │   ├── settings.py       # INSTALLED_APPS, CORS, DB 등 전역 설정
+│   │   ├── urls.py            # 최상위 URL 라우팅 (앱별 urls.py를 include)
+│   │   ├── wsgi.py
+│   │   └── asgi.py
+│   └── apps/                  # 기능별 Django 앱 모음
+│       ├── common/             # 공통 유틸 (응답 포맷, 예외처리, 권한 등)
+│       ├── accounts/            # 인증 및 사용자 관리 (게스트/회원, 소셜로그인)
+│       ├── environment/         # 환경 데이터 (기상청, 에어코리아 연동)
+│       ├── places/               # 장소 검색 (카카오/Tmap 연동)
+│       ├── routes/                # 경로 탐색·추천, 노출 부하 계산, LLM 요약
+│       ├── trips/                  # 이동 트래킹, 리포트 집계
+│       └── notifications/          # Web Push 구독 관리
+│
+└── frontend/
+    ├── .env
+    ├── .env.example
+    └── (구성 예정 - TBD)
+```
+
+### 폴더별 역할
+
+- **`server/config/`**: 프로젝트 전역 설정이 모여있는 곳입니다. 새 앱을 추가하면 `settings.py`의 `INSTALLED_APPS`와 `urls.py`에 등록해야 합니다.
+- **`server/apps/`**: 실제 기능(모델, 뷰, 시리얼라이저 등)이 들어가는 앱들을 모아두는 폴더입니다. 각 앱은 `apps.<앱이름>` 형태로 등록되어 있습니다 (예: `apps.accounts`).
+- **`server/apps/common/`**: 여러 앱에서 공통으로 쓰는 응답 포맷, 예외 처리, 페이지네이션, 권한 클래스를 모아둔 폴더입니다.
 
 ---
 
