@@ -24,10 +24,10 @@ def health_check(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/health/', health_check),
-    path('api/v1/auth/', include('apps.accounts.urls')),
-    path('api/v1/environment/', include('apps.environment.urls')),
-    path('api/v1/places/', include('apps.places.urls')),
-    path('api/v1/routes/', include('apps.routes.urls')),
-    path('api/v1/trips/', include('apps.trips.urls')),
-    path('api/v1/notifications/', include('apps.notifications.urls')),
+    path('api/', include('apps.accounts.urls')),
+    path('api/', include('apps.environment.urls')),
+    path('api/', include('apps.places.urls')),
+    path('api/', include('apps.routes.urls')),
+    path('api/', include('apps.trips.urls')),
+    path('api/', include('apps.notifications.urls')),
 ]
