@@ -9,7 +9,7 @@
 
 웨이웰(Waywell)은 대중교통 경로 이용 시 발생하는 **야외 노출 부하(자외선, 미세먼지, 날씨 등)를 최소화하는 경로를 추천**하고, 대기 시간을 실내 활동으로 전환할 수 있도록 지원하는 웰니스 내비게이션 서비스(PWA)입니다.
 
-- **문서 버전:** v1.1
+- **문서 버전:** v1.2
 - **우선순위 규정:** `P0` (MVP 필수) / `P1` (여유 시 구현) / `P2` (제안서/컨셉)
 
 ---
@@ -222,3 +222,23 @@ SC-10 설정 ──> SC-11 로그인 / SC-12 회원가입 ──> SC-09 주간 �
 | **E-06** | 데모 모드 | 날씨 조건 토글 스위치 | P1 | FE | 발표용 히든 스위치 제공 |
 | **E-07** | 에러·빈 상태 처리 | 경로 없음, 데이터 부족, 네트워크 오류 | P0 | FE | 에러 화면(SC-14) 안내 |
 | **E-08** | 로딩 상태 | 스켈레톤 UI | P0 | FE | 3초 이상 시 안내 문구 노출 |
+
+## 🔌 API Endpoints
+| # | HTTP Method | Endpoint | 담당 App |
+| :---: | :---: | :--- | :--- |
+| **1** | `POST` | `/api/auth/signup` | accounts |
+| **2** | `POST` | `/api/auth/login` | accounts |
+| **3** | `GET` | `/api/me` | accounts |
+| **4** | `PATCH` | `/api/me` | accounts |
+| **5** | `DELETE` | `/api/me` | accounts |
+| **6** | `GET` | `/api/places/search` | places |
+| **7** | `GET` | `/api/environment` | environment |
+| **8** | `GET` | `/api/routes` | routes |
+| **9** | `POST` | `/api/routes/explain` | routes |
+| **10** | `GET` | `/api/arrival` | trips |
+| **11** | `GET` | `/api/shelters` | places |
+| **12** | `POST` | `/api/trips` | trips |
+| **13** | `PATCH` | `/api/trips/{trip_id}` | trips |
+| **14** | `GET` | `/api/trips` | trips |
+| **15** | `GET` | `/api/report/weekly` | trips |
+| **16** | `POST` | `/api/push/subscribe` | notifications |s
