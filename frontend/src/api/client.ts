@@ -55,7 +55,7 @@ export const api = {
 
   getRoutes: (params: RouteParams) =>
     USE_MOCK
-      ? mock<RoutesResponse>('routes.success')
+      ? mock<RoutesResponse>(params.demo_weather === 'uv_high' ? 'routes.uv_high' : 'routes.success')
       : http.get<RoutesResponse>('/routes', { params }).then((r) => r.data),
 
   getArrival: (station_id: string, route_id: string) =>
