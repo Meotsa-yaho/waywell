@@ -66,13 +66,13 @@ export const api = {
   getShelters: (lat: number, lng: number) =>
     http.get<{ shelters: Shelter[] }>('/shelters', { params: { lat, lng } }).then((r) => r.data.shelters),
 
+  // 이동 기록·리포트는 백엔드 구현 완료 → 목업 모드여도 실 API. POST/PATCH는 slash 필수(Django APPEND_SLASH)
   startTrip: (body: unknown) =>
-    USE_MOCK
-      ? Promise.resolve<Trip>({ trip_id: 't_mock', status: 'in_progress' })
-      : http.post<Trip>('/trips', body).then((r) => r.data),
+    http.post<Trip>('/trips/', body).then((r) => r.data),
+
+  completeTrip: (trip_id: string) =>
+    http.patch<Trip>(`/trips/${trip_id}/`, { status: 'completed' }).then((r) => r.data),
 
   getWeeklyReport: (week_of?: string) =>
-    USE_MOCK
-      ? mock<WeeklyReport>('report.weekly')
-      : http.get<WeeklyReport>('/report/weekly', { params: { week_of } }).then((r) => r.data),
+    http.get<WeeklyReport>('/report/weekly/', { params: { week_of } }).then((r) => r.data),
 }

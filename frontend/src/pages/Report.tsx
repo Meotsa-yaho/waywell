@@ -20,7 +20,6 @@ export default function Report() {
       </div>
     )
 
-  const uvChange = data.comparison.uv_minutes_change_pct
   const chartData = data.daily.map((d) => ({ day: d.date.slice(5), 부하: d.exposure_load }))
 
   return (
@@ -45,7 +44,7 @@ export default function Report() {
             <Bar dataKey="부하" fill="#1a7f6b" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-        {uvChange != null && (
+        {data.coaching && (
           <p className="coaching">{data.coaching}</p>
         )}
       </section>

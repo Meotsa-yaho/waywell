@@ -3,11 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import KakaoMap from '../components/KakaoMap'
 import { api } from '../api/client'
 import { useRouteQuery } from '../store/route'
+import { useSession } from '../store/session'
 import { segmentLine } from '../lib/segments'
 import type { Route } from '../types/api'
 
-const DEMO_FROM = { lat: 37.2011, lng: 127.0983 }
-const DEMO_TO = { lat: 37.4979, lng: 127.0276 }
+const DEMO_FROM = { lat: 37.2011, lng: 127.0983, name: '동탄역' }
+const DEMO_TO = { lat: 37.4979, lng: 127.0276, name: '강남역' }
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 
@@ -20,6 +21,8 @@ export default function RouteDetail() {
   const [failed, setFailed] = useState(false)
   const fromP = useRouteQuery((s) => s.from) ?? DEMO_FROM
   const toP = useRouteQuery((s) => s.to) ?? DEMO_TO
+  const weather = useRouteQuery((s) => s.weather)
+  const preset = useSession((s) => s.preset)
   const fromParam = `${fromP.lat},${fromP.lng}`
   const toParam = `${toP.lat},${toP.lng}`
 
@@ -42,14 +45,18 @@ export default function RouteDetail() {
   const dragRef = useRef<{ startY: number; startH: number; lastY: number; moved: number } | null>(null)
 
   useEffect(() => {
+    // 리스트(RouteCompare)와 같은 preset·demo_weather로 조회해야 노출부하·추천이 일치
     api
-      .getRoutes({ from: fromParam, to: toParam, geometry: '1' })
+      .getRoutes({
+        from: fromParam, to: toParam, geometry: '1', preset,
+        demo_weather: weather === 'uv_high' ? 'uv_high' : 'clear',
+      })
       .then((d) => {
         setRoutes(d.routes)
         setSelectedId((cur) => (d.routes.some((r) => r.route_id === cur) ? cur : d.routes[0]?.route_id ?? null))
       })
       .catch(() => setFailed(true))
-  }, [fromParam, toParam])
+  }, [fromParam, toParam, preset, weather])
 
   const route = useMemo(
     () => routes?.find((r) => r.route_id === selectedId) ?? routes?.[0],
@@ -112,7 +119,25 @@ export default function RouteDetail() {
             </button>
           ))}
         </div>
-        <button className="topbar-cta" onClick={() => nav('/trip')}>안내 시작</button>
+        <button
+          className="topbar-cta"
+          onClick={() => {
+            // 이동 기록 생성(C-01) 후 이동 화면으로. 실패해도 진입은 함.
+            api
+              .startTrip({
+                from_name: fromP.name,
+                to_name: toP.name,
+                total_minutes: route.total_minutes,
+                exposure_load: route.exposure_load,
+                outdoor_minutes: route.outdoor_minutes,
+              })
+              .then((t) => localStorage.setItem('active_trip_id', t.trip_id))
+              .catch(() => {})
+              .finally(() => nav('/trip'))
+          }}
+        >
+          안내 시작
+        </button>
       </div>
 
       {/* 메인: 지도 (framing은 half 기준으로 고정 → full에서도 안 구겨지고 전환 자연스러움) */}

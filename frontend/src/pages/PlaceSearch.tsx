@@ -50,6 +50,20 @@ export default function PlaceSearch() {
     nav(-1)
   }
 
+  // 출발지: 현재 위치로 바로 설정 (실수로 다른 걸 골라도 복구용)
+  const useCurrentLocation = () => {
+    const set = (lat: number, lng: number) => {
+      setPlace('from', { place_id: 'current', name: '현재 위치', address: '', category: '', lat, lng })
+      nav(-1)
+    }
+    if (loc.current) return set(loc.current.lat, loc.current.lng)
+    navigator.geolocation?.getCurrentPosition(
+      (p) => set(p.coords.latitude, p.coords.longitude),
+      () => {},
+      { timeout: 6000, maximumAge: 60000 },
+    )
+  }
+
   const shown = results ?? (q.trim() ? [] : recent)
 
   return (
@@ -65,6 +79,10 @@ export default function PlaceSearch() {
         onChange={(e) => setQ(e.target.value)}
         autoFocus
       />
+
+      {target === 'from' && (
+        <button className="current-loc-btn" onClick={useCurrentLocation}>📍 현재 위치로 설정</button>
+      )}
 
       {loading && <div className="card skeleton">검색 중…</div>}
       {!loading && results?.length === 0 && <p className="empty">검색 결과가 없어요.</p>}

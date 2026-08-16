@@ -26,9 +26,10 @@ export default function RouteCompare() {
   const preset = useSession((s) => s.preset)
   const fromP = useRouteQuery((s) => s.from) ?? DEMO_FROM
   const toP = useRouteQuery((s) => s.to) ?? DEMO_TO
+  const weather = useRouteQuery((s) => s.weather)
+  const setWeather = useRouteQuery((s) => s.setWeather)
   const [data, setData] = useState<RoutesResponse | null>(null)
   const [sort, setSort] = useState<'exposure' | 'duration' | 'recommend'>('recommend')
-  const [weather, setWeather] = useState<'mild' | 'uv_high'>('mild')
   const [error, setError] = useState<string | null>(null)
 
   const fromParam = `${fromP.lat},${fromP.lng}`

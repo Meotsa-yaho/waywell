@@ -73,7 +73,21 @@ export default function Trip() {
       <button className="card shelter-hint" onClick={() => nav('/trip/shelters')}>
         근처 실내 대기 장소 보기 →
       </button>
-      <button className="btn" onClick={() => nav('/report')}>이동 종료</button>
+      <button
+        className="btn"
+        onClick={() => {
+          // 이동 완료 처리(C-06) → 리포트에 집계. 없거나 실패해도 리포트로 이동.
+          const id = localStorage.getItem('active_trip_id')
+          const done = () => {
+            localStorage.removeItem('active_trip_id')
+            nav('/report')
+          }
+          if (id) api.completeTrip(id).then(done).catch(done)
+          else nav('/report')
+        }}
+      >
+        이동 종료
+      </button>
     </div>
   )
 }

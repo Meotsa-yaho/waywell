@@ -227,6 +227,11 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
 .shelter-hint { cursor: pointer; color: var(--brand-ink); }
 
 /* 장소 검색 결과 (B-02) */
+.current-loc-btn {
+  display: flex; align-items: center; gap: 6px; width: 100%;
+  background: #eef4f2; color: var(--brand-ink); border: 1px solid var(--line);
+  border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
 .place-item { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 .place-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; text-align: left; }
 .place-info strong { font-size: 15px; }
