@@ -70,6 +70,7 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
   cursor: pointer; text-decoration: none; margin-top: 8px;
 }
 .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn.sticky { position: sticky; bottom: 16px; }
 .link { align-self: flex-start; background: none; border: 0; color: var(--brand); font-size: 14px; cursor: pointer; padding: 0; }
 .row { display: flex; gap: 8px; }
@@ -225,12 +226,37 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
 .big-timer--soon strong { color: var(--warn); }
 .shelter-hint { cursor: pointer; color: var(--brand-ink); }
 
+/* 장소 검색 결과 (B-02) */
+.place-item { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.place-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; text-align: left; }
+.place-info strong { font-size: 15px; }
+.place-info .muted { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.place-dist { flex: 0 0 auto; color: var(--muted); font-size: 12px; }
+
+/* 실내 대기 장소 (C-04) */
+.shelter-item { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+.shelter-icon { font-size: 24px; flex: 0 0 auto; }
+.shelter-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.shelter-info strong { font-size: 15px; }
+.shelter-info .muted { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shelter-dist { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; }
+.shelter-dist strong { font-size: 14px; color: var(--brand-ink); }
+.shelter-dist .muted { font-size: 11px; }
+
 .empty { color: var(--muted); text-align: center; padding: 40px 0; }
 .version { color: var(--muted); font-size: 12px; text-align: center; }
 
 /* 지도 우선 홈 (SC-03) */
 .home-map { position: relative; height: calc(100dvh - 72px); }
 .map-fill { position: absolute; inset: 0; }
+.locate-btn {
+  position: absolute; right: 12px; bottom: 16px; z-index: 3;
+  width: 44px; height: 44px; border-radius: 50%; padding: 0;
+  background: var(--card); border: 1px solid var(--line); color: var(--brand);
+  cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  display: flex; align-items: center; justify-content: center;
+}
+.locate-btn:active { background: var(--bg); }
 .map-overlay {
   position: absolute; top: 12px; left: 12px; right: 12px; z-index: 2;
   display: flex; flex-direction: column; gap: 8px; pointer-events: none;

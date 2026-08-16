@@ -20,11 +20,12 @@ interface Props {
   polyline?: [number, number][] // [lat, lng][] — 단색 폴백
   paths?: PathSeg[] // 모드별 색상 구분
   fitBottomPadding?: number // 하단 시트에 가리지 않도록 bounds 아래 여백(px)
+  recenterKey?: number // 값이 바뀌면 center로 지도 이동(좌표 동일해도 강제) — 현위치 버튼용
   onMapClick?: (lat: number, lng: number) => void
   className?: string
 }
 
-export default function KakaoMap({ center, level = 5, markers = [], polyline, paths, fitBottomPadding = 0, onMapClick }: Props) {
+export default function KakaoMap({ center, level = 5, markers = [], polyline, paths, fitBottomPadding = 0, recenterKey, onMapClick }: Props) {
   const boxRef = useRef<HTMLDivElement>(null)
   const kakaoRef = useRef<any>(null)
   const mapRef = useRef<any>(null)
@@ -58,6 +59,14 @@ export default function KakaoMap({ center, level = 5, markers = [], polyline, pa
     const kakao = kakaoRef.current
     if (kakao && mapRef.current) mapRef.current.setCenter(new kakao.maps.LatLng(center.lat, center.lng))
   }, [center.lat, center.lng])
+
+  // 현위치 버튼: 좌표가 같아도 center로 강제 이동 (확대 변경 없음)
+  useEffect(() => {
+    const kakao = kakaoRef.current
+    if (recenterKey === undefined || !kakao || !mapRef.current) return
+    mapRef.current.setCenter(new kakao.maps.LatLng(center.lat, center.lng))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recenterKey])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(redraw, [JSON.stringify(markers ?? null), JSON.stringify(polyline ?? null), JSON.stringify(paths ?? null), fitBottomPadding])

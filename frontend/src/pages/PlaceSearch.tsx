@@ -1,14 +1,84 @@
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { api } from '../api/client'
+import { useRouteQuery } from '../store/route'
+import type { Place } from '../types/api'
 
-// SC-04 장소 검색 (스텁)
+// SC-04 / B-02 장소 검색 — 카카오 키워드검색, 최근 검색, 출발/도착 선택
 export default function PlaceSearch() {
   const nav = useNavigate()
+  const [params] = useSearchParams()
+  const target = params.get('target') === 'from' ? 'from' : 'to'
+  const setPlace = useRouteQuery((s) => s.setPlace)
+  const addRecent = useRouteQuery((s) => s.addRecent)
+  const recent = useRouteQuery((s) => s.recent)
+
+  const [q, setQ] = useState('')
+  const [results, setResults] = useState<Place[] | null>(null)
+  const [loading, setLoading] = useState(false)
+  const loc = useRef<{ lat: number; lng: number } | null>(null)
+
+  useEffect(() => {
+    navigator.geolocation?.getCurrentPosition(
+      (p) => (loc.current = { lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => {},
+      { timeout: 4000 },
+    )
+  }, [])
+
+  // 입력 디바운스 300ms
+  useEffect(() => {
+    const term = q.trim()
+    if (!term) {
+      setResults(null)
+      return
+    }
+    setLoading(true)
+    const id = setTimeout(() => {
+      api
+        .searchPlaces(term, loc.current?.lat, loc.current?.lng)
+        .then((p) => setResults(p))
+        .catch(() => setResults([]))
+        .finally(() => setLoading(false))
+    }, 300)
+    return () => clearTimeout(id)
+  }, [q])
+
+  const pick = (p: Place) => {
+    setPlace(target, p)
+    addRecent(p)
+    nav(-1)
+  }
+
+  const shown = results ?? (q.trim() ? [] : recent)
+
   return (
     <div className="page">
-      <button className="link" onClick={() => nav(-1)}>← 뒤로</button>
-      <h1>장소 검색</h1>
-      <input className="search" placeholder="장소를 검색하세요" autoFocus />
-      <p className="muted">SC-04 · GET /api/places/search 연동 예정</p>
+      <header className="page-head">
+        <button className="link" onClick={() => nav(-1)}>← 뒤로</button>
+        <span className="muted">{target === 'from' ? '출발지' : '도착지'} 검색</span>
+      </header>
+      <input
+        className="search"
+        placeholder={target === 'from' ? '출발지를 검색하세요' : '도착지를 검색하세요'}
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        autoFocus
+      />
+
+      {loading && <div className="card skeleton">검색 중…</div>}
+      {!loading && results?.length === 0 && <p className="empty">검색 결과가 없어요.</p>}
+      {!results && !q.trim() && recent.length > 0 && <h2>최근 검색</h2>}
+
+      {shown.map((p) => (
+        <button key={p.place_id} className="card place-item" onClick={() => pick(p)}>
+          <div className="place-info">
+            <strong>{p.name}</strong>
+            <span className="muted">{p.address}</span>
+          </div>
+          {p.distance_m != null && <span className="place-dist">{p.distance_m}m</span>}
+        </button>
+      ))}
     </div>
   )
 }

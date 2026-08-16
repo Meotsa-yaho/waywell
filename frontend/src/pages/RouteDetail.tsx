@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import KakaoMap from '../components/KakaoMap'
 import { api } from '../api/client'
+import { useRouteQuery } from '../store/route'
 import { segmentLine } from '../lib/segments'
 import type { Route } from '../types/api'
 
-const FROM = '37.2011,127.0983'
-const TO = '37.4979,127.0276'
+const DEMO_FROM = { lat: 37.2011, lng: 127.0983 }
+const DEMO_TO = { lat: 37.4979, lng: 127.0276 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 
@@ -17,6 +18,10 @@ export default function RouteDetail() {
   const [routes, setRoutes] = useState<Route[] | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(routeId ?? null)
   const [failed, setFailed] = useState(false)
+  const fromP = useRouteQuery((s) => s.from) ?? DEMO_FROM
+  const toP = useRouteQuery((s) => s.to) ?? DEMO_TO
+  const fromParam = `${fromP.lat},${fromP.lng}`
+  const toParam = `${toP.lat},${toP.lng}`
 
   // route-detail = 100dvh(탭바 없음) → 뷰포트 높이 기준. reserve = 상단 버튼바 밑 여백
   const rootRef = useRef<HTMLDivElement>(null)
@@ -38,13 +43,13 @@ export default function RouteDetail() {
 
   useEffect(() => {
     api
-      .getRoutes({ from: FROM, to: TO, geometry: '1' })
+      .getRoutes({ from: fromParam, to: toParam, geometry: '1' })
       .then((d) => {
         setRoutes(d.routes)
         setSelectedId((cur) => (d.routes.some((r) => r.route_id === cur) ? cur : d.routes[0]?.route_id ?? null))
       })
       .catch(() => setFailed(true))
-  }, [])
+  }, [fromParam, toParam])
 
   const route = useMemo(
     () => routes?.find((r) => r.route_id === selectedId) ?? routes?.[0],

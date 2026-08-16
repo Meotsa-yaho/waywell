@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { useSession } from '../store/session'
+import { useRouteQuery } from '../store/route'
 import { modeChips } from '../lib/segments'
 import type { RoutesResponse } from '../types/api'
 
@@ -11,8 +12,8 @@ const gradeLabel: Record<string, string> = {
   estimated: '추정',
 }
 
-const FROM = '37.2011,127.0983' // 동탄역 (데모 구간)
-const TO = '37.4979,127.0276' // 강남역
+const DEMO_FROM = { lat: 37.2011, lng: 127.0983, name: '동탄역' } // 미선택 시 데모 구간
+const DEMO_TO = { lat: 37.4979, lng: 127.0276, name: '강남역' }
 
 function hhmm(iso: string): string {
   const d = new Date(iso)
@@ -23,19 +24,27 @@ function hhmm(iso: string): string {
 export default function RouteCompare() {
   const nav = useNavigate()
   const preset = useSession((s) => s.preset)
+  const fromP = useRouteQuery((s) => s.from) ?? DEMO_FROM
+  const toP = useRouteQuery((s) => s.to) ?? DEMO_TO
   const [data, setData] = useState<RoutesResponse | null>(null)
   const [sort, setSort] = useState<'exposure' | 'duration' | 'recommend'>('recommend')
   const [weather, setWeather] = useState<'mild' | 'uv_high'>('mild')
   const [error, setError] = useState<string | null>(null)
 
+  const fromParam = `${fromP.lat},${fromP.lng}`
+  const toParam = `${toP.lat},${toP.lng}`
+
   useEffect(() => {
     setData(null)
     setError(null)
     api
-      .getRoutes({ from: FROM, to: TO, preset, sort, demo_weather: weather === 'uv_high' ? 'uv_high' : 'clear' })
+      .getRoutes({
+        from: fromParam, to: toParam, from_name: fromP.name, to_name: toP.name,
+        preset, sort, demo_weather: weather === 'uv_high' ? 'uv_high' : 'clear',
+      })
       .then(setData)
       .catch(() => setError('이 구간은 대중교통 경로를 찾지 못했어요'))
-  }, [sort, weather, preset])
+  }, [fromParam, toParam, sort, weather, preset])
 
   const env = data?.environment
 
