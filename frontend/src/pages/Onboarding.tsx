@@ -1,43 +1,156 @@
-import { useNavigate } from 'react-router-dom'
-import { useSession } from '../store/session'
-import type { Preset } from '../types/api'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'motion/react';
+import type { SensitivityId } from '../types/onboarding';
+import { StepIndicator } from '../components/onboarding/StepIndicator';
+import { Step1Framing } from '../components/onboarding/Step1Framing';
+import { Step2Sensitivity } from '../components/onboarding/Step2Sensitivity';
+import { Step3Auth } from '../components/onboarding/Step3Auth';
+import { useSession } from '../store/session';
+import type { Preset } from '../types/api';
 
-const presets: { id: Preset; title: string; desc: string }[] = [
-  { id: 'normal', title: '일반', desc: '기본 노출 부하 기준' },
-  { id: 'skin', title: '민감성 피부', desc: '자외선 가중' },
-  { id: 'respiratory', title: '호흡기 주의', desc: '미세먼지 가중' },
-]
+const SENSITIVITY_TO_PRESET: Record<SensitivityId, Preset> = {
+  uv: 'skin',
+  temp: 'normal',
+  dust: 'respiratory',
+  balanced: 'normal',
+};
 
-// SC-02 온보딩 — 가입 없이 프리셋만 고르고 시작 (게스트)
 export default function Onboarding() {
-  const nav = useNavigate()
-  const setPreset = useSession((s) => s.setPreset)
-  const current = useSession((s) => s.preset)
-  const complete = useSession((s) => s.completeOnboarding)
+  const navigate = useNavigate();
+  const setPreset = useSession((s) => s.setPreset);
+  const completeOnboarding = useSession((s) => s.completeOnboarding);
 
-  const pick = (p: Preset) => {
-    setPreset(p)
-    complete()
-    nav('/', { replace: true })
-  }
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [selectedSensitivity, setSelectedSensitivity] = useState<SensitivityId>('balanced');
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(true);
+  const [authSuccess, setAuthSuccess] = useState<'kakao' | 'guest' | null>(null);
+  const [isKakaoLoading, setIsKakaoLoading] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage((prev) => (prev === msg ? null : prev));
+    }, 2800);
+  };
+
+  const handleStep1Next = () => {
+    setCurrentStep(2);
+  };
+
+  const handleStep2Select = (id: SensitivityId) => {
+    setSelectedSensitivity(id);
+  };
+
+  const handleStep2Next = () => {
+    setCurrentStep(3);
+  };
+
+  const handleStep2Skip = () => {
+    setSelectedSensitivity('balanced');
+    setCurrentStep(3);
+    showToast("'스마트 밸런스' 기본 프로필이 적용되었습니다.");
+  };
+
+  const handleStepBack = () => {
+    if (isKakaoLoading) return;
+    if (currentStep === 3) setCurrentStep(2);
+    else if (currentStep === 2) setCurrentStep(1);
+  };
+
+  const handleToggleNotifications = () => {
+    const nextState = !notificationsEnabled;
+    setNotificationsEnabled(nextState);
+    localStorage.setItem('pwa_notifications', String(nextState));
+    showToast(nextState ? '🔔 실내 대기 3분 전 알림이 켜졌습니다.' : '🔕 실내 대기 알림이 꺼졌습니다.');
+  };
+
+  const saveProfileAndFinish = (method: 'kakao' | 'guest') => {
+    const preset = SENSITIVITY_TO_PRESET[selectedSensitivity] || 'normal';
+    setPreset(preset);
+    localStorage.setItem('sensitivity_profile', selectedSensitivity);
+    localStorage.setItem('auth_method', method);
+    completeOnboarding();
+
+    setTimeout(() => {
+      navigate('/', { replace: true });
+    }, 800);
+  };
+
+  const handleKakaoLogin = () => {
+    if (isKakaoLoading || authSuccess === 'kakao') return;
+    setIsKakaoLoading(true);
+
+    // Kakao OAuth Handshake Simulation
+    setTimeout(() => {
+      setIsKakaoLoading(false);
+      setAuthSuccess('kakao');
+      showToast('카카오 계정으로 노출 부하 프로필 연동이 완료되었습니다.');
+      saveProfileAndFinish('kakao');
+    }, 1200);
+  };
+
+  const handleGuestEnter = () => {
+    if (isKakaoLoading) return;
+    setAuthSuccess('guest');
+    showToast('게스트 모드로 노출 부하 프로필이 적용되었습니다.');
+    saveProfileAndFinish('guest');
+  };
 
   return (
-    <div className="page onboarding">
-      <h1>어떤 편이세요?</h1>
-      <p className="sub">나중에 설정에서 바꿀 수 있어요.</p>
-      <div className="preset-list">
-        {presets.map((p) => (
-          <button
-            key={p.id}
-            className={'card preset' + (current === p.id ? ' preset--on' : '')}
-            onClick={() => pick(p.id)}
-          >
-            <strong>{p.title}</strong>
-            <small>{p.desc}</small>
-          </button>
-        ))}
-      </div>
-      <button className="link" onClick={() => pick('normal')}>건너뛰기 (일반)</button>
+    <div className="min-h-screen bg-white flex flex-col justify-center items-center font-sans text-slate-800 selection:bg-emerald-200 selection:text-emerald-950">
+      <main 
+        id="waywell-onboarding-container"
+        className="w-full max-w-lg min-h-screen flex flex-col justify-between p-6 sm:p-8 relative mx-auto"
+      >
+        {/* Toast Notification Popup */}
+        <AnimatePresence>
+          {toastMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="fixed sm:absolute top-5 left-4 right-4 sm:left-6 sm:right-6 z-50 bg-slate-900/95 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-xl flex items-center justify-center text-center backdrop-blur-xs"
+            >
+              {toastMessage}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Step Progress Header */}
+        <StepIndicator currentStep={currentStep} onBack={handleStepBack} authSuccess={authSuccess} />
+
+        {/* Step Content with AnimatePresence */}
+        <div className="flex-1 flex flex-col justify-between py-2">
+          <AnimatePresence mode="wait">
+            {currentStep === 1 && (
+              <Step1Framing key="step1" onNext={handleStep1Next} />
+            )}
+            {currentStep === 2 && (
+              <Step2Sensitivity
+                key="step2"
+                selectedSensitivity={selectedSensitivity}
+                onSelect={handleStep2Select}
+                onNext={handleStep2Next}
+                onSkip={handleStep2Skip}
+              />
+            )}
+            {currentStep === 3 && (
+              <Step3Auth
+                key="step3"
+                selectedSensitivity={selectedSensitivity}
+                notificationsEnabled={notificationsEnabled}
+                onToggleNotifications={handleToggleNotifications}
+                onLoginKakao={handleKakaoLogin}
+                onEnterGuest={handleGuestEnter}
+                authSuccess={authSuccess}
+                isKakaoLoading={isKakaoLoading}
+              />
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
     </div>
-  )
+  );
 }

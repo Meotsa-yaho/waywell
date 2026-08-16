@@ -31,6 +31,11 @@ export default function Settings() {
             </button>
           ))}
         </div>
+        <div style={{ marginTop: '12px' }}>
+          <Link to="/onboarding" className="link" style={{ fontSize: '13px' }}>
+            ✨ 온보딩 맞춤 설정 다시하기
+          </Link>
+        </div>
       </section>
 
       <section className="card">
