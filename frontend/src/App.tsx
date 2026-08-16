@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import Splash from './pages/Splash'
 import Onboarding from './pages/Onboarding'
 import Home from './pages/Home'
+import { useSession } from './store/session'
 import PlaceSearch from './pages/PlaceSearch'
 import RouteCompare from './pages/RouteCompare'
 import RouteDetail from './pages/RouteDetail'
@@ -15,6 +16,14 @@ import Signup from './pages/Signup'
 import History from './pages/History'
 import NotFound from './pages/NotFound'
 
+function HomeRoute() {
+  const onboarded = useSession((s) => s.onboarded)
+  if (!onboarded) {
+    return <Navigate to="/onboarding" replace />
+  }
+  return <Home />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -24,7 +33,7 @@ export default function App() {
 
         {/* 하단 탭 3개: 홈 / 리포트 / 설정 */}
         <Route element={<Layout />}>
-          <Route index element={<Home />} />
+          <Route index element={<HomeRoute />} />
           <Route path="/report" element={<Report />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
