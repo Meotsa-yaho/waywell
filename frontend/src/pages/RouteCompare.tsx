@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import KakaoMap from '../components/KakaoMap'
 import { api } from '../api/client'
 import { useSession } from '../store/session'
+import { modeChips } from '../lib/segments'
 import type { RoutesResponse } from '../types/api'
 
 const gradeLabel: Record<string, string> = {
@@ -14,38 +14,30 @@ const gradeLabel: Record<string, string> = {
 const FROM = '37.2011,127.0983' // 동탄역 (데모 구간)
 const TO = '37.4979,127.0276' // 강남역
 
-// SC-05 경로 비교 결과 (핵심 화면 · 실 /api/routes + 지도 폴리라인)
+function hhmm(iso: string): string {
+  const d = new Date(iso)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+// SC-05 경로 비교 결과 (핵심 화면 · 카드 중심 · 지도는 상세에서)
 export default function RouteCompare() {
   const nav = useNavigate()
   const preset = useSession((s) => s.preset)
   const [data, setData] = useState<RoutesResponse | null>(null)
   const [sort, setSort] = useState<'exposure' | 'duration' | 'recommend'>('recommend')
   const [weather, setWeather] = useState<'mild' | 'uv_high'>('mild')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setData(null)
     setError(null)
-    setSelectedId(null)
     api
       .getRoutes({ from: FROM, to: TO, preset, sort, demo_weather: weather === 'uv_high' ? 'uv_high' : 'clear' })
-      .then((d) => {
-        setData(d)
-        setSelectedId(d.routes.find((r) => r.recommended)?.route_id ?? d.routes[0]?.route_id ?? null)
-      })
+      .then(setData)
       .catch(() => setError('이 구간은 대중교통 경로를 찾지 못했어요'))
   }, [sort, weather, preset])
 
   const env = data?.environment
-  const selected = useMemo(
-    () => data?.routes.find((r) => r.route_id === selectedId),
-    [data, selectedId],
-  )
-  const polyline = selected?.polyline
-  const center = polyline?.[0]
-    ? { lat: polyline[0][0], lng: polyline[0][1] }
-    : { lat: 37.2011, lng: 127.0983 }
 
   return (
     <div className="page">
@@ -56,12 +48,6 @@ export default function RouteCompare() {
           <button className={weather === 'uv_high' ? 'on' : ''} onClick={() => setWeather('uv_high')}>🔥 폭염·자외선</button>
         </div>
       </header>
-
-      {polyline && polyline.length > 1 && (
-        <div className="route-map">
-          <KakaoMap center={center} polyline={polyline} />
-        </div>
-      )}
 
       {env && (
         <div className={'env-strip' + (weather === 'uv_high' ? ' env-strip--hot' : '')}>
@@ -79,29 +65,46 @@ export default function RouteCompare() {
       {!error && !data && <div className="card skeleton">경로 계산 중…</div>}
 
       {!error &&
-        data?.routes.map((r) => (
-          <div
-            key={r.route_id}
-            className={'card route-card' + (r.route_id === selectedId ? ' route-card--sel' : '')}
-            onClick={() => setSelectedId(r.route_id)}
-          >
-            <div className="route-top">
-              <div className="score">
-                <strong>{r.exposure_load}</strong>
-                <small>노출 부하</small>
+        data?.routes.map((r) => {
+          const chips = modeChips(r.segments)
+          return (
+            <div
+              key={r.route_id}
+              className={'card route-card' + (r.recommended ? ' route-card--rec' : '')}
+              onClick={() => nav(`/routes/${r.route_id}`)}
+            >
+              <div className="route-top">
+                <div className="score">
+                  <strong>{r.exposure_load}</strong>
+                  <small>노출 부하</small>
+                </div>
+                <div className="route-headline">
+                  <div className="route-badges">
+                    {r.recommended && <span className="badge rec">추천</span>}
+                    <span className="badge grade">{gradeLabel[r.prediction_grade] ?? r.prediction_grade}</span>
+                  </div>
+                  <div className="route-time">
+                    <strong>{r.total_minutes}분</strong>
+                    <span className="muted"> · {hhmm(r.arrival_time)} 도착 · 환승 {r.transfers}</span>
+                  </div>
+                </div>
+                <span className="detail-chevron">›</span>
               </div>
-              {r.recommended && <span className="badge rec">추천</span>}
-              <span className="badge grade">{gradeLabel[r.prediction_grade] ?? r.prediction_grade}</span>
-              <button className="detail-link" onClick={(e) => { e.stopPropagation(); nav(`/routes/${r.route_id}`) }}>상세 →</button>
+
+              <div className="route-modes">
+                {chips.map((c, i) => (
+                  <span key={i} className="mode-chip">{c}</span>
+                ))}
+              </div>
+
+              <div className="route-meta">
+                <span>야외 {r.outdoor_minutes}분</span>
+                <span>실내 {Math.round(r.indoor_ratio * 100)}%</span>
+              </div>
+              {r.llm_comment && <p className="llm">{r.llm_comment}</p>}
             </div>
-            <div className="route-meta">
-              <span>야외 {r.outdoor_minutes}분</span>
-              <span>실내 {Math.round(r.indoor_ratio * 100)}%</span>
-              <span>{r.total_minutes}분 · 환승 {r.transfers}</span>
-            </div>
-            {r.llm_comment && <p className="llm">{r.llm_comment}</p>}
-          </div>
-        ))}
+          )
+        })}
     </div>
   )
 }

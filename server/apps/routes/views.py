@@ -38,8 +38,9 @@ class RoutesView(APIView):
 
         env = DEMO_ENV.get(demo) or env_for_exposure(from_lat, from_lng)
 
+        with_geometry = q.get("geometry") in ("1", "true")  # 상세 화면만 실제 선로 좌표 요청
         try:
-            candidates = odsay_client.search_routes(from_lat, from_lng, to_lat, to_lng)
+            candidates = odsay_client.search_routes(from_lat, from_lng, to_lat, to_lng, with_geometry=with_geometry)
         except Exception:
             return error_response("UPSTREAM_TIMEOUT", "경로 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.", 504)
 
@@ -73,6 +74,7 @@ class RoutesView(APIView):
                 "notice": None,
                 "llm_comment": None,
                 "polyline": c["polyline"],
+                "path_segments": c["path_segments"],
                 "segments": c["segments_api"],
             })
 

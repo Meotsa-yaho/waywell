@@ -85,7 +85,8 @@ export interface Route {
   data_source: DataSource
   notice: string | null
   llm_comment: string | null
-  polyline?: [number, number][] // [lat, lng][] — 지도 경로선
+  polyline?: [number, number][] // [lat, lng][] — 지도 경로선(전체)
+  path_segments?: { type: 'walk' | 'bus' | 'subway'; coords: [number, number][]; outdoor?: boolean }[] // 모드별 색상 구분용
   segments: RouteSegment[]
 }
 

@@ -37,6 +37,7 @@ export interface RouteParams {
   preset?: string
   sort?: 'exposure' | 'duration' | 'recommend'
   demo_weather?: string
+  geometry?: string // '1' 이면 실제 선로 좌표 포함 (상세 화면)
 }
 
 export const api = {
