@@ -1,0 +1,57 @@
+{
+  "query": {
+    "from": { "lat": 37.2011, "lng": 127.0983, "name": "동탄역" },
+    "to": { "lat": 37.4979, "lng": 127.0276, "name": "강남역" },
+    "depart_at": "2026-08-12T09:00:00+09:00",
+    "preset": "skin"
+  },
+  "environment": { "uv": 8, "feels_like": 34.6, "pm10_grade": "보통", "precipitation": "none" },
+  "routes": [
+    {
+      "route_id": "r_a1b2c3",
+      "rank": 1,
+      "recommended": true,
+      "exposure_load": 31,
+      "exposure_breakdown": { "uv": 19, "heat": 9, "air": 3 },
+      "outdoor_minutes": 7,
+      "indoor_ratio": 0.89,
+      "total_minutes": 62,
+      "arrival_time": "2026-08-12T10:02:00+09:00",
+      "transfers": 1,
+      "prediction_grade": "precise",
+      "data_source": "gbis",
+      "notice": null,
+      "llm_comment": "자외선 지수 8 — 6분 늦지만 야외 노출이 11분 적은 지하철 경로를 추천해요.",
+      "segments": [
+        { "seq": 1, "type": "walk", "minutes": 4, "outdoor": true, "exposure_minutes": 4, "from": { "name": "출발지" }, "to": { "name": "동탄역 2번 출구" } },
+        { "seq": 2, "type": "subway_wait", "minutes": 3, "outdoor": false, "exposure_minutes": 0, "station": "동탄역" },
+        { "seq": 3, "type": "subway", "line": "GTX-A", "minutes": 22, "outdoor": false, "exposure_minutes": 0, "from": { "name": "동탄역" }, "to": { "name": "수서역" } },
+        { "seq": 4, "type": "bus_wait", "minutes": 3, "outdoor": true, "exposure_minutes": 3, "station_id": "23-456", "station": "수서역 정류장", "route_id": "4432" },
+        { "seq": 5, "type": "bus", "route_name": "4432", "minutes": 25, "outdoor": false, "exposure_minutes": 0 },
+        { "seq": 6, "type": "walk", "minutes": 5, "outdoor": false, "exposure_minutes": 0, "note": "지하 연결통로" }
+      ]
+    },
+    {
+      "route_id": "r_d4e5f6",
+      "rank": 2,
+      "recommended": false,
+      "exposure_load": 72,
+      "exposure_breakdown": { "uv": 48, "heat": 18, "air": 6 },
+      "outdoor_minutes": 18,
+      "indoor_ratio": 0.62,
+      "total_minutes": 56,
+      "arrival_time": "2026-08-12T09:56:00+09:00",
+      "transfers": 2,
+      "prediction_grade": "realtime",
+      "data_source": "gbis",
+      "notice": null,
+      "llm_comment": "가장 빠르지만 환승 대기 18분이 모두 뙤약볕이에요.",
+      "segments": [
+        { "seq": 1, "type": "walk", "minutes": 6, "outdoor": true, "exposure_minutes": 6, "from": { "name": "출발지" }, "to": { "name": "버스정류장" } },
+        { "seq": 2, "type": "bus_wait", "minutes": 8, "outdoor": true, "exposure_minutes": 8, "station_id": "23-100", "station": "동탄중앙", "route_id": "1002" },
+        { "seq": 3, "type": "bus", "route_name": "1002", "minutes": 38, "outdoor": false, "exposure_minutes": 0 },
+        { "seq": 4, "type": "walk", "minutes": 4, "outdoor": true, "exposure_minutes": 4, "to": { "name": "강남역" } }
+      ]
+    }
+  ]
+}

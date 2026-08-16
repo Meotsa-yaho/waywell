@@ -90,7 +90,22 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
 .sort-toggle button:first-child, .seg button:first-child { border-radius: 8px 0 0 8px; }
 .sort-toggle button:last-child, .seg button:last-child { border-radius: 0 8px 8px 0; }
 .sort-toggle .on, .seg .on { background: var(--brand); color: #fff; border-color: var(--brand); }
-.seg { display: inline-flex; }
+.seg, .sort-toggle { display: inline-flex; }
+
+/* 데모 날씨 토글 + 환경 스트립 */
+.weather-toggle { display: inline-flex; }
+.weather-toggle button {
+  border: 1px solid var(--line); background: var(--card); color: var(--muted);
+  padding: 6px 10px; font-size: 12px; cursor: pointer;
+}
+.weather-toggle button:first-child { border-radius: 8px 0 0 8px; }
+.weather-toggle button:last-child { border-radius: 0 8px 8px 0; }
+.weather-toggle .on { background: var(--brand); color: #fff; border-color: var(--brand); }
+.env-strip {
+  font-size: 13px; color: var(--muted); background: var(--card);
+  border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px;
+}
+.env-strip--hot { background: #fdf0e6; border-color: #f0c9a8; color: var(--warn); font-weight: 600; }
 
 /* 타임라인 */
 .timeline { list-style: none; padding: 0; margin: 0; }
@@ -126,6 +141,29 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
 
 .empty { color: var(--muted); text-align: center; padding: 40px 0; }
 .version { color: var(--muted); font-size: 12px; text-align: center; }
+
+/* 지도 우선 홈 (SC-03) */
+.home-map { position: relative; height: calc(100dvh - 72px); }
+.map-fill { position: absolute; inset: 0; }
+.map-overlay {
+  position: absolute; top: 12px; left: 12px; right: 12px; z-index: 2;
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+}
+.map-overlay > * { pointer-events: auto; }
+.env-chip {
+  align-self: flex-start; background: rgba(255, 255, 255, 0.95); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
+  font-size: 12px; font-weight: 600; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+}
+.search-card {
+  background: var(--card); border-radius: 14px; padding: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); display: flex; flex-direction: column; gap: 8px;
+}
+.search-field {
+  text-align: left; border: 1px solid var(--line); border-radius: 8px;
+  padding: 11px 12px; font-size: 14px; background: var(--card); color: var(--ink); cursor: pointer;
+}
+.muted-field { color: var(--muted); }
 
 /* 하단 탭바 */
 .tabbar {
