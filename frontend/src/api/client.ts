@@ -57,10 +57,9 @@ export const api = {
   getRoutes: (params: RouteParams) =>
     http.get<RoutesResponse>('/routes', { params }).then((r) => r.data),
 
-  getArrival: (station_id: string, route_id: string) =>
-    USE_MOCK
-      ? mock<Arrival>('arrival.corrected')
-      : http.get<Arrival>('/arrival', { params: { station_id, route_id } }).then((r) => r.data),
+  // 도착정보는 백엔드(TAGO) 구현 완료 → 목업 모드여도 실 API 호출
+  getArrival: (station_id: string, route_id?: string, city_code?: string) =>
+    http.get<Arrival>('/arrival', { params: { station_id, route_id, city_code } }).then((r) => r.data),
 
   getShelters: (lat: number, lng: number) =>
     USE_MOCK

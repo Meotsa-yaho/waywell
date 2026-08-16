@@ -145,6 +145,8 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
 .big-timer { text-align: center; }
 .big-timer strong { font-size: 44px; display: block; color: var(--brand-ink); }
 .big-timer small { color: var(--muted); }
+.big-timer--soon { background: #fdf0e6; border-color: #f0c9a8; }
+.big-timer--soon strong { color: var(--warn); }
 .shelter-hint { cursor: pointer; color: var(--brand-ink); }
 
 .empty { color: var(--muted); text-align: center; padding: 40px 0; }

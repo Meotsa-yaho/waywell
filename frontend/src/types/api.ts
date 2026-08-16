@@ -110,7 +110,7 @@ export interface Arrival {
   station_id: string
   route_id: string
   route_name: string
-  arrivals: { seq: number; minutes: number; raw_minutes: number | null; corrected: boolean; vehicle_id?: string | null }[]
+  arrivals: { seq: number; minutes: number; raw_minutes: number | null; corrected: boolean; vehicle_id?: string | null; route_name?: string; stations_left?: number | null }[]
   prediction_grade: PredictionGrade
   data_source: DataSource
   notice: string | null
