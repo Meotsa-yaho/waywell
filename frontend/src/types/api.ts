@@ -85,6 +85,7 @@ export interface Route {
   data_source: DataSource
   notice: string | null
   llm_comment: string | null
+  polyline?: [number, number][] // [lat, lng][] — 지도 경로선
   segments: RouteSegment[]
 }
 

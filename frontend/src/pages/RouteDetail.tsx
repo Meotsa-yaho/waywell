@@ -10,9 +10,10 @@ export default function RouteDetail() {
   const [route, setRoute] = useState<Route | null>(null)
 
   useEffect(() => {
-    api.getRoutes({ from: '', to: '' }).then((d) => {
-      setRoute(d.routes.find((r) => r.route_id === routeId) ?? d.routes[0] ?? null)
-    })
+    api
+      .getRoutes({ from: '37.2011,127.0983', to: '37.4979,127.0276' })
+      .then((d) => setRoute(d.routes.find((r) => r.route_id === routeId) ?? d.routes[0] ?? null))
+      .catch(() => setRoute(null))
   }, [routeId])
 
   if (!route) return <div className="page"><div className="card skeleton">불러오는 중…</div></div>

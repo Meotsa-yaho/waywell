@@ -35,7 +35,7 @@ export interface RouteParams {
   to: string
   depart_at?: string
   preset?: string
-  sort?: 'exposure' | 'duration'
+  sort?: 'exposure' | 'duration' | 'recommend'
   demo_weather?: string
 }
 
@@ -53,10 +53,9 @@ export const api = {
       ? mock<Environment>('environment')
       : http.get<Environment>('/environment', { params: { lat, lng } }).then((r) => r.data),
 
+  // 경로는 백엔드 구현 완료 → 목업 모드여도 실 API 호출 (demo_weather 지원)
   getRoutes: (params: RouteParams) =>
-    USE_MOCK
-      ? mock<RoutesResponse>(params.demo_weather === 'uv_high' ? 'routes.uv_high' : 'routes.success')
-      : http.get<RoutesResponse>('/routes', { params }).then((r) => r.data),
+    http.get<RoutesResponse>('/routes', { params }).then((r) => r.data),
 
   getArrival: (station_id: string, route_id: string) =>
     USE_MOCK
