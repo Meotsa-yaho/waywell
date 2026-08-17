@@ -3,24 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import type { SensitivityId } from '../types/onboarding';
 import { useSession } from '../store/session';
-import type { Preset } from '../types/api';
+import { api } from '../api/client';
+import { SENSITIVITY_TO_PRESET } from '../lib/presets';
 import { startKakaoLogin } from '../lib/kakaoAuth';
 import { StepIndicator } from '../components/onboarding/StepIndicator';
 import { Step1Framing } from '../components/onboarding/Step1Framing';
 import { Step2Sensitivity } from '../components/onboarding/Step2Sensitivity';
 import { Step3Auth } from '../components/onboarding/Step3Auth';
 
-const SENSITIVITY_TO_PRESET: Record<SensitivityId, Preset> = {
-  uv: 'skin',
-  dust: 'respiratory',
-  temp: 'heat',
-  balanced: 'normal',
-};
-
 export default function Onboarding() {
   const nav = useNavigate();
   const setPreset = useSession((s) => s.setPreset);
   const completeOnboarding = useSession((s) => s.completeOnboarding);
+  const token = useSession((s) => s.token); // 이미 로그인했으면 인증 단계 생략
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [selectedSensitivity, setSelectedSensitivity] = useState<SensitivityId>('balanced');
@@ -44,12 +39,25 @@ export default function Onboarding() {
     setSelectedSensitivity(id);
   };
 
+  // 로그인 상태면 인증 단계 없이 프리셋만 저장하고 완료
+  const finishForLoggedIn = (sensitivity: SensitivityId) => {
+    const preset = SENSITIVITY_TO_PRESET[sensitivity] || 'normal';
+    setPreset(preset);
+    api.patchMe(preset).catch(() => {});
+    completeOnboarding();
+    localStorage.setItem('sensitivity_profile', sensitivity);
+    showToast('프로필이 저장되었습니다.');
+    setTimeout(() => nav('/', { replace: true }), 700);
+  };
+
   const handleStep2Next = () => {
+    if (token) return finishForLoggedIn(selectedSensitivity);
     setCurrentStep(3);
   };
 
   const handleStep2Skip = () => {
     setSelectedSensitivity('balanced');
+    if (token) return finishForLoggedIn('balanced');
     setCurrentStep(3);
     showToast("'스마트 밸런스' 기본 프로필이 적용되었습니다.");
   };

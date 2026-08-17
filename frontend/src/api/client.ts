@@ -11,9 +11,6 @@ import type {
   Trip,
 } from '../types/api'
 
-// VITE_USE_MOCK=true 면 /mock/*.json 을 읽고, 아니면 실 API(/api/*)를 부른다.
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
-
 const http = axios.create({ baseURL: '/api', timeout: 10000 })
 
 // 게스트/로그인 신원 헤더 부착 (API 명세서 1장)
@@ -24,12 +21,6 @@ http.interceptors.request.use((config) => {
   else if (deviceId) config.headers['X-Device-Id'] = deviceId
   return config
 })
-
-async function mock<T>(name: string): Promise<T> {
-  const res = await fetch(`/mock/${name}.json`)
-  if (!res.ok) throw new Error(`mock ${name} 없음`)
-  return res.json()
-}
 
 export interface RouteParams {
   from: string
@@ -57,6 +48,8 @@ export const api = {
 
   patchMe: (preset: string) =>
     http.patch<Me>('/me/', { preset }).then((r) => r.data),
+
+  deleteMe: () => http.delete('/me/').then(() => true),
 
   // 장소 검색은 백엔드(카카오 로컬) 구현 완료 → 목업 모드여도 실 API
   searchPlaces: (q: string, lat?: number, lng?: number) =>

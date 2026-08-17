@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { useSession } from '../store/session'
 import { kakaoRedirectUri } from '../lib/kakaoAuth'
+import type { Preset } from '../types/api'
 
 // 카카오 인가 코드 콜백 → 백엔드 교환 → JWT 저장 후 홈
 export default function KakaoCallback() {
@@ -26,7 +27,7 @@ export default function KakaoCallback() {
         const ob = localStorage.getItem('onboarding_preset')
         if (ob) {
           localStorage.removeItem('onboarding_preset')
-          setPreset(ob)
+          setPreset(ob as Preset)
           api.patchMe(ob).catch(() => {})
         } else {
           setPreset(res.user.preset)

@@ -1,4 +1,5 @@
 """GET /api/environment — 현재 위치의 환경 상태 (SC-03, B-06)."""
+import logging
 from datetime import datetime, timezone, timedelta
 
 from django.core.cache import cache
@@ -10,6 +11,7 @@ from apps.common.response import error_response
 from .services import kma_client, airkorea_client
 from .services.grid import latlng_to_grid, apparent_temperature
 
+_log = logging.getLogger("environment")
 KST = timezone(timedelta(hours=9))
 
 _PTY = {0: "none", 1: "rain", 2: "rain_snow", 3: "snow", 5: "shower", 6: "rain_snow", 7: "snow"}
@@ -60,25 +62,28 @@ class EnvironmentView(APIView):
             feels = apparent_temperature(w["temp"], w["humidity"], w["wind"])
             temperature = {"current": w["temp"], "feels_like": feels, "humidity": int(w["humidity"])}
             precipitation = {"type": _PTY.get(w["pty"], "none"), "probability": 0 if w["pty"] == 0 else 80}
-        except Exception:
+        except Exception as e:
             partial = True
             feels = None
+            _log.warning("weather fetch failed: %s", e)
 
         # 자외선
         uv = None
         try:
             idx = kma_client.get_uv(lat, lng)
             uv = {"index": idx, "grade": _uv_grade(idx)}
-        except Exception:
+        except Exception as e:
             partial = True
+            _log.warning("uv fetch failed: %s", e)
 
         # 미세먼지
         air = None
         try:
             a = airkorea_client.get_air(lat, lng)
             air = {"pm10": a["pm10"], "pm10_grade": a["pm10_grade"], "pm25": a["pm25"], "pm25_grade": a["pm25_grade"]}
-        except Exception:
+        except Exception as e:
             partial = True
+            _log.warning("air fetch failed: %s", e)
 
         body = {
             "observed_at": datetime.now(KST).replace(microsecond=0).isoformat(),
@@ -89,5 +94,6 @@ class EnvironmentView(APIView):
             "comment": _comment(uv["index"] if uv else None, feels, air["pm10_grade"] if air else None),
             "partial": partial,
         }
-        cache.set(cache_key, body, 600)  # 격자 10분 캐시
+        # 완전 응답만 10분 캐시. 부분실패(외부 API 일시 오류)는 60초만 → 곧 재시도되게.
+        cache.set(cache_key, body, 60 if partial else 600)
         return Response(body)

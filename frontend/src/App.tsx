@@ -12,6 +12,8 @@ import Trip from './pages/Trip'
 import Shelters from './pages/Shelters'
 import Report from './pages/Report'
 import Settings from './pages/Settings'
+import PresetSelect from './pages/PresetSelect'
+import Info from './pages/Info'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import KakaoCallback from './pages/KakaoCallback'
@@ -43,6 +45,8 @@ export default function App() {
           </Route>
 
           {/* 탭 없는 화면 */}
+          <Route path="/settings/preset" element={<PresetSelect />} />
+          <Route path="/settings/info" element={<Info />} />
           <Route path="/search" element={<PlaceSearch />} />
           <Route path="/routes" element={<RouteCompare />} />
           <Route path="/routes/:routeId" element={<RouteDetail />} />

@@ -1,22 +1,35 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts'
 import { api } from '../api/client'
+import EmptyState from '../components/EmptyState'
 import type { WeeklyReport } from '../types/api'
 
 // SC-09 주간 리포트 (핵심 화면)
 export default function Report() {
+  const nav = useNavigate()
   const [data, setData] = useState<WeeklyReport | null>(null)
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
-    api.getWeeklyReport().then(setData).catch(() => setData(null))
+    api.getWeeklyReport().then(setData).catch(() => setFailed(true))
   }, [])
+
+  if (failed)
+    return (
+      <div className="page">
+        <EmptyState icon="📡" title="리포트를 불러오지 못했어요" hint="네트워크 상태를 확인해주세요."
+          actionLabel="다시 시도" onAction={() => location.reload()} />
+      </div>
+    )
 
   if (!data) return <div className="page"><div className="card skeleton">리포트 불러오는 중…</div></div>
 
   if (!data.has_data)
     return (
       <div className="page">
-        <p className="empty">첫 이동을 기록해보세요</p>
+        <EmptyState icon="🚶" title="아직 이동 기록이 없어요" hint="첫 이동을 기록하면 주간 노출 추이가 여기에 쌓여요."
+          actionLabel="경로 찾기" onAction={() => nav('/')} />
       </div>
     )
 

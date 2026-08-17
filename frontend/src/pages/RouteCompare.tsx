@@ -4,6 +4,7 @@ import { api } from '../api/client'
 import { useSession } from '../store/session'
 import { useRouteQuery } from '../store/route'
 import { modeChips } from '../lib/segments'
+import EmptyState from '../components/EmptyState'
 import type { RoutesResponse } from '../types/api'
 
 const gradeLabel: Record<string, string> = {
@@ -71,8 +72,15 @@ export default function RouteCompare() {
         <button className={sort === 'duration' ? 'on' : ''} onClick={() => setSort('duration')}>시간순</button>
       </div>
 
-      {error && <p className="empty">{error}</p>}
+      {error && (
+        <EmptyState icon="🧭" title={error} hint="출발지·도착지를 다시 확인하거나 다른 구간으로 시도해보세요."
+          actionLabel="다시 검색" onAction={() => nav('/')} />
+      )}
       {!error && !data && <div className="card skeleton">경로 계산 중…</div>}
+      {!error && data && data.routes.length === 0 && (
+        <EmptyState icon="🚏" title="추천할 경로가 없어요" hint="가까운 거리이거나 대중교통이 닿지 않는 구간일 수 있어요."
+          actionLabel="다시 검색" onAction={() => nav('/')} />
+      )}
 
       {!error &&
         data?.routes.map((r) => {

@@ -104,3 +104,11 @@ class MeView(APIView):
             account.preset = preset
             account.save(update_fields=["preset"])
         return Response(_me(account))
+
+    def delete(self, request):
+        """회원 탈퇴 (A-08). 계정·이동기록 전체 삭제(FK CASCADE)."""
+        account = account_from_request(request)
+        if not account:
+            return error_response("UNAUTHORIZED", "로그인이 필요해요.", 401)
+        account.delete()
+        return Response({"deleted": True})
