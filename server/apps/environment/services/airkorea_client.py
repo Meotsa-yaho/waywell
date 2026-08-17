@@ -45,20 +45,24 @@ def get_air(lat: float, lng: float) -> dict:
     station = _nearest_station(lat, lng)
     data = _get_json(
         _url_with_key(_DUST_URL),
-        {"returnType": "json", "stationName": station, "dataTerm": "DAILY", "ver": "1.3", "numOfRows": 1},
+        {"returnType": "json", "stationName": station, "dataTerm": "DAILY", "ver": "1.3", "numOfRows": 6},
     )
-    it = data["response"]["body"]["items"][0]
+    items = data["response"]["body"]["items"]
 
-    def _num(v):
-        try:
-            return int(float(v))
-        except (TypeError, ValueError):
-            return None
+    def _pick(value_key: str, grade_key: str):
+        """최신 행부터 유효한 숫자값을 찾는다 (최신 행이 '-' 측정공백이어도 이전 시간값 사용)."""
+        for it in items:
+            try:
+                num = int(float(it.get(value_key)))
+            except (TypeError, ValueError):
+                continue
+            return num, _GRADE.get(it.get(grade_key), "보통")
+        return None, "보통"
 
+    pm10, pm10_grade = _pick("pm10Value", "pm10Grade")
+    pm25, pm25_grade = _pick("pm25Value", "pm25Grade")
     return {
-        "pm10": _num(it.get("pm10Value")),
-        "pm10_grade": _GRADE.get(it.get("pm10Grade"), "보통"),
-        "pm25": _num(it.get("pm25Value")),
-        "pm25_grade": _GRADE.get(it.get("pm25Grade"), "보통"),
+        "pm10": pm10, "pm10_grade": pm10_grade,
+        "pm25": pm25, "pm25_grade": pm25_grade,
         "station": station,
     }

@@ -1,7 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Arrival } from '../types/api'
+
+type NotifPerm = NotificationPermission | 'unsupported'
+const initNotifPerm = (): NotifPerm =>
+  typeof Notification === 'undefined' ? 'unsupported' : Notification.permission
 
 // 데모 정류소 — TAGO 실시간 도착이 나오는 세종 송강전통시장 (우리 데모 경로는 지하철이라 버스 노드가 없음)
 const DEMO_STATION = 'DJB8001793'
@@ -13,6 +17,8 @@ export default function Trip() {
   const nav = useNavigate()
   const [data, setData] = useState<Arrival | null>(null)
   const [error, setError] = useState(false)
+  const [notifPerm, setNotifPerm] = useState<NotifPerm>(initNotifPerm)
+  const notifiedFor = useRef<number | null>(null) // 알림 보낸 차량 seq (중복 발송 방지)
 
   useEffect(() => {
     let alive = true
@@ -32,9 +38,34 @@ export default function Trip() {
   const next = data?.arrivals[0]
   const soon = next && next.minutes <= 3 // 실내 대기 알림 임계 (온보딩에서 약속한 3분 전)
 
+  // C-05 도착 3분 전 알림: soon 진입 시 차량당 1회 발송
+  useEffect(() => {
+    if (!next || !soon || notifPerm !== 'granted') return
+    if (notifiedFor.current === next.seq) return
+    notifiedFor.current = next.seq
+    new Notification('🚏 곧 도착해요', {
+      body: `${data?.route_name ?? ''}번 · ${next.minutes}분 후 도착 · 실내에서 대기하세요`,
+      icon: '/favicon.svg',
+    })
+  }, [next, soon, notifPerm, data])
+
+  const enableNotif = () => {
+    if (typeof Notification === 'undefined') return
+    Notification.requestPermission().then(setNotifPerm)
+  }
+
   return (
     <div className="page">
       <h1>이동 중</h1>
+
+      {notifPerm === 'default' && (
+        <button className="notif-cta" onClick={enableNotif}>
+          🔔 도착 3분 전 알림 받기 <span>탭하여 켜기</span>
+        </button>
+      )}
+      {notifPerm === 'denied' && (
+        <p className="notif-hint">🔕 알림이 꺼져 있어요. 브라우저 설정에서 허용하면 도착 알림을 받아요.</p>
+      )}
 
       {error && <p className="empty">도착 정보를 불러오지 못했어요.</p>}
       {!error && !data && <div className="card skeleton">도착 정보 불러오는 중…</div>}

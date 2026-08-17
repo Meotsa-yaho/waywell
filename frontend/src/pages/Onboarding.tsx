@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import type { SensitivityId } from '../types/onboarding';
 import { useSession } from '../store/session';
 import { api } from '../api/client';
-import { SENSITIVITY_TO_PRESET } from '../lib/presets';
+import { SENSITIVITY_TO_PRESET, PRESET_TO_SENSITIVITY } from '../lib/presets';
 import { startKakaoLogin } from '../lib/kakaoAuth';
 import { StepIndicator } from '../components/onboarding/StepIndicator';
 import { Step1Framing } from '../components/onboarding/Step1Framing';
@@ -16,9 +16,12 @@ export default function Onboarding() {
   const setPreset = useSession((s) => s.setPreset);
   const completeOnboarding = useSession((s) => s.completeOnboarding);
   const token = useSession((s) => s.token); // 이미 로그인했으면 인증 단계 생략
+  const preset = useSession((s) => s.preset); // 재진입 시 현재 프리셋을 초기 선택으로 (설정↔온보딩 통일)
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  const [selectedSensitivity, setSelectedSensitivity] = useState<SensitivityId>('balanced');
+  const [selectedSensitivity, setSelectedSensitivity] = useState<SensitivityId>(
+    PRESET_TO_SENSITIVITY[preset],
+  );
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(true);
   const [authSuccess, setAuthSuccess] = useState<'kakao' | 'guest' | null>(null);
   const [isKakaoLoading, setIsKakaoLoading] = useState<boolean>(false);

@@ -62,6 +62,14 @@ export default function Report() {
         )}
       </section>
 
+      <button className="menu-item" onClick={() => nav('/history')}>
+        <div className="menu-text">
+          <strong>이동 기록 전체 보기</strong>
+          <span className="muted">지난 이동 목록·노출 부하</span>
+        </div>
+        <span className="menu-chevron">›</span>
+      </button>
+
       {data.is_guest && (
         <section className="card banner">
           가입하면 지금까지의 기록이 계정에 저장돼요

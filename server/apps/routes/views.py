@@ -47,6 +47,10 @@ class RoutesView(APIView):
         if not candidates:
             return error_response("ROUTE_NOT_FOUND", "이 구간은 대중교통 경로를 찾지 못했어요", 404)
 
+        # 버스 '대기'를 TAGO 실시간 도착으로 보정(노출부하 계산 전). realtime_wait=0 이면 생략.
+        if q.get("realtime_wait", "1") != "0":
+            odsay_client.apply_realtime_waits(candidates)
+
         try:
             depart_at = datetime.fromisoformat(q["depart_at"]) if q.get("depart_at") else datetime.now(KST)
         except ValueError:

@@ -30,7 +30,33 @@ def _account(request):
 
 
 class TripsView(APIView):
-    """POST /api/trips — 이동 시작(C-01). 선택 경로 요약을 기록으로 저장."""
+    """GET /api/trips — 이동 기록 목록(SC-13). POST — 이동 시작(C-01)."""
+
+    def get(self, request):
+        account = _account(request)
+        device_id = _device_id(request)
+        if account:
+            qs = Trip.objects.filter(account=account)
+        elif device_id:
+            qs = Trip.objects.filter(device_id=device_id, account__isnull=True)
+        else:
+            return error_response("VALIDATION_ERROR", "이동 기록에 필요한 정보가 없어요.", 400)
+
+        def _iso(dt):
+            return dt.astimezone(KST).replace(microsecond=0).isoformat() if dt else None
+
+        trips = [{
+            "id": str(t.id),
+            "from_name": t.from_name,
+            "to_name": t.to_name,
+            "status": t.status,
+            "total_minutes": t.total_minutes,
+            "exposure_load": t.exposure_load,
+            "outdoor_minutes": t.outdoor_minutes,
+            "started_at": _iso(t.started_at),
+            "completed_at": _iso(t.completed_at),
+        } for t in qs[:50]]
+        return Response({"trips": trips})
 
     def post(self, request):
         account = _account(request)

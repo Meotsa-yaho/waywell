@@ -9,6 +9,7 @@ import type {
   Shelter,
   Arrival,
   Trip,
+  TripSummary,
 } from '../types/api'
 
 const http = axios.create({ baseURL: '/api', timeout: 10000 })
@@ -72,6 +73,9 @@ export const api = {
     http.get<{ shelters: Shelter[] }>('/shelters', { params: { lat, lng } }).then((r) => r.data.shelters),
 
   // 이동 기록·리포트는 백엔드 구현 완료 → 목업 모드여도 실 API. POST/PATCH는 slash 필수(Django APPEND_SLASH)
+  listTrips: () =>
+    http.get<{ trips: TripSummary[] }>('/trips/').then((r) => r.data.trips),
+
   startTrip: (body: unknown) =>
     http.post<Trip>('/trips/', body).then((r) => r.data),
 

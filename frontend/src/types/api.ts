@@ -68,6 +68,7 @@ export interface RouteSegment {
   from?: { name: string; lat?: number; lng?: number }
   to?: { name: string; lat?: number; lng?: number }
   note?: string
+  realtime?: boolean // 버스 대기: TAGO 실시간 도착으로 보정된 값이면 true
 }
 
 export interface Route {
@@ -133,6 +134,19 @@ export interface Shelter {
 export interface Trip {
   trip_id: string
   status: 'in_progress' | 'completed' | 'cancelled'
+}
+
+// 이동 기록 목록 항목 (SC-13)
+export interface TripSummary {
+  id: string
+  from_name: string
+  to_name: string
+  status: 'in_progress' | 'completed' | 'cancelled'
+  total_minutes: number
+  exposure_load: number
+  outdoor_minutes: number
+  started_at: string
+  completed_at: string | null
 }
 
 // --- 리포트 (SC-09) ---

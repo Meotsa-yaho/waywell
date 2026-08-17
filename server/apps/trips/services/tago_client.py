@@ -29,7 +29,10 @@ def get_arrivals(city_code: str, node_id: str, route_id: str | None = None) -> l
         timeout=6,
     )
     r.raise_for_status()
-    items = _as_list(r.json().get("response", {}).get("body", {}).get("items", {}).get("item"))
+    # TAGO는 도착 예정이 없으면 items를 빈 문자열("")로 준다 → dict일 때만 item 추출.
+    container = r.json().get("response", {}).get("body", {}).get("items")
+    raw = container.get("item") if isinstance(container, dict) else None
+    items = _as_list(raw)
     if route_id:
         items = [it for it in items if str(it.get("routeid")) == str(route_id)]
     items.sort(key=lambda it: it.get("arrtime", 10**9))

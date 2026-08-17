@@ -13,11 +13,14 @@ export default function Home() {
   const [center, setCenter] = useState(DEFAULT);
   const [located, setLocated] = useState(false); // 실제 위치 확보 여부 (마커는 이때만)
   const [geoDenied, setGeoDenied] = useState(false); // 위치 권한 거부/불가
+  const [showPrimer, setShowPrimer] = useState(false); // 위치 권한 사전 동의 카드
   const [env, setEnv] = useState<Environment | null>(null);
   const [recenterKey, setRecenterKey] = useState(0);
   const from = useRouteQuery((s) => s.from);
   const to = useRouteQuery((s) => s.to);
   const setPlace = useRouteQuery((s) => s.setPlace);
+  const departAt = useRouteQuery((s) => s.departAt);
+  const setDepartAt = useRouteQuery((s) => s.setDepartAt);
 
   const goToCurrentLocation = () => {
     if (!navigator.geolocation) return setGeoDenied(true);
@@ -47,10 +50,39 @@ export default function Home() {
     );
   };
 
+  // 진입 시 바로 네이티브 권한창을 띄우지 않고, 권한 상태부터 확인한다.
   useEffect(() => {
-    goToCurrentLocation();
+    let cancelled = false;
+    if (!navigator.geolocation) {
+      setGeoDenied(true);
+      return;
+    }
+    // 이전에 '나중에'로 닫았으면 자동 요청/카드 없이 넘어감 (현위치 버튼으로 언제든 가능)
+    if (localStorage.getItem("geo_primer_dismissed")) return;
+    navigator.permissions
+      ?.query({ name: "geolocation" as PermissionName })
+      .then((st) => {
+        if (cancelled) return;
+        if (st.state === "granted") goToCurrentLocation();
+        else if (st.state === "denied") setGeoDenied(true);
+        else setShowPrimer(true); // prompt: 사전 동의 카드
+      })
+      .catch(() => !cancelled && setShowPrimer(true)); // Permissions API 미지원 → 카드로 안전하게
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const allowLocation = () => {
+    setShowPrimer(false);
+    goToCurrentLocation();
+  };
+
+  const dismissPrimer = () => {
+    setShowPrimer(false);
+    localStorage.setItem("geo_primer_dismissed", "1");
+  };
 
   // 현위치 버튼: 현위치로 지도 이동 (확대 없이)
   const locate = () => goToCurrentLocation();
@@ -95,6 +127,26 @@ export default function Home() {
         </svg>
       </button>
 
+      {showPrimer && (
+        <div className="geo-primer-backdrop">
+          <div className="geo-primer">
+            <strong>📍 현재 위치를 사용할까요?</strong>
+            <span>
+              현재 위치의 날씨·미세먼지와 출발지를 자동으로 맞춰드려요. 위치는 기기에서만
+              쓰이고 서버에 저장하지 않아요.
+            </span>
+            <div className="geo-primer__actions">
+              <button className="btn primary" onClick={allowLocation}>
+                위치 허용
+              </button>
+              <button className="btn" onClick={dismissPrimer}>
+                나중에
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="map-overlay">
         {env && (
           <div className="env-chip">
@@ -120,6 +172,22 @@ export default function Home() {
           >
             🔴 {to ? to.name : "도착지 입력"}
           </button>
+          <div className="depart-row">
+            <span className="depart-label">🕐 출발</span>
+            <input
+              type="time"
+              className="depart-input"
+              value={departAt ?? ""}
+              onChange={(e) => setDepartAt(e.target.value || null)}
+            />
+            {departAt ? (
+              <button className="depart-now" onClick={() => setDepartAt(null)}>
+                지금으로
+              </button>
+            ) : (
+              <span className="depart-now muted">지금 출발</span>
+            )}
+          </div>
           <button
             className="btn primary"
             disabled={!to}

@@ -21,6 +21,19 @@ function hhmm(iso: string): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
+function fmt(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+// 출발시각(HH:MM) → 오늘 기준 Date. 이미 지난 시각이면 내일로.
+function departDate(hhmmStr: string): Date {
+  const [h, m] = hhmmStr.split(':').map(Number)
+  const d = new Date()
+  d.setHours(h, m, 0, 0)
+  if (d.getTime() < Date.now() - 60_000) d.setDate(d.getDate() + 1)
+  return d
+}
+
 // SC-05 경로 비교 결과 (핵심 화면 · 카드 중심 · 지도는 상세에서)
 export default function RouteCompare() {
   const nav = useNavigate()
@@ -29,6 +42,7 @@ export default function RouteCompare() {
   const toP = useRouteQuery((s) => s.to) ?? DEMO_TO
   const weather = useRouteQuery((s) => s.weather)
   const setWeather = useRouteQuery((s) => s.setWeather)
+  const departAt = useRouteQuery((s) => s.departAt)
   const [data, setData] = useState<RoutesResponse | null>(null)
   const [sort, setSort] = useState<'exposure' | 'duration' | 'recommend'>('recommend')
   const [error, setError] = useState<string | null>(null)
@@ -103,7 +117,14 @@ export default function RouteCompare() {
                   </div>
                   <div className="route-time">
                     <strong>{r.total_minutes}분</strong>
-                    <span className="muted"> · {hhmm(r.arrival_time)} 도착 · 환승 {r.transfers}</span>
+                    <span className="muted">
+                      {' · '}
+                      {departAt
+                        ? `${departAt} 출발 · ${fmt(new Date(departDate(departAt).getTime() + r.total_minutes * 60000))} 도착`
+                        : `${hhmm(r.arrival_time)} 도착`}
+                      {' · 환승 '}
+                      {r.transfers}
+                    </span>
                   </div>
                 </div>
                 <span className="detail-chevron">›</span>
