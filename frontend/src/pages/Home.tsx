@@ -12,21 +12,34 @@ export default function Home() {
   const nav = useNavigate()
   const [center, setCenter] = useState(DEFAULT)
   const [located, setLocated] = useState(false) // 실제 위치 확보 여부 (마커는 이때만)
+  const [geoDenied, setGeoDenied] = useState(false) // 위치 권한 거부/불가
   const [env, setEnv] = useState<Environment | null>(null)
   const [recenterKey, setRecenterKey] = useState(0)
   const from = useRouteQuery((s) => s.from)
   const to = useRouteQuery((s) => s.to)
+  const setPlace = useRouteQuery((s) => s.setPlace)
 
-  const goToCurrentLocation = () =>
-    navigator.geolocation?.getCurrentPosition(
+  const goToCurrentLocation = () => {
+    if (!navigator.geolocation) return setGeoDenied(true)
+    navigator.geolocation.getCurrentPosition(
       (p) => {
-        setCenter({ lat: p.coords.latitude, lng: p.coords.longitude })
+        const loc = { lat: p.coords.latitude, lng: p.coords.longitude }
+        setCenter(loc)
         setLocated(true)
+        setGeoDenied(false)
         setRecenterKey((k) => k + 1)
+        // 출발지 미설정이거나 '현위치'였으면 현위치로 자동 설정/갱신 (사용자가 고른 장소는 유지)
+        const cur = useRouteQuery.getState().from
+        if (!cur || cur.place_id === 'current') {
+          setPlace('from', { place_id: 'current', name: '현재 위치', address: '', category: '', ...loc })
+        }
       },
-      () => {},
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) setGeoDenied(true)
+      },
       { timeout: 6000, maximumAge: 60000 },
     )
+  }
 
   useEffect(() => {
     goToCurrentLocation()
@@ -63,9 +76,12 @@ export default function Home() {
             체감 {env.temperature?.feels_like ?? '-'}° · UV {env.uv?.index ?? '-'} · 미세 {env.air?.pm10_grade ?? '-'}
           </div>
         )}
+        {geoDenied && (
+          <div className="geo-hint">📍 위치 권한이 꺼져 있어요. 출발지를 검색해 설정하세요.</div>
+        )}
         <div className="search-card">
           <button className={'search-field' + (from ? '' : ' muted-field')} onClick={() => nav('/search?target=from')}>
-            🟢 {from ? from.name : '현재 위치'}
+            🟢 {from ? from.name : geoDenied ? '출발지 입력' : '현재 위치'}
           </button>
           <button className={'search-field' + (to ? '' : ' muted-field')} onClick={() => nav('/search?target=to')}>
             🔴 {to ? to.name : '도착지 입력'}

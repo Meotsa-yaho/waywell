@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from apps.common.response import error_response
+from apps.accounts.models import Account
+from apps.accounts.services.jwt_util import decode_token
 from .models import Trip
 from .services import tago_client
 from .services import report as report_service
@@ -17,12 +19,23 @@ def _device_id(request):
     return request.headers.get("X-Device-Id")
 
 
+def _account(request):
+    """로그인 상태면 Account, 아니면 None."""
+    auth = request.headers.get("Authorization", "")
+    if auth.startswith("Bearer "):
+        aid = decode_token(auth[7:])
+        if aid:
+            return Account.objects.filter(id=aid).first()
+    return None
+
+
 class TripsView(APIView):
     """POST /api/trips — 이동 시작(C-01). 선택 경로 요약을 기록으로 저장."""
 
     def post(self, request):
+        account = _account(request)
         device_id = _device_id(request)
-        if not device_id:
+        if not account and not device_id:
             return error_response("VALIDATION_ERROR", "이동 기록에 필요한 정보가 없어요.", 400)
         b = request.data
 
@@ -34,7 +47,8 @@ class TripsView(APIView):
 
         outdoor = _int("outdoor_minutes")
         trip = Trip.objects.create(
-            device_id=device_id,
+            account=account,
+            device_id=device_id or "",
             from_name=str(b.get("from_name", ""))[:120],
             to_name=str(b.get("to_name", ""))[:120],
             total_minutes=_int("total_minutes"),
@@ -49,9 +63,10 @@ class TripDetailView(APIView):
     """PATCH /api/trips/{id} — 이동 완료/취소 처리(C-06). 완료 시 리포트에 집계됨."""
 
     def patch(self, request, trip_id):
-        device_id = _device_id(request)
+        account = _account(request)
+        owner = {"account": account} if account else {"device_id": _device_id(request) or ""}
         try:
-            trip = Trip.objects.get(id=trip_id, device_id=device_id)
+            trip = Trip.objects.get(id=trip_id, **owner)
         except Exception:
             return error_response("NOT_FOUND", "이동 기록을 찾을 수 없어요.", 404)
         new_status = request.data.get("status")
@@ -67,7 +82,7 @@ class WeeklyReportView(APIView):
     """GET /api/report/weekly — 오늘 요약 + 7일 추이 + 전주 대비(D-01~03)."""
 
     def get(self, request):
-        return Response(report_service.weekly_report(_device_id(request)))
+        return Response(report_service.weekly_report(_account(request), _device_id(request)))
 
 # TAGO cityCode 미지정 시 기본값. 데모 정류소(세종)용. 실서비스는 정류소→cityCode 매핑 필요.
 DEFAULT_CITY_CODE = "25"

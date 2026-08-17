@@ -15,6 +15,7 @@ PRESET_WEIGHTS = {
     "normal": {"uv": 1.0, "heat": 1.0, "air": 1.0},
     "skin": {"uv": 1.5, "heat": 1.0, "air": 1.0},
     "respiratory": {"uv": 1.0, "heat": 1.0, "air": 1.5},
+    "heat": {"uv": 1.0, "heat": 1.5, "air": 1.0},
 }
 
 

@@ -6,6 +6,7 @@ const presets: { id: Preset; label: string }[] = [
   { id: 'normal', label: '일반' },
   { id: 'skin', label: '민감성 피부' },
   { id: 'respiratory', label: '호흡기 주의' },
+  { id: 'heat', label: '더위 주의' },
 ]
 
 // SC-10 설정

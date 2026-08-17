@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import type { SensitivityId } from '../types/onboarding';
 import { useSession } from '../store/session';
 import type { Preset } from '../types/api';
+import { startKakaoLogin } from '../lib/kakaoAuth';
 import { StepIndicator } from '../components/onboarding/StepIndicator';
 import { Step1Framing } from '../components/onboarding/Step1Framing';
 import { Step2Sensitivity } from '../components/onboarding/Step2Sensitivity';
@@ -12,7 +13,7 @@ import { Step3Auth } from '../components/onboarding/Step3Auth';
 const SENSITIVITY_TO_PRESET: Record<SensitivityId, Preset> = {
   uv: 'skin',
   dust: 'respiratory',
-  temp: 'normal',
+  temp: 'heat',
   balanced: 'normal',
 };
 
@@ -79,16 +80,14 @@ export default function Onboarding() {
   };
 
   const handleKakaoLogin = () => {
-    if (isKakaoLoading || authSuccess === 'kakao') return;
+    if (isKakaoLoading) return;
     setIsKakaoLoading(true);
-
-    // Simulate Kakao OAuth login handshake
-    setTimeout(() => {
-      setIsKakaoLoading(false);
-      setAuthSuccess('kakao');
-      showToast('카카오 계정으로 노출 부하 프로필 연동이 완료되었습니다.');
-      finalizeOnboarding('kakao');
-    }, 1200);
+    // 선택한 프리셋을 로컬에 저장하고 카카오로 리다이렉트 → 콜백에서 계정에 반영
+    const preset = SENSITIVITY_TO_PRESET[selectedSensitivity] || 'normal';
+    setPreset(preset);
+    completeOnboarding();
+    localStorage.setItem('onboarding_preset', preset);
+    startKakaoLogin();
   };
 
   const handleGuestEnter = () => {

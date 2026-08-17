@@ -4,6 +4,7 @@ import type {
   RoutesResponse,
   WeeklyReport,
   Me,
+  AuthResponse,
   Place,
   Shelter,
   Arrival,
@@ -43,8 +44,19 @@ export interface RouteParams {
 }
 
 export const api = {
-  getMe: () =>
-    USE_MOCK ? mock<Me>('me') : http.get<Me>('/me').then((r) => r.data),
+  getMe: () => http.get<Me>('/me/').then((r) => r.data),
+
+  signup: (email: string, password: string, preset?: string) =>
+    http.post<AuthResponse>('/auth/signup/', { email, password, preset }).then((r) => r.data),
+
+  login: (email: string, password: string) =>
+    http.post<AuthResponse>('/auth/login/', { email, password }).then((r) => r.data),
+
+  kakaoLogin: (code: string, redirect_uri: string) =>
+    http.post<AuthResponse>('/auth/kakao/', { code, redirect_uri }).then((r) => r.data),
+
+  patchMe: (preset: string) =>
+    http.patch<Me>('/me/', { preset }).then((r) => r.data),
 
   // 장소 검색은 백엔드(카카오 로컬) 구현 완료 → 목업 모드여도 실 API
   searchPlaces: (q: string, lat?: number, lng?: number) =>

@@ -1,6 +1,6 @@
 // API 명세서 v0.1 과 1:1. 확정 시 함께 갱신한다.
 
-export type Preset = 'normal' | 'skin' | 'respiratory'
+export type Preset = 'normal' | 'skin' | 'respiratory' | 'heat'
 export type PredictionGrade = 'precise' | 'realtime' | 'estimated'
 export type DataSource = 'gbis' | 'seoul' | 'tago' | 'timetable'
 

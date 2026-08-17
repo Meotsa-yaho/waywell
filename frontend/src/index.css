@@ -28,6 +28,12 @@ body { background: var(--bg); }
 }
 .app-main { flex: 1; overflow-y: auto; padding-bottom: 72px; }
 
+/* 데스크톱에선 폰 프레임처럼 보이게 (모바일은 꽉 참) */
+@media (min-width: 481px) {
+  body { background: #d9dedb; }
+  .app-shell { box-shadow: 0 0 0 1px var(--line), 0 8px 40px rgba(0, 0, 0, 0.12); }
+}
+
 .page { padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; }
 .page.center { align-items: center; justify-content: center; min-height: 70vh; }
 .page-head { display: flex; align-items: center; justify-content: space-between; }
@@ -71,6 +77,7 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
 }
 .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.kakao { background: #fee500; color: #191600; border-color: #fee500; }
 .btn.sticky { position: sticky; bottom: 16px; }
 .link { align-self: flex-start; background: none; border: 0; color: var(--brand); font-size: 14px; cursor: pointer; padding: 0; }
 .row { display: flex; gap: 8px; }
@@ -271,6 +278,11 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
   align-self: flex-start; background: rgba(255, 255, 255, 0.95); color: var(--ink);
   border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
   font-size: 12px; font-weight: 600; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+}
+.geo-hint {
+  align-self: stretch; background: #fdf0e6; color: var(--warn);
+  border: 1px solid #f0c9a8; border-radius: 10px; padding: 8px 12px;
+  font-size: 12px; font-weight: 600;
 }
 .search-card {
   background: var(--card); border-radius: 14px; padding: 12px;

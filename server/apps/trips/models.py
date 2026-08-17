@@ -8,7 +8,8 @@ class Trip(models.Model):
     STATUS = [("in_progress", "이동중"), ("completed", "완료"), ("cancelled", "취소")]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    device_id = models.CharField(max_length=64, db_index=True)
+    device_id = models.CharField(max_length=64, blank=True, default="", db_index=True)  # 게스트 식별
+    account = models.ForeignKey("accounts.Account", null=True, blank=True, on_delete=models.CASCADE, related_name="trips")  # 로그인 시 소유
     status = models.CharField(max_length=12, choices=STATUS, default="in_progress")
 
     from_name = models.CharField(max_length=120, blank=True, default="")
