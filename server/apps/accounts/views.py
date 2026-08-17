@@ -1,5 +1,7 @@
 """회원가입·로그인·카카오 로그인·프로필 (A-05/06/09, /me)."""
 from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -44,8 +46,12 @@ class SignupView(APIView):
     def post(self, request):
         email = (request.data.get("email") or "").strip().lower()
         password = request.data.get("password") or ""
-        if not email or len(password) < 6:
-            return error_response("VALIDATION_ERROR", "이메일과 6자 이상 비밀번호가 필요해요.", 400)
+        if not email:
+            return error_response("VALIDATION_ERROR", "이메일이 필요해요.", 400)
+        try:
+            validate_password(password)  # Django 검증기(길이·흔한비번·숫자전용 등)
+        except ValidationError as e:
+            return error_response("WEAK_PASSWORD", " ".join(e.messages), 400)
         if Account.objects.filter(email=email).exists():
             return error_response("EMAIL_TAKEN", "이미 가입된 이메일이에요.", 409)
         account = Account.objects.create(
