@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
+import { useSession } from '../store/session'
+import { useRouteQuery } from '../store/route'
+import { modeChips } from '../lib/segments'
 import type { RoutesResponse } from '../types/api'
 
 const gradeLabel: Record<string, string> = {
@@ -9,27 +12,40 @@ const gradeLabel: Record<string, string> = {
   estimated: '추정',
 }
 
-// SC-05 경로 비교 결과 (핵심 화면 · 데모 킬러 장면)
+const DEMO_FROM = { lat: 37.2011, lng: 127.0983, name: '동탄역' } // 미선택 시 데모 구간
+const DEMO_TO = { lat: 37.4979, lng: 127.0276, name: '강남역' }
+
+function hhmm(iso: string): string {
+  const d = new Date(iso)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+// SC-05 경로 비교 결과 (핵심 화면 · 카드 중심 · 지도는 상세에서)
 export default function RouteCompare() {
   const nav = useNavigate()
+  const preset = useSession((s) => s.preset)
+  const fromP = useRouteQuery((s) => s.from) ?? DEMO_FROM
+  const toP = useRouteQuery((s) => s.to) ?? DEMO_TO
+  const weather = useRouteQuery((s) => s.weather)
+  const setWeather = useRouteQuery((s) => s.setWeather)
   const [data, setData] = useState<RoutesResponse | null>(null)
-  const [sort, setSort] = useState<'exposure' | 'duration'>('exposure')
-  const [weather, setWeather] = useState<'mild' | 'uv_high'>('mild')
+  const [sort, setSort] = useState<'exposure' | 'duration' | 'recommend'>('recommend')
   const [error, setError] = useState<string | null>(null)
+
+  const fromParam = `${fromP.lat},${fromP.lng}`
+  const toParam = `${toP.lat},${toP.lng}`
 
   useEffect(() => {
     setData(null)
     setError(null)
     api
       .getRoutes({
-        from: '37.2011,127.0983',
-        to: '37.4979,127.0276',
-        sort,
-        demo_weather: weather === 'uv_high' ? 'uv_high' : undefined,
+        from: fromParam, to: toParam, from_name: fromP.name, to_name: toP.name,
+        preset, sort, demo_weather: weather === 'uv_high' ? 'uv_high' : 'clear',
       })
       .then(setData)
       .catch(() => setError('이 구간은 대중교통 경로를 찾지 못했어요'))
-  }, [sort, weather])
+  }, [fromParam, toParam, sort, weather, preset])
 
   const env = data?.environment
 
@@ -37,7 +53,6 @@ export default function RouteCompare() {
     <div className="page">
       <header className="page-head">
         <button className="link" onClick={() => nav(-1)}>← 홈</button>
-        {/* 데모 모드: 날씨 토글 (E-06 / F-12) */}
         <div className="weather-toggle" role="group" aria-label="데모 날씨">
           <button className={weather === 'mild' ? 'on' : ''} onClick={() => setWeather('mild')}>☀️ 맑음</button>
           <button className={weather === 'uv_high' ? 'on' : ''} onClick={() => setWeather('uv_high')}>🔥 폭염·자외선</button>
@@ -46,37 +61,60 @@ export default function RouteCompare() {
 
       {env && (
         <div className={'env-strip' + (weather === 'uv_high' ? ' env-strip--hot' : '')}>
-          UV {env.uv} · 체감 {env.feels_like}° · 미세 {env.pm10_grade}
+          UV {env.uv ?? '-'} · 체감 {env.feels_like ?? '-'}° · 미세 {env.pm10_grade}
         </div>
       )}
 
       <div className="sort-toggle">
-        <button className={sort === 'exposure' ? 'on' : ''} onClick={() => setSort('exposure')}>노출 부하순</button>
-        <button className={sort === 'duration' ? 'on' : ''} onClick={() => setSort('duration')}>도착 시간순</button>
+        <button className={sort === 'recommend' ? 'on' : ''} onClick={() => setSort('recommend')}>추천순</button>
+        <button className={sort === 'exposure' ? 'on' : ''} onClick={() => setSort('exposure')}>노출순</button>
+        <button className={sort === 'duration' ? 'on' : ''} onClick={() => setSort('duration')}>시간순</button>
       </div>
 
       {error && <p className="empty">{error}</p>}
       {!error && !data && <div className="card skeleton">경로 계산 중…</div>}
 
       {!error &&
-        data?.routes.map((r) => (
-          <button key={r.route_id} className="card route-card" onClick={() => nav(`/routes/${r.route_id}`)}>
-            <div className="route-top">
-              <div className="score">
-                <strong>{r.exposure_load}</strong>
-                <small>노출 부하</small>
+        data?.routes.map((r) => {
+          const chips = modeChips(r.segments)
+          return (
+            <div
+              key={r.route_id}
+              className={'card route-card' + (r.recommended ? ' route-card--rec' : '')}
+              onClick={() => nav(`/routes/${r.route_id}`)}
+            >
+              <div className="route-top">
+                <div className="score">
+                  <strong>{r.exposure_load}</strong>
+                  <small>노출 부하</small>
+                </div>
+                <div className="route-headline">
+                  <div className="route-badges">
+                    {r.recommended && <span className="badge rec">추천</span>}
+                    <span className="badge grade">{gradeLabel[r.prediction_grade] ?? r.prediction_grade}</span>
+                  </div>
+                  <div className="route-time">
+                    <strong>{r.total_minutes}분</strong>
+                    <span className="muted"> · {hhmm(r.arrival_time)} 도착 · 환승 {r.transfers}</span>
+                  </div>
+                </div>
+                <span className="detail-chevron">›</span>
               </div>
-              {r.recommended && <span className="badge rec">추천</span>}
-              <span className="badge grade">{gradeLabel[r.prediction_grade] ?? r.prediction_grade}</span>
+
+              <div className="route-modes">
+                {chips.map((c, i) => (
+                  <span key={i} className="mode-chip">{c}</span>
+                ))}
+              </div>
+
+              <div className="route-meta">
+                <span>야외 {r.outdoor_minutes}분</span>
+                <span>실내 {Math.round(r.indoor_ratio * 100)}%</span>
+              </div>
+              {r.llm_comment && <p className="llm">{r.llm_comment}</p>}
             </div>
-            <div className="route-meta">
-              <span>야외 {r.outdoor_minutes}분</span>
-              <span>실내 {Math.round(r.indoor_ratio * 100)}%</span>
-              <span>{r.total_minutes}분 · 환승 {r.transfers}</span>
-            </div>
-            {r.llm_comment && <p className="llm">{r.llm_comment}</p>}
-          </button>
-        ))}
+          )
+        })}
     </div>
   )
 }

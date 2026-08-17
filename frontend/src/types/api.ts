@@ -85,6 +85,8 @@ export interface Route {
   data_source: DataSource
   notice: string | null
   llm_comment: string | null
+  polyline?: [number, number][] // [lat, lng][] — 지도 경로선(전체)
+  path_segments?: { type: 'walk' | 'bus' | 'subway'; coords: [number, number][]; outdoor?: boolean }[] // 모드별 색상 구분용
   segments: RouteSegment[]
 }
 
@@ -109,7 +111,7 @@ export interface Arrival {
   station_id: string
   route_id: string
   route_name: string
-  arrivals: { seq: number; minutes: number; raw_minutes: number | null; corrected: boolean; vehicle_id?: string | null }[]
+  arrivals: { seq: number; minutes: number; raw_minutes: number | null; corrected: boolean; vehicle_id?: string | null; route_name?: string; stations_left?: number | null }[]
   prediction_grade: PredictionGrade
   data_source: DataSource
   notice: string | null

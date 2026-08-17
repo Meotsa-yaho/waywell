@@ -33,48 +33,46 @@ async function mock<T>(name: string): Promise<T> {
 export interface RouteParams {
   from: string
   to: string
+  from_name?: string
+  to_name?: string
   depart_at?: string
   preset?: string
-  sort?: 'exposure' | 'duration'
+  sort?: 'exposure' | 'duration' | 'recommend'
   demo_weather?: string
+  geometry?: string // '1' 이면 실제 선로 좌표 포함 (상세 화면)
 }
 
 export const api = {
   getMe: () =>
     USE_MOCK ? mock<Me>('me') : http.get<Me>('/me').then((r) => r.data),
 
+  // 장소 검색은 백엔드(카카오 로컬) 구현 완료 → 목업 모드여도 실 API
   searchPlaces: (q: string, lat?: number, lng?: number) =>
-    USE_MOCK
-      ? mock<{ places: Place[] }>('places').then((d) => d.places)
-      : http.get<{ places: Place[] }>('/places/search', { params: { q, lat, lng } }).then((r) => r.data.places),
+    http.get<{ places: Place[] }>('/places/search', { params: { q, lat, lng } }).then((r) => r.data.places),
 
+  // 환경(날씨)은 백엔드(기상청·에어코리아) 구현 완료 → 목업 모드여도 실 API
   getEnvironment: (lat: number, lng: number) =>
-    USE_MOCK
-      ? mock<Environment>('environment')
-      : http.get<Environment>('/environment', { params: { lat, lng } }).then((r) => r.data),
+    http.get<Environment>('/environment', { params: { lat, lng } }).then((r) => r.data),
 
+  // 경로는 백엔드 구현 완료 → 목업 모드여도 실 API 호출 (demo_weather 지원)
   getRoutes: (params: RouteParams) =>
-    USE_MOCK
-      ? mock<RoutesResponse>(params.demo_weather === 'uv_high' ? 'routes.uv_high' : 'routes.success')
-      : http.get<RoutesResponse>('/routes', { params }).then((r) => r.data),
+    http.get<RoutesResponse>('/routes', { params }).then((r) => r.data),
 
-  getArrival: (station_id: string, route_id: string) =>
-    USE_MOCK
-      ? mock<Arrival>('arrival.corrected')
-      : http.get<Arrival>('/arrival', { params: { station_id, route_id } }).then((r) => r.data),
+  // 도착정보는 백엔드(TAGO) 구현 완료 → 목업 모드여도 실 API 호출
+  getArrival: (station_id: string, route_id?: string, city_code?: string) =>
+    http.get<Arrival>('/arrival', { params: { station_id, route_id, city_code } }).then((r) => r.data),
 
+  // 실내 대기장소는 백엔드(카카오 로컬) 구현 완료 → 목업 모드여도 실 API
   getShelters: (lat: number, lng: number) =>
-    USE_MOCK
-      ? mock<{ shelters: Shelter[] }>('shelters').then((d) => d.shelters)
-      : http.get<{ shelters: Shelter[] }>('/shelters', { params: { lat, lng } }).then((r) => r.data.shelters),
+    http.get<{ shelters: Shelter[] }>('/shelters', { params: { lat, lng } }).then((r) => r.data.shelters),
 
+  // 이동 기록·리포트는 백엔드 구현 완료 → 목업 모드여도 실 API. POST/PATCH는 slash 필수(Django APPEND_SLASH)
   startTrip: (body: unknown) =>
-    USE_MOCK
-      ? Promise.resolve<Trip>({ trip_id: 't_mock', status: 'in_progress' })
-      : http.post<Trip>('/trips', body).then((r) => r.data),
+    http.post<Trip>('/trips/', body).then((r) => r.data),
+
+  completeTrip: (trip_id: string) =>
+    http.patch<Trip>(`/trips/${trip_id}/`, { status: 'completed' }).then((r) => r.data),
 
   getWeeklyReport: (week_of?: string) =>
-    USE_MOCK
-      ? mock<WeeklyReport>('report.weekly')
-      : http.get<WeeklyReport>('/report/weekly', { params: { week_of } }).then((r) => r.data),
+    http.get<WeeklyReport>('/report/weekly/', { params: { week_of } }).then((r) => r.data),
 }
