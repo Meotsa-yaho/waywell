@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import KakaoMap from "../components/KakaoMap";
 import { api } from "../api/client";
+import { loadKakao } from "../lib/kakao";
 import { useRouteQuery } from "../store/route";
 import type { Environment } from "../types/api";
 
@@ -21,6 +22,37 @@ export default function Home() {
   const setPlace = useRouteQuery((s) => s.setPlace);
   const departAt = useRouteQuery((s) => s.departAt);
   const setDepartAt = useRouteQuery((s) => s.setDepartAt);
+  // B-01 지도에서 출발/도착 선택 모드 (검색 페이지에서 ?pick=from|to 로 진입)
+  const [params] = useSearchParams();
+  const [picking, setPicking] = useState<"from" | "to" | null>(null);
+  const pickingRef = useRef<"from" | "to" | null>(null); // 맵 클릭 리스너는 마운트 1회 등록 → 최신값을 ref로
+  const startPick = (t: "from" | "to") => { pickingRef.current = t; setPicking(t); };
+  const cancelPick = () => { pickingRef.current = null; setPicking(null); };
+
+  useEffect(() => {
+    const p = params.get("pick");
+    if (p === "from" || p === "to") startPick(p);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 지도 탭 → 해당 지점을 target으로 지정 (역지오코딩으로 이름). 픽 모드일 때만 동작.
+  const onMapPick = (lat: number, lng: number) => {
+    const t = pickingRef.current;
+    if (!t) return;
+    loadKakao().then((kakao: any) => {
+      new kakao.maps.services.Geocoder().coord2Address(lng, lat, (res: any[], status: string) => {
+        const ok = status === kakao.maps.services.Status.OK && res[0];
+        const name = ok
+          ? res[0].road_address?.address_name || res[0].address?.address_name || "지도에서 선택한 위치"
+          : "지도에서 선택한 위치";
+        setPlace(t, { place_id: `map_${lat.toFixed(5)}_${lng.toFixed(5)}`, name, address: name, category: "", lat, lng });
+        setCenter({ lat, lng });
+        setRecenterKey((k) => k + 1);
+        if (t === "from") setLocated(true);
+        cancelPick();
+      });
+    });
+  };
 
   const goToCurrentLocation = () => {
     if (!navigator.geolocation) return setGeoDenied(true);
@@ -101,6 +133,7 @@ export default function Home() {
           center={center}
           markers={located ? [{ lat: center.lat, lng: center.lng }] : []}
           recenterKey={recenterKey}
+          onMapClick={onMapPick}
         />
       </div>
 
@@ -154,9 +187,15 @@ export default function Home() {
             {env.uv?.index ?? "-"} · 미세먼지 {env.air?.pm10_grade ?? "-"}
           </div>
         )}
-        {geoDenied && (
+        {geoDenied && !picking && (
           <div className="geo-hint">
             📍 위치 권한이 꺼져 있어요. 출발지를 검색해 설정하세요.
+          </div>
+        )}
+        {picking && (
+          <div className="pick-hint">
+            🗺️ 지도를 탭해 {picking === "from" ? "출발지" : "도착지"}를 지정하세요
+            <button onClick={cancelPick}>취소</button>
           </div>
         )}
         <div className="search-card">

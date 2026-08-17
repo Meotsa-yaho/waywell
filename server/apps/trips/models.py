@@ -26,3 +26,17 @@ class Trip(models.Model):
 
     class Meta:
         ordering = ["-started_at"]
+
+
+class ArrivalSnapshot(models.Model):
+    """E-04 크롤러가 대표 정류소 도착정보를 주기 수집·저장. live TAGO 실패 시 폴백 소스."""
+    city_code = models.CharField(max_length=8)
+    node_id = models.CharField(max_length=32, db_index=True)
+    route_no = models.CharField(max_length=16)
+    route_id = models.CharField(max_length=32, blank=True, default="")
+    minutes = models.IntegerField()
+    stations_left = models.IntegerField(null=True, blank=True)
+    collected_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-collected_at"]

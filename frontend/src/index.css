@@ -271,7 +271,22 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
 .big-timer small { color: var(--muted); }
 .big-timer--soon { background: #fdf0e6; border-color: #f0c9a8; }
 .big-timer--soon strong { color: var(--warn); }
+.big-timer--long { background: #fbe9e9; border-color: #eec2c2; }
+.big-timer--long strong { color: #d64545; }
 .shelter-hint { cursor: pointer; color: var(--brand-ink); }
+
+/* C-03 대기 야외 노출 누적 + 장시간 경고 */
+.wait-exposure {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; font-size: 13px; color: var(--muted);
+}
+.wait-exposure strong { font-size: 15px; color: var(--ink); }
+.wait-exposure strong.over { color: #d64545; }
+.wait-warn {
+  width: 100%; text-align: left; background: #fbe9e9; color: #b83232;
+  border: 1px solid #eec2c2; border-radius: 12px; padding: 12px 14px;
+  font-size: 13px; font-weight: 600; cursor: pointer; line-height: 1.4;
+}
 
 /* 장소 검색 결과 (B-02) */
 .current-loc-btn {
@@ -353,6 +368,16 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
   border: 1px solid #f0c9a8; border-radius: 10px; padding: 8px 12px;
   font-size: 12px; font-weight: 600;
 }
+/* B-01 지도에서 선택 (검색 페이지 · 현재위치와 나란히) */
+.loc-actions { display: flex; gap: 8px; }
+.loc-actions .current-loc-btn { flex: 1; }
+.pick-hint {
+  align-self: stretch; display: flex; align-items: center; justify-content: space-between;
+  background: var(--brand); color: #fff; border-radius: 10px; padding: 8px 12px;
+  font-size: 13px; font-weight: 600;
+}
+.pick-hint button { background: rgba(255,255,255,0.25); color: #fff; border: 0; border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+
 /* 위치 권한 사전 동의 카드 (화면 가운데 모달) */
 .geo-primer-backdrop {
   position: absolute; inset: 0; z-index: 5;
@@ -380,6 +405,16 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
   background: #fdf0e6; color: var(--warn); border: 1px solid #f0c9a8;
   border-radius: 10px; padding: 8px 12px; font-size: 12px; font-weight: 600;
 }
+
+/* D-03 전주 대비 */
+.cmp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.cmp-item { display: flex; flex-direction: column; gap: 4px; }
+.cmp-item small { color: var(--muted); font-size: 12px; }
+.cmp-item strong { font-size: 17px; font-weight: 700; }
+.cmp-down { color: var(--brand); }
+.cmp-up { color: #d64545; }
+.cmp-flat { color: var(--muted); }
+.cmp-note { font-size: 11px; margin: 10px 0 0; }
 
 /* SC-13 이동 기록 목록 */
 .trip-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }

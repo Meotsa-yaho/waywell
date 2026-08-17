@@ -1,6 +1,7 @@
 """trips 앱 뷰 — 실시간 도착(C-02), 이동 기록(C-01/C-06), 주간 리포트(D)."""
 from datetime import datetime, timezone, timedelta
 
+from django.conf import settings
 from django.utils import timezone as dj_tz
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,7 +9,7 @@ from rest_framework.response import Response
 from apps.common.response import error_response
 from apps.accounts.models import Account
 from apps.accounts.services.jwt_util import decode_token
-from .models import Trip
+from .models import Trip, ArrivalSnapshot
 from .services import tago_client
 from .services import report as report_service
 
@@ -114,8 +115,28 @@ class WeeklyReportView(APIView):
 DEFAULT_CITY_CODE = "25"
 
 
+def _snapshot_arrivals(node_id: str, route_id: str | None) -> list[dict]:
+    """E-04 크롤러 스냅샷에서 최근 수집분을 Arrival 형태로 복원. 없으면 빈 리스트."""
+    ttl = getattr(settings, "ARRIVAL_SNAPSHOT_TTL", 300)
+    qs = ArrivalSnapshot.objects.filter(node_id=node_id, collected_at__gte=dj_tz.now() - timedelta(seconds=ttl))
+    if route_id:
+        qs = qs.filter(route_id=route_id)
+    latest = qs.first()
+    if not latest:
+        return []
+    recent = qs.filter(collected_at__gte=latest.collected_at - timedelta(seconds=30))
+    items = sorted(recent, key=lambda s: s.minutes)
+    return [{
+        "seq": i + 1, "minutes": s.minutes, "raw_minutes": s.minutes, "corrected": False,
+        "vehicle_id": None, "route_name": s.route_no, "route_id": s.route_id, "stations_left": s.stations_left,
+    } for i, s in enumerate(items)]
+
+
 class ArrivalView(APIView):
-    """GET /api/arrival?station_id=&route_id=&city_code=  → 다음 버스 도착 예정."""
+    """GET /api/arrival?station_id=&route_id=&city_code=  → 다음 버스 도착 예정.
+
+    live TAGO 실패/빈 응답이면 E-04 크롤러 스냅샷으로 폴백(우아한 실패).
+    """
 
     def get(self, request):
         q = request.query_params
@@ -125,19 +146,27 @@ class ArrivalView(APIView):
         route_id = q.get("route_id")
         city_code = q.get("city_code", DEFAULT_CITY_CODE)
 
+        data_source, grade, notice = "tago", "realtime", None
         try:
             arrivals = tago_client.get_arrivals(city_code, station_id, route_id)
         except Exception:
-            return error_response("UPSTREAM_TIMEOUT", "도착 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.", 504)
+            arrivals = []
 
-        notice = None if arrivals else "곧 도착 예정인 차량이 없어요."
+        if not arrivals:  # live 실패/없음 → 크롤러 스냅샷 폴백
+            cached = _snapshot_arrivals(station_id, route_id)
+            if cached:
+                arrivals, data_source, grade = cached, "tago_cache", "estimated"
+                notice = "실시간 연결이 지연돼 최근 수집 정보로 안내해요."
+            else:
+                notice = "곧 도착 예정인 차량이 없어요."
+
         return Response({
             "station_id": station_id,
             "route_id": route_id,
             "route_name": arrivals[0]["route_name"] if arrivals else None,
             "arrivals": arrivals,
-            "prediction_grade": "realtime",
-            "data_source": "tago",
+            "prediction_grade": grade,
+            "data_source": data_source,
             "notice": notice,
             "polled_at": datetime.now(KST).replace(microsecond=0).isoformat(),
         })

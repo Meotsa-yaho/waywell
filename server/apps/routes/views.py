@@ -64,6 +64,15 @@ class RoutesView(APIView):
             total = c["total_minutes"]
             outdoor = load["outdoor_minutes"]
             indoor_ratio = round(max(0.0, min(1.0, 1 - (outdoor / total))), 2) if total else 1.0
+
+            # B-11 예측 등급: 버스 대기를 실시간(TAGO)으로 채웠으면 realtime, 폴백(추정)이면 estimated.
+            # 버스 없는(지하철·도보) 경로는 ODsay 시간 신뢰 → realtime.
+            bus_waits_api = [s for s in c["segments_api"] if s["type"] == "bus_wait"]
+            if bus_waits_api and not any(s.get("realtime") for s in bus_waits_api):
+                grade, notice = "estimated", "실시간 버스 도착 정보가 없어 추정 배차로 안내해요."
+            else:
+                grade, notice = "realtime", None
+
             routes.append({
                 "route_id": f"r_{i}",
                 "exposure_load": load["score"],
@@ -73,9 +82,9 @@ class RoutesView(APIView):
                 "total_minutes": total,
                 "arrival_time": (depart_at + timedelta(minutes=total)).replace(microsecond=0).isoformat(),
                 "transfers": c["transfers"],
-                "prediction_grade": "realtime",
+                "prediction_grade": grade,
                 "data_source": "odsay",
-                "notice": None,
+                "notice": notice,
                 "llm_comment": None,
                 "polyline": c["polyline"],
                 "path_segments": c["path_segments"],

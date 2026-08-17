@@ -18,17 +18,21 @@ export default function Trip() {
   const [data, setData] = useState<Arrival | null>(null)
   const [error, setError] = useState(false)
   const [notifPerm, setNotifPerm] = useState<NotifPerm>(initNotifPerm)
+  const [waitedMin, setWaitedMin] = useState(0) // C-03 대기 중 야외 노출 누적(분)
   const notifiedFor = useRef<number | null>(null) // 알림 보낸 차량 seq (중복 발송 방지)
+  const startedRef = useRef(Date.now())
 
   useEffect(() => {
     let alive = true
+    const tick = () => alive && setWaitedMin(Math.floor((Date.now() - startedRef.current) / 60000))
     const load = () =>
       api
         .getArrival(DEMO_STATION, undefined, DEMO_CITY)
         .then((d) => alive && (setData(d), setError(false)))
         .catch(() => alive && setError(true))
     load()
-    const id = setInterval(load, POLL_MS)
+    tick()
+    const id = setInterval(() => { load(); tick() }, POLL_MS)
     return () => {
       alive = false
       clearInterval(id)
@@ -37,6 +41,7 @@ export default function Trip() {
 
   const next = data?.arrivals[0]
   const soon = next && next.minutes <= 3 // 실내 대기 알림 임계 (온보딩에서 약속한 3분 전)
+  const longWait = next && next.minutes >= 10 // C-03 10분 이상 대기 → 야외 노출 경고 강조
 
   // C-05 도착 3분 전 알림: soon 진입 시 차량당 1회 발송
   useEffect(() => {
@@ -72,7 +77,7 @@ export default function Trip() {
 
       {data && (
         <>
-          <div className={'card big-timer' + (soon ? ' big-timer--soon' : '')}>
+          <div className={'card big-timer' + (soon ? ' big-timer--soon' : longWait ? ' big-timer--long' : '')}>
             <small>다음 차량까지</small>
             {next ? (
               <>
@@ -86,6 +91,16 @@ export default function Trip() {
               <strong style={{ fontSize: 22 }}>{data.notice ?? '도착 예정 없음'}</strong>
             )}
           </div>
+
+          <div className="wait-exposure">
+            <span>🌡️ 야외 대기 누적</span>
+            <strong className={waitedMin >= 10 ? 'over' : ''}>{waitedMin}분</strong>
+          </div>
+          {longWait && (
+            <button className="wait-warn" onClick={() => nav('/trip/shelters')}>
+              🔥 다음 차량까지 {next!.minutes}분 · 야외 대기가 길어요. 실내 대기 장소로 이동하세요 →
+            </button>
+          )}
 
           {data.arrivals.length > 1 && (
             <ul className="timeline">

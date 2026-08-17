@@ -35,6 +35,15 @@ export default function Report() {
 
   const chartData = data.daily.map((d) => ({ day: d.date.slice(5), 부하: d.exposure_load }))
 
+  // D-03 전주 대비: 노출 지표는 감소(-)가 좋음 → 초록, 증가(+)는 빨강
+  const cmp = data.comparison
+  const deltas = [
+    { label: '노출 부하', pct: cmp.exposure_load_change_pct },
+    { label: '야외 분', pct: cmp.outdoor_minutes_change_pct },
+    { label: 'UV 분', pct: cmp.uv_minutes_change_pct },
+  ]
+  const hasCmp = deltas.some((d) => d.pct !== null)
+
   return (
     <div className="page">
       <h1>주간 리포트</h1>
@@ -61,6 +70,27 @@ export default function Report() {
           <p className="coaching">{data.coaching}</p>
         )}
       </section>
+
+      {hasCmp && (
+        <section className="card">
+          <h2>지난주 대비</h2>
+          <div className="cmp-grid">
+            {deltas.map((d) => (
+              <div key={d.label} className="cmp-item">
+                <small>{d.label}</small>
+                {d.pct === null ? (
+                  <strong className="cmp-flat">–</strong>
+                ) : (
+                  <strong className={d.pct <= 0 ? 'cmp-down' : 'cmp-up'}>
+                    {d.pct <= 0 ? '▼' : '▲'} {Math.abs(d.pct)}%
+                  </strong>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="muted cmp-note">노출 지표는 낮을수록 좋아요 (▼ 감소 = 개선)</p>
+        </section>
+      )}
 
       <button className="menu-item" onClick={() => nav('/history')}>
         <div className="menu-text">

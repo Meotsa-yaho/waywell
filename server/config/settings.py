@@ -144,3 +144,10 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+# E-04 도착정보 크롤러가 주기 수집할 대표 정류소 (city_code, node_id, label)
+TAGO_CRAWL_STATIONS = [
+    ("25", "DJB8001793", "세종 송강전통시장"),
+]
+# 폴백 스냅샷 유효 시간(초): 이보다 오래된 수집분은 무시
+ARRIVAL_SNAPSHOT_TTL = 300

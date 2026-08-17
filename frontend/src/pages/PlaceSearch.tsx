@@ -64,6 +64,9 @@ export default function PlaceSearch() {
     )
   }
 
+  // 지도에서 선택 → 홈 지도 픽 모드로 이동 (해당 target)
+  const pickOnMap = () => nav(`/?pick=${target}`)
+
   const shown = results ?? (q.trim() ? [] : recent)
 
   return (
@@ -80,9 +83,12 @@ export default function PlaceSearch() {
         autoFocus
       />
 
-      {target === 'from' && (
-        <button className="current-loc-btn" onClick={useCurrentLocation}>📍 현재 위치로 설정</button>
-      )}
+      <div className="loc-actions">
+        {target === 'from' && (
+          <button className="current-loc-btn" onClick={useCurrentLocation}>📍 현재 위치로 설정</button>
+        )}
+        <button className="current-loc-btn" onClick={pickOnMap}>🗺️ 지도에서 선택</button>
+      </div>
 
       {loading && <div className="card skeleton">검색 중…</div>}
       {!loading && results?.length === 0 && <p className="empty">검색 결과가 없어요.</p>}
