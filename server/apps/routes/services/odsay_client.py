@@ -5,8 +5,11 @@ ODsay는 경로 후보와 각 구간(도보/버스/지하철·시간·좌표)을
 지하철 환승 통로 도보는 실내로 판정.
 """
 import os
+from concurrent.futures import ThreadPoolExecutor, wait
 
 import requests
+
+from . import bus_wait
 
 _URL = "https://api.odsay.com/v1/api/searchPubTransPathT"
 _LANE_URL = "https://api.odsay.com/v1/api/loadLane"
@@ -37,6 +40,7 @@ def _parse_path(path: dict, origin: list[float] | None = None, dest: list[float]
     seg_engine: list[dict] = []
     polyline: list[list[float]] = []
     path_segments: list[dict] = []  # 모드별(도보/버스/전철) 좌표 → 지도 색상 구분용
+    bus_waits: list[dict] = []  # 버스 대기 위치(실시간 보정용): api/engine 인덱스 + 승차 좌표 + 노선번호
     seq = 0
 
     _MODE = {1: "subway", 2: "bus", 3: "walk"}
@@ -90,8 +94,11 @@ def _parse_path(path: dict, origin: list[float] | None = None, dest: list[float]
         elif tt == 2:  # 버스: 대기(야외) + 탑승(실내)
             seq += 1
             seg_api.append({"seq": seq, "type": "bus_wait", "minutes": EST_BUS_WAIT, "outdoor": True,
-                            "exposure_minutes": EST_BUS_WAIT, "station": sp.get("startName")})
+                            "exposure_minutes": EST_BUS_WAIT, "station": sp.get("startName"), "realtime": False})
             seg_engine.append({"outdoor": True, "minutes": EST_BUS_WAIT})
+            if start:  # 실시간 보정 대상: 승차 정류소 좌표 + 노선번호
+                bus_waits.append({"api": len(seg_api) - 1, "engine": len(seg_engine) - 1,
+                                  "lat": start[0], "lng": start[1], "bus_no": _lane_name(sp)})
             seq += 1
             seg_api.append({"seq": seq, "type": "bus", "route_name": _lane_name(sp), "minutes": st,
                             "outdoor": False, "exposure_minutes": 0,
@@ -113,6 +120,7 @@ def _parse_path(path: dict, origin: list[float] | None = None, dest: list[float]
         "segments_engine": seg_engine,
         "polyline": polyline,
         "path_segments": path_segments,
+        "bus_waits": bus_waits,
         "map_obj": info.get("mapObj"),
     }
 
@@ -159,6 +167,32 @@ def _apply_geometry(parsed: dict) -> None:
     for seg, lane in zip(transit, lanes):  # 순서 일치 (mapObj가 구간 순서로 구성됨)
         if len(lane) >= 2:
             seg["coords"] = lane
+
+
+def apply_realtime_waits(candidates: list[dict], deadline_s: float = 5, budget: int = 8) -> None:
+    """버스 '대기'를 TAGO 실시간 도착으로 교체(제자리). 미커버/타임아웃은 추정치 유지.
+
+    ponytail: 전체 지연 상한 = deadline_s (버스 개수와 무관, 동시 실행).
+    """
+    tasks = [(c, bw) for c in candidates for bw in c.get("bus_waits", [])][:budget]
+    if not tasks:
+        return
+    ex = ThreadPoolExecutor(max_workers=min(8, len(tasks)))
+    futmap = {ex.submit(bus_wait.realtime_wait, bw["lat"], bw["lng"], bw["bus_no"]): (c, bw) for c, bw in tasks}
+    done, _ = wait(futmap, timeout=deadline_s)
+    for fut in done:
+        c, bw = futmap[fut]
+        try:
+            minutes = fut.result()
+        except Exception:
+            minutes = None
+        if minutes is not None:
+            api_seg = c["segments_api"][bw["api"]]
+            api_seg["minutes"] = minutes
+            api_seg["exposure_minutes"] = minutes
+            api_seg["realtime"] = True
+            c["segments_engine"][bw["engine"]]["minutes"] = minutes
+    ex.shutdown(wait=False, cancel_futures=True)  # 남은 느린 콜은 기다리지 않음
 
 
 def search_routes(from_lat: float, from_lng: float, to_lat: float, to_lng: float,

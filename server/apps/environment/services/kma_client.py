@@ -8,7 +8,7 @@ from .grid import latlng_to_grid
 from .kakao_geo import to_region_code
 
 _NCST_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst"
-_UV_URL = "http://apis.data.go.kr/1360000/LivingWthrIdxServiceV4/getUVIdxV4"
+_UV_URL = "http://apis.data.go.kr/1360000/LivingWthrIdxServiceV5/getUVIdxV5"
 
 
 def _with_key(base_url: str, key_env: str) -> str:
@@ -50,7 +50,8 @@ def get_weather(lat: float, lng: float) -> dict:
 
 def get_uv(lat: float, lng: float) -> int:
     """자외선지수(현재 시각 h0). 실패 시 예외."""
-    area_no = to_region_code(lat, lng)
+    # UV V5는 시군구 레벨 코드(앞 5자리+00000)만 인식. 법정동 전체코드는 검색결과 없음(rc99).
+    area_no = to_region_code(lat, lng)[:5] + "00000"
     now = datetime.now()
     # 자외선지수는 3시간 단위 발표 → 현재 시각 이하의 짝수 발표시각 사용
     time_str = now.strftime("%Y%m%d") + f"{(now.hour // 3) * 3:02d}"

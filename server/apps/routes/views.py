@@ -47,6 +47,10 @@ class RoutesView(APIView):
         if not candidates:
             return error_response("ROUTE_NOT_FOUND", "이 구간은 대중교통 경로를 찾지 못했어요", 404)
 
+        # 버스 '대기'를 TAGO 실시간 도착으로 보정(노출부하 계산 전). realtime_wait=0 이면 생략.
+        if q.get("realtime_wait", "1") != "0":
+            odsay_client.apply_realtime_waits(candidates)
+
         try:
             depart_at = datetime.fromisoformat(q["depart_at"]) if q.get("depart_at") else datetime.now(KST)
         except ValueError:
@@ -60,6 +64,15 @@ class RoutesView(APIView):
             total = c["total_minutes"]
             outdoor = load["outdoor_minutes"]
             indoor_ratio = round(max(0.0, min(1.0, 1 - (outdoor / total))), 2) if total else 1.0
+
+            # B-11 예측 등급: 버스 대기를 실시간(TAGO)으로 채웠으면 realtime, 폴백(추정)이면 estimated.
+            # 버스 없는(지하철·도보) 경로는 ODsay 시간 신뢰 → realtime.
+            bus_waits_api = [s for s in c["segments_api"] if s["type"] == "bus_wait"]
+            if bus_waits_api and not any(s.get("realtime") for s in bus_waits_api):
+                grade, notice = "estimated", "실시간 버스 도착 정보가 없어 추정 배차로 안내해요."
+            else:
+                grade, notice = "realtime", None
+
             routes.append({
                 "route_id": f"r_{i}",
                 "exposure_load": load["score"],
@@ -69,9 +82,9 @@ class RoutesView(APIView):
                 "total_minutes": total,
                 "arrival_time": (depart_at + timedelta(minutes=total)).replace(microsecond=0).isoformat(),
                 "transfers": c["transfers"],
-                "prediction_grade": "realtime",
+                "prediction_grade": grade,
                 "data_source": "odsay",
-                "notice": None,
+                "notice": notice,
                 "llm_comment": None,
                 "polyline": c["polyline"],
                 "path_segments": c["path_segments"],

@@ -17,9 +17,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DEBUG = os.getenv("DEBUG", "False") == "True"
-SECRET_KEY = os.getenv("SECRET_KEY")
-
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -35,7 +32,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = []
+# 배포 도메인은 env로 (예: ALLOWED_HOSTS=waywell.testgogo.site). 미설정 시 로컬만 허용.
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -121,9 +119,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ko-kr'
 
-TIME_ZONE = 'UTC'
+# 한국 서비스 — 리포트 날짜 집계가 KST 기준이어야 함 (timezone.localtime()이 KST 반환)
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
@@ -142,5 +141,25 @@ STATIC_URL = 'static/'
 MAILERS = {
     'default': {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+    },
+}
+
+# E-04 도착정보 크롤러가 주기 수집할 대표 정류소 (city_code, node_id, label)
+TAGO_CRAWL_STATIONS = [
+    ("25", "DJB8001793", "세종 송강전통시장"),
+]
+# 폴백 스냅샷 유효 시간(초): 이보다 오래된 수집분은 무시
+ARRIVAL_SNAPSHOT_TTL = 300
+
+# 레이트리밋 — 유료 외부 API(ODsay/기상청/카카오/TAGO) 프록시 남용 방지.
+# IP(게스트)·계정별 상한. 배포 시 프록시 뒤면 X-Forwarded-For 처리(NUM_PROXIES) 필요.
+REST_FRAMEWORK = {
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": os.getenv("THROTTLE_ANON", "120/min"),
+        "user": os.getenv("THROTTLE_USER", "240/min"),
     },
 }

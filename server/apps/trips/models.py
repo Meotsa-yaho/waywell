@@ -8,7 +8,8 @@ class Trip(models.Model):
     STATUS = [("in_progress", "이동중"), ("completed", "완료"), ("cancelled", "취소")]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    device_id = models.CharField(max_length=64, db_index=True)
+    device_id = models.CharField(max_length=64, blank=True, default="", db_index=True)  # 게스트 식별
+    account = models.ForeignKey("accounts.Account", null=True, blank=True, on_delete=models.CASCADE, related_name="trips")  # 로그인 시 소유
     status = models.CharField(max_length=12, choices=STATUS, default="in_progress")
 
     from_name = models.CharField(max_length=120, blank=True, default="")
@@ -25,3 +26,17 @@ class Trip(models.Model):
 
     class Meta:
         ordering = ["-started_at"]
+
+
+class ArrivalSnapshot(models.Model):
+    """E-04 크롤러가 대표 정류소 도착정보를 주기 수집·저장. live TAGO 실패 시 폴백 소스."""
+    city_code = models.CharField(max_length=8)
+    node_id = models.CharField(max_length=32, db_index=True)
+    route_no = models.CharField(max_length=16)
+    route_id = models.CharField(max_length=32, blank=True, default="")
+    minutes = models.IntegerField()
+    stations_left = models.IntegerField(null=True, blank=True)
+    collected_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-collected_at"]

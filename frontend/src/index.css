@@ -28,6 +28,12 @@ body { background: var(--bg); }
 }
 .app-main { flex: 1; overflow-y: auto; padding-bottom: 72px; }
 
+/* 데스크톱에선 폰 프레임처럼 보이게 (모바일은 꽉 참) */
+@media (min-width: 481px) {
+  body { background: #d9dedb; }
+  .app-shell { box-shadow: 0 0 0 1px var(--line), 0 8px 40px rgba(0, 0, 0, 0.12); }
+}
+
 .page { padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; }
 .page.center { align-items: center; justify-content: center; min-height: 70vh; }
 .page-head { display: flex; align-items: center; justify-content: space-between; }
@@ -71,8 +77,49 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
 }
 .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.kakao { background: #fee500; color: #191600; border-color: #fee500; }
 .btn.sticky { position: sticky; bottom: 16px; }
 .link { align-self: flex-start; background: none; border: 0; color: var(--brand); font-size: 14px; cursor: pointer; padding: 0; }
+.settings-page { min-height: calc(100dvh - 92px); }
+
+/* 설정 메뉴 */
+.menu-list { display: flex; flex-direction: column; gap: 10px; }
+.menu-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px; text-decoration: none; color: var(--ink);
+  width: 100%; font: inherit; text-align: left; cursor: pointer; /* button도 동일하게 */
+}
+.menu-text { display: flex; flex-direction: column; gap: 2px; }
+.menu-text strong { font-size: 15px; }
+.menu-text .muted { font-size: 12px; }
+.menu-chevron { color: var(--muted); font-size: 22px; }
+
+.link.withdraw { color: var(--warn); margin-top: 10px; }
+
+/* 정보 페이지 */
+.info-hero { text-align: center; padding: 8px 0 4px; }
+.info-hero .brand { display: block; }
+.info-body { font-size: 13px; line-height: 1.7; color: var(--ink); margin: 6px 0 0; }
+.info-body b { color: var(--brand-ink); }
+.source-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.source-row { display: flex; align-items: center; gap: 12px; }
+.source-icon {
+  width: 38px; height: 38px; border-radius: 10px; background: #eef4f2;
+  display: flex; align-items: center; justify-content: center; font-size: 19px; flex: 0 0 auto;
+}
+.source-text { display: flex; flex-direction: column; gap: 1px; }
+.source-text strong { font-size: 14px; }
+.source-text .muted { font-size: 12px; }
+.dev-card { background: linear-gradient(135deg, var(--brand), var(--brand-ink)); border: 0; color: #fff; text-align: center; }
+.dev-card h2 { color: rgba(255, 255, 255, 0.85); }
+.dev-team { font-size: 15px; margin: 4px 0; }
+.dev-ver { font-size: 12px; opacity: 0.8; }
+.logout-center { display: flex; margin: 8px auto 0; }
+.withdraw-btn {
+  align-self: flex-end; margin-top: auto; color: var(--warn);
+  border-color: var(--warn); background: transparent; font-size: 13px; padding: 8px 14px;
+}
 .row { display: flex; gap: 8px; }
 .row .btn { flex: 1; }
 
@@ -224,7 +271,22 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
 .big-timer small { color: var(--muted); }
 .big-timer--soon { background: #fdf0e6; border-color: #f0c9a8; }
 .big-timer--soon strong { color: var(--warn); }
+.big-timer--long { background: #fbe9e9; border-color: #eec2c2; }
+.big-timer--long strong { color: #d64545; }
 .shelter-hint { cursor: pointer; color: var(--brand-ink); }
+
+/* C-03 대기 야외 노출 누적 + 장시간 경고 */
+.wait-exposure {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; font-size: 13px; color: var(--muted);
+}
+.wait-exposure strong { font-size: 15px; color: var(--ink); }
+.wait-exposure strong.over { color: #d64545; }
+.wait-warn {
+  width: 100%; text-align: left; background: #fbe9e9; color: #b83232;
+  border: 1px solid #eec2c2; border-radius: 12px; padding: 12px 14px;
+  font-size: 13px; font-weight: 600; cursor: pointer; line-height: 1.4;
+}
 
 /* 장소 검색 결과 (B-02) */
 .current-loc-btn {
@@ -251,6 +313,35 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
 .empty { color: var(--muted); text-align: center; padding: 40px 0; }
 .version { color: var(--muted); font-size: 12px; text-align: center; }
 
+/* E-07 빈/에러 상태 */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; text-align: center; padding: 56px 24px; min-height: 55vh;
+}
+.empty-state__icon { font-size: 44px; line-height: 1; }
+.empty-state__title { font-size: 16px; font-weight: 700; color: var(--ink); margin: 4px 0 0; }
+.empty-state__hint { font-size: 13px; color: var(--muted); max-width: 260px; margin: 0; }
+.empty-state .btn { margin-top: 10px; }
+
+/* E-03 홈 화면 추가 배너 */
+.install-banner {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 10px);
+  z-index: 60; width: min(452px, calc(100% - 24px));
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1px solid var(--line); border-radius: 14px;
+  padding: 10px 12px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+}
+.install-banner__icon { font-size: 24px; line-height: 1; }
+.install-banner__text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.install-banner__text strong { font-size: 13px; color: var(--ink); }
+.install-banner__text span { font-size: 11px; color: var(--muted); }
+.install-banner__cta { padding: 8px 14px; font-size: 13px; white-space: nowrap; }
+.install-banner__close {
+  background: none; border: 0; color: var(--muted); font-size: 14px;
+  padding: 4px 6px; cursor: pointer;
+}
+
 /* 지도 우선 홈 (SC-03) */
 .home-map { position: relative; height: calc(100dvh - 72px); }
 .map-fill { position: absolute; inset: 0; }
@@ -271,6 +362,87 @@ h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); }
   align-self: flex-start; background: rgba(255, 255, 255, 0.95); color: var(--ink);
   border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
   font-size: 12px; font-weight: 600; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+}
+.geo-hint {
+  align-self: stretch; background: #fdf0e6; color: var(--warn);
+  border: 1px solid #f0c9a8; border-radius: 10px; padding: 8px 12px;
+  font-size: 12px; font-weight: 600;
+}
+/* B-01 지도에서 선택 (검색 페이지 · 현재위치와 나란히) */
+.loc-actions { display: flex; gap: 8px; }
+.loc-actions .current-loc-btn { flex: 1; }
+.pick-hint {
+  align-self: stretch; display: flex; align-items: center; justify-content: space-between;
+  background: var(--brand); color: #fff; border-radius: 10px; padding: 8px 12px;
+  font-size: 13px; font-weight: 600;
+}
+.pick-hint button { background: rgba(255,255,255,0.25); color: #fff; border: 0; border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+
+/* 위치 권한 사전 동의 카드 (화면 가운데 모달) */
+.geo-primer-backdrop {
+  position: absolute; inset: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: rgba(0, 0, 0, 0.28);
+}
+.geo-primer {
+  width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 6px;
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  padding: 18px; box-shadow: 0 10px 32px rgba(0, 0, 0, 0.22);
+}
+.geo-primer strong { font-size: 14px; color: var(--ink); }
+.geo-primer span { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.geo-primer__actions { display: flex; gap: 8px; margin-top: 6px; }
+.geo-primer__actions .btn { flex: 1; }
+
+/* C-05 도착 알림 유도/안내 */
+.notif-cta {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--brand); color: #fff; border: 0; border-radius: 12px;
+  padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.notif-cta span { font-size: 12px; font-weight: 500; opacity: 0.85; }
+.notif-hint {
+  background: #fdf0e6; color: var(--warn); border: 1px solid #f0c9a8;
+  border-radius: 10px; padding: 8px 12px; font-size: 12px; font-weight: 600;
+}
+
+/* D-03 전주 대비 */
+.cmp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.cmp-item { display: flex; flex-direction: column; gap: 4px; }
+.cmp-item small { color: var(--muted); font-size: 12px; }
+.cmp-item strong { font-size: 17px; font-weight: 700; }
+.cmp-down { color: var(--brand); }
+.cmp-up { color: #d64545; }
+.cmp-flat { color: var(--muted); }
+.cmp-note { font-size: 11px; margin: 10px 0 0; }
+
+/* SC-13 이동 기록 목록 */
+.trip-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.trip-item { display: flex; flex-direction: column; gap: 8px; }
+.trip-route { display: flex; align-items: center; gap: 6px; font-size: 15px; color: var(--ink); }
+.trip-route strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trip-arrow { color: var(--muted); flex: 0 0 auto; }
+.trip-meta { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+.trip-badge { padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 11px; }
+.trip-badge--completed { background: #e7f5f0; color: var(--brand-ink); }
+.trip-badge--in_progress { background: #fdf0e6; color: var(--warn); }
+.trip-badge--cancelled { background: #f0f1f2; color: var(--muted); }
+.trip-stats { display: flex; gap: 12px; font-size: 12px; color: var(--muted); }
+
+/* B-03 출발시각 지정 */
+.depart-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 2px;
+}
+.depart-label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.depart-input {
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px;
+  font-size: 13px; color: var(--ink); background: #fff;
+}
+.depart-now { font-size: 12px; }
+.depart-now.muted { color: var(--muted); }
+button.depart-now {
+  border: 0; background: none; color: var(--brand); font-weight: 600; cursor: pointer;
 }
 .search-card {
   background: var(--card); border-radius: 14px; padding: 12px;

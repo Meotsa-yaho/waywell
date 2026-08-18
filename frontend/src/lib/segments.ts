@@ -25,7 +25,11 @@ export function segmentLine(s: RouteSegment): { icon: string; title: string; sub
     case 'bus':
       return { icon: '🚌', title: `${s.route_name ?? ''}번`, sub: `${board} 승차 → ${alight} 하차 · ${s.minutes}분` }
     case 'bus_wait':
-      return { icon: '⏳', title: '버스 대기', sub: `${s.station ?? ''} 정류장 · 약 ${s.minutes}분` }
+      return {
+        icon: '⏳',
+        title: s.realtime ? '버스 대기 · 실시간' : '버스 대기',
+        sub: `${s.station ?? ''} 정류장 · ${s.realtime ? '' : '약 '}${s.minutes}분`,
+      }
     case 'transfer_walk':
       return { icon: '🔀', title: '환승 이동', sub: `실내 도보 ${s.minutes}분` }
     default: // walk

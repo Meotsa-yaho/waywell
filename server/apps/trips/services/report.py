@@ -45,26 +45,33 @@ def _coaching(today: dict, uv_change) -> str:
     return "실내 위주로 잘 이동했어요. 이 페이스를 유지해보세요."
 
 
-def weekly_report(device_id: str | None) -> dict:
+def weekly_report(account=None, device_id: str | None = None) -> dict:
     now = timezone.localtime()
     today = now.date()
     this_days = [today - timedelta(days=i) for i in range(6, -1, -1)]     # 최근 7일
     prev_days = [today - timedelta(days=i) for i in range(13, 6, -1)]     # 그 전 7일
 
-    if not device_id:
+    # 소유자: 로그인=계정, 아니면 게스트 device_id (계정에 이관 안 된 것만)
+    if account:
+        base = Trip.objects.filter(account=account, status="completed")
+    elif device_id:
+        base = Trip.objects.filter(device_id=device_id, account__isnull=True, status="completed")
+    else:
+        base = None
+
+    if base is None:
         daily = [_empty_day(d.isoformat()) for d in this_days]
         return {
             "period": {"start": this_days[0].isoformat(), "end": today.isoformat()},
             "today": daily[-1], "daily": daily,
             "comparison": {"previous_period": {"start": prev_days[0].isoformat(), "end": prev_days[-1].isoformat()},
                            "uv_minutes_change_pct": None, "outdoor_minutes_change_pct": None, "exposure_load_change_pct": None},
-            "coaching": _coaching(daily[-1], None), "is_guest": True, "has_data": False,
+            "coaching": _coaching(daily[-1], None), "is_guest": account is None, "has_data": False,
         }
 
     start = this_days[0]
-    trips = Trip.objects.filter(device_id=device_id, status="completed",
-                                started_at__gte=timezone.make_aware(
-                                    timezone.datetime.combine(prev_days[0], timezone.datetime.min.time())))
+    trips = base.filter(started_at__gte=timezone.make_aware(
+        timezone.datetime.combine(prev_days[0], timezone.datetime.min.time())))
     this_b = _bucket(trips, this_days)
     prev_b = _bucket(trips, prev_days)
     daily = [this_b[d.isoformat()] for d in this_days]
@@ -83,6 +90,6 @@ def weekly_report(device_id: str | None) -> dict:
             "exposure_load_change_pct": _pct(_sum(daily, "exposure_load"), _sum(prev_daily, "exposure_load")),
         },
         "coaching": _coaching(today_data, uv_change),
-        "is_guest": True,
+        "is_guest": account is None,
         "has_data": _sum(daily, "trip_count") > 0,
     }
