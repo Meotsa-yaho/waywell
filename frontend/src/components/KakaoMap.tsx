@@ -25,7 +25,7 @@ interface Props {
   className?: string
 }
 
-export default function KakaoMap({ center, level = 5, markers = [], polyline, paths, fitBottomPadding = 0, recenterKey, onMapClick }: Props) {
+export default function KakaoMap({ center, level = 5, markers = [], polyline, paths, fitBottomPadding = 180, recenterKey, onMapClick }: Props) {
   const boxRef = useRef<HTMLDivElement>(null)
   const kakaoRef = useRef<any>(null)
   const mapRef = useRef<any>(null)
@@ -68,8 +68,9 @@ export default function KakaoMap({ center, level = 5, markers = [], polyline, pa
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recenterKey])
 
+  // 마커나 경로가 실제로 변경될 때만 redraw 실행 (fitBottomPadding 변경으로 인한 지도 흔들림 방지)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(redraw, [JSON.stringify(markers ?? null), JSON.stringify(polyline ?? null), JSON.stringify(paths ?? null), fitBottomPadding])
+  useEffect(redraw, [JSON.stringify(markers ?? null), JSON.stringify(polyline ?? null), JSON.stringify(paths ?? null)])
 
   function redraw() {
     const kakao = kakaoRef.current
@@ -105,7 +106,7 @@ export default function KakaoMap({ center, level = 5, markers = [], polyline, pa
       path.forEach((p: any) => { bounds.extend(p); hasBounds = true })
     }
 
-    // 경로 전체가 한눈에 보이게 여백 두고 맞춤 (하단은 시트 높이만큼 더)
+    // 경로 전체가 한눈에 보이게 여백 두고 맞춤 (경로가 변경되었을 때만 1회 호출)
     if (hasBounds) map.setBounds(bounds, 40, 40, 40 + fitBottomPadding, 40)
   }
 

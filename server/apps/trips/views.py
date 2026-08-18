@@ -85,9 +85,21 @@ class TripsView(APIView):
         )
         return Response({"trip_id": str(trip.id), "status": trip.status}, status=201)
 
+    def delete(self, request):
+        """DELETE /api/trips/ — 모든 이동 기록 전체 삭제."""
+        account = _account(request)
+        device_id = _device_id(request)
+        if account:
+            deleted_count, _ = Trip.objects.filter(account=account).delete()
+        elif device_id:
+            deleted_count, _ = Trip.objects.filter(device_id=device_id, account__isnull=True).delete()
+        else:
+            return error_response("VALIDATION_ERROR", "이동 기록에 필요한 정보가 없어요.", 400)
+        return Response({"deleted": True, "count": deleted_count})
+
 
 class TripDetailView(APIView):
-    """PATCH /api/trips/{id} — 이동 완료/취소 처리(C-06). 완료 시 리포트에 집계됨."""
+    """PATCH /api/trips/{id} — 이동 완료/취소 처리(C-06). DELETE — 단일 기록 삭제."""
 
     def patch(self, request, trip_id):
         account = _account(request)
@@ -103,6 +115,17 @@ class TripDetailView(APIView):
                 trip.completed_at = dj_tz.now()
             trip.save(update_fields=["status", "completed_at"])
         return Response({"trip_id": str(trip.id), "status": trip.status})
+
+    def delete(self, request, trip_id):
+        """DELETE /api/trips/{id}/ — 특정 이동 기록 삭제."""
+        account = _account(request)
+        owner = {"account": account} if account else {"device_id": _device_id(request) or ""}
+        try:
+            trip = Trip.objects.get(id=trip_id, **owner)
+        except Exception:
+            return error_response("NOT_FOUND", "이동 기록을 찾을 수 없어요.", 404)
+        trip.delete()
+        return Response({"deleted": True, "trip_id": str(trip_id)})
 
 
 class WeeklyReportView(APIView):

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import type { SensitivityId } from '../types/onboarding';
@@ -11,6 +11,18 @@ import { Step1Framing } from '../components/onboarding/Step1Framing';
 import { Step2Sensitivity } from '../components/onboarding/Step2Sensitivity';
 import { Step3Auth } from '../components/onboarding/Step3Auth';
 
+// Helper to determine system preference as default
+const getSystemDarkModePreference = (): boolean => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('theme_dark_mode');
+    if (saved !== null) return saved === 'true';
+    if (window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+  }
+  return false;
+};
+
 export default function Onboarding() {
   const nav = useNavigate();
   const setPreset = useSession((s) => s.setPreset);
@@ -20,12 +32,43 @@ export default function Onboarding() {
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [selectedSensitivity, setSelectedSensitivity] = useState<SensitivityId>(
-    PRESET_TO_SENSITIVITY[preset],
+    PRESET_TO_SENSITIVITY[preset] || 'uv',
   );
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(true);
   const [authSuccess, setAuthSuccess] = useState<'kakao' | 'guest' | null>(null);
   const [isKakaoLoading, setIsKakaoLoading] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Dark Mode State: Defaults to User Device / OS preference
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(getSystemDarkModePreference);
+  const [hasManualDarkModeToggle, setHasManualDarkModeToggle] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && localStorage.getItem('theme_dark_mode') !== null;
+  });
+
+  // Sync with system preferences if user hasn't manually overridden
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+      if (!hasManualDarkModeToggle) {
+        setIsDarkMode(e.matches);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+  }, [hasManualDarkModeToggle]);
+
+  const handleToggleDarkMode = () => {
+    setHasManualDarkModeToggle(true);
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      localStorage.setItem('theme_dark_mode', String(next));
+      showToast(next ? '🌙 다크 모드가 적용되었습니다.' : '☀️ 라이트 모드가 적용되었습니다.');
+      return next;
+    });
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -109,7 +152,9 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-center items-center font-sans text-slate-800 selection:bg-emerald-200 selection:text-emerald-950">
+    <div className={`min-h-screen flex flex-col justify-center items-center font-sans transition-colors duration-200 selection:bg-emerald-500/30 selection:text-emerald-300 ${
+      isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-800'
+    }`}>
       <main
         id="waywell-onboarding-container"
         className="w-full max-w-lg min-h-screen flex flex-col justify-between p-6 sm:p-8 relative mx-auto"
@@ -121,26 +166,33 @@ export default function Onboarding() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="fixed sm:absolute top-5 left-4 right-4 sm:left-6 sm:right-6 z-50 bg-slate-900/95 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-xl flex items-center justify-center text-center backdrop-blur-xs"
+              className="fixed sm:absolute top-5 left-4 right-4 sm:left-6 sm:right-6 z-50 bg-slate-900/95 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-xl flex items-center justify-center text-center backdrop-blur-xs border border-slate-700/50"
             >
               {toastMessage}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Step Progress Header */}
-        <StepIndicator currentStep={currentStep} onBack={handleStepBack} authSuccess={authSuccess} />
+        {/* Step Progress Header with Dark Mode Switch */}
+        <StepIndicator 
+          currentStep={currentStep} 
+          onBack={handleStepBack} 
+          authSuccess={authSuccess}
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={handleToggleDarkMode}
+        />
 
         {/* Step Content with AnimatePresence */}
         <div className="flex-1 flex flex-col justify-between py-2">
           <AnimatePresence mode="wait">
             {currentStep === 1 && (
-              <Step1Framing key="step1" onNext={handleStep1Next} />
+              <Step1Framing key="step1" isDarkMode={isDarkMode} onNext={handleStep1Next} />
             )}
             {currentStep === 2 && (
               <Step2Sensitivity
                 key="step2"
                 selectedSensitivity={selectedSensitivity}
+                isDarkMode={isDarkMode}
                 onSelect={handleStep2Select}
                 onNext={handleStep2Next}
                 onSkip={handleStep2Skip}
@@ -151,6 +203,7 @@ export default function Onboarding() {
                 key="step3"
                 selectedSensitivity={selectedSensitivity}
                 notificationsEnabled={notificationsEnabled}
+                isDarkMode={isDarkMode}
                 onToggleNotifications={handleToggleNotifications}
                 onLoginKakao={handleKakaoLogin}
                 onEnterGuest={handleGuestEnter}
