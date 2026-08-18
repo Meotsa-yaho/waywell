@@ -7,6 +7,7 @@ import { SENSITIVITY_OPTIONS } from '../../data/onboardingOptions';
 interface Step3AuthProps {
   selectedSensitivity: SensitivityId;
   notificationsEnabled: boolean;
+  isDarkMode?: boolean;
   onToggleNotifications: () => void;
   onLoginKakao: () => void;
   onEnterGuest: () => void;
@@ -17,6 +18,7 @@ interface Step3AuthProps {
 export const Step3Auth: React.FC<Step3AuthProps> = ({
   selectedSensitivity,
   notificationsEnabled,
+  isDarkMode = false,
   onToggleNotifications,
   onLoginKakao,
   onEnterGuest,
@@ -36,37 +38,49 @@ export const Step3Auth: React.FC<Step3AuthProps> = ({
     >
       {/* Title Section */}
       <div className="space-y-1.5">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/70 text-emerald-800 text-[11px] font-bold">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+        <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-bold ${
+          isDarkMode 
+            ? 'bg-emerald-950/60 border-emerald-800/60 text-emerald-300' 
+            : 'bg-emerald-50 border-emerald-200/70 text-emerald-800'
+        }`}>
+          <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
           <span>온보딩 마지막 단계</span>
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold leading-tight text-emerald-900 tracking-tight">
+        <h1 className={`text-xl sm:text-2xl font-bold leading-tight tracking-tight ${
+          isDarkMode ? 'text-white' : 'text-emerald-900'
+        }`}>
           노출 부하 프로필이<br />
-          <span className="text-emerald-700">완성되었습니다!</span>
+          <span className={isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}>완성되었습니다!</span>
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+        <p className={`text-xs sm:text-sm leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
           지정한 맞춤 설정으로 오늘 이동의 신체 부담을 줄여드릴게요.
         </p>
       </div>
 
-      {/* Middle Content - Natural Tones Style */}
+      {/* Middle Content */}
       <div className="my-4 space-y-3">
         {/* Verified Profile Card */}
         <div 
           id="profile-summary-card"
-          className="bg-emerald-50 rounded-3xl p-5 text-center border border-emerald-100/90 shadow-xs"
+          className={`rounded-3xl p-5 text-center border shadow-xs transition-colors ${
+            isDarkMode 
+              ? 'bg-emerald-950/30 border-emerald-900/60' 
+              : 'bg-emerald-50 border-emerald-100/90'
+          }`}
         >
-          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-full mx-auto mb-2.5 flex items-center justify-center text-2xl sm:text-3xl shadow-sm">
+          <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full mx-auto mb-2.5 flex items-center justify-center text-2xl sm:text-3xl shadow-sm ${
+            isDarkMode ? 'bg-slate-800 text-white' : 'bg-white'
+          }`}>
             {currentOption.icon}
           </div>
           <div className="inline-flex items-center gap-1 px-3 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-full mb-1.5 uppercase tracking-wide shadow-xs">
             <ShieldCheck className="w-3 h-3" />
             <span>Verified Profile</span>
           </div>
-          <div className="text-sm sm:text-base font-bold text-emerald-950">
+          <div className={`text-sm sm:text-base font-bold ${isDarkMode ? 'text-white' : 'text-emerald-950'}`}>
             {currentOption.tag} 적용됨
           </div>
-          <p className="text-[11px] text-emerald-800/80 mt-1 font-medium">
+          <p className={`text-[11px] mt-1 font-medium ${isDarkMode ? 'text-emerald-300' : 'text-emerald-800/80'}`}>
             "{currentOption.title}"
           </p>
         </div>
@@ -75,14 +89,20 @@ export const Step3Auth: React.FC<Step3AuthProps> = ({
         <div 
           id="pwa-notification-toggle-card"
           onClick={onToggleNotifications}
-          className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/70 border border-slate-100 rounded-2xl cursor-pointer transition-colors"
+          className={`flex items-center justify-between p-3 border rounded-2xl cursor-pointer transition-colors ${
+            isDarkMode 
+              ? 'bg-slate-900/80 hover:bg-slate-800/80 border-slate-800' 
+              : 'bg-slate-50 hover:bg-slate-100/70 border-slate-100'
+          }`}
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-700">
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+              isDarkMode ? 'bg-emerald-950 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
+            }`}>
               <Bell className="w-3.5 h-3.5" />
             </div>
             <div>
-              <span className="text-xs font-bold text-slate-700 tracking-tight block">
+              <span className={`text-xs font-bold tracking-tight block ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
                 실내 대기 중 버스 도착 3분 전 알림 받기
               </span>
               <span className="text-[10px] text-slate-400 block">
@@ -94,7 +114,7 @@ export const Step3Auth: React.FC<Step3AuthProps> = ({
           {/* Toggle Switch */}
           <div
             className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-              notificationsEnabled ? 'bg-emerald-500' : 'bg-slate-300'
+              notificationsEnabled ? 'bg-emerald-500' : isDarkMode ? 'bg-slate-700' : 'bg-slate-300'
             }`}
           >
             <div
@@ -106,7 +126,7 @@ export const Step3Auth: React.FC<Step3AuthProps> = ({
         </div>
       </div>
 
-      {/* Two-Track Action Buttons - Natural Tones styling */}
+      {/* Two-Track Action Buttons */}
       <div className="pt-2 space-y-2">
         {/* Track 1: Kakao Login Button with Loading State */}
         <div>
@@ -130,7 +150,7 @@ export const Step3Auth: React.FC<Step3AuthProps> = ({
               </div>
             ) : authSuccess === 'kakao' ? (
               <div className="flex items-center gap-1.5 text-emerald-950 font-bold">
-                <Check className="w-4 h-4 stroke-[3] text-emerald-700" />
+                <Check className="w-3 h-3 stroke-[3] text-emerald-700" />
                 <span>카카오 연동 완료</span>
               </div>
             ) : (
@@ -157,17 +177,19 @@ export const Step3Auth: React.FC<Step3AuthProps> = ({
             id="guest-enter-button"
             onClick={onEnterGuest}
             disabled={isKakaoLoading}
-            className={`w-full py-3 border rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 focus:outline-none focus:ring-2 focus:ring-slate-300 ${
+            className={`w-full py-3 border rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 focus:outline-none focus:ring-2 ${
               isKakaoLoading
-                ? 'opacity-40 cursor-not-allowed border-slate-200 text-slate-400'
+                ? 'opacity-40 cursor-not-allowed border-slate-700 text-slate-500'
                 : authSuccess === 'guest'
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                ? isDarkMode ? 'bg-emerald-950/60 border-emerald-700 text-emerald-300' : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                : isDarkMode
+                ? 'border-slate-800 hover:bg-slate-800 text-slate-300 focus:ring-slate-700'
+                : 'border-slate-200 hover:bg-slate-50 text-slate-600 focus:ring-slate-300'
             }`}
           >
             {authSuccess === 'guest' ? (
               <>
-                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                <Check className="w-3.5 h-3.5 text-emerald-500 stroke-[3]" />
                 <span>게스트 프로필 설정 완료</span>
               </>
             ) : (

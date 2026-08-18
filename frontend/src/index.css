@@ -34,6 +34,22 @@ body { background: var(--bg); }
   .app-shell { box-shadow: 0 0 0 1px var(--line), 0 8px 40px rgba(0, 0, 0, 0.12); }
 }
 
+html.dark {
+  --bg: #020617;
+  --card: #0f172a;
+  --ink: #f8fafc;
+  --muted: #94a3b8;
+  --line: #1e293b;
+}
+html.dark body {
+  background: #020617;
+  color: #f8fafc;
+}
+@media (min-width: 481px) {
+  html.dark body { background: #090d16; }
+  html.dark .app-shell { box-shadow: 0 0 0 1px #1e293b, 0 8px 40px rgba(0, 0, 0, 0.6); }
+}
+
 .page { padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; }
 .page.center { align-items: center; justify-content: center; min-height: 70vh; }
 .page-head { display: flex; align-items: center; justify-content: space-between; }

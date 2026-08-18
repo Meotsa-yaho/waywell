@@ -82,6 +82,12 @@ export const api = {
   completeTrip: (trip_id: string) =>
     http.patch<Trip>(`/trips/${trip_id}/`, { status: 'completed' }).then((r) => r.data),
 
+  deleteTrip: (trip_id: string) =>
+    http.delete<{ deleted: boolean; trip_id: string }>(`/trips/${trip_id}/`).then((r) => r.data),
+
+  clearAllTrips: () =>
+    http.delete<{ deleted: boolean; count: number }>('/trips/').then((r) => r.data),
+
   getWeeklyReport: (week_of?: string) =>
     http.get<WeeklyReport>('/report/weekly/', { params: { week_of } }).then((r) => r.data),
 }

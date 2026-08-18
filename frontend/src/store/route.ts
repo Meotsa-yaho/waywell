@@ -20,6 +20,8 @@ interface RouteQueryState {
   departAt: string | null // 출발 예정 시각 'HH:MM' (null = 지금 출발) (B-03)
   setPlace: (target: 'from' | 'to', p: Place) => void
   addRecent: (p: Place) => void
+  removeRecent: (placeId: string) => void
+  clearRecent: () => void
   setWeather: (w: 'mild' | 'uv_high') => void
   setDepartAt: (t: string | null) => void
 }
@@ -34,8 +36,17 @@ export const useRouteQuery = create<RouteQueryState>((set, get) => ({
   setWeather: (w) => set({ weather: w }),
   setDepartAt: (t) => set({ departAt: t }),
   addRecent: (p) => {
-    const recent = [p, ...get().recent.filter((r) => r.place_id !== p.place_id)].slice(0, 5)
+    const recent = [p, ...get().recent.filter((r) => r.place_id !== p.place_id && r.name !== p.name)].slice(0, 5)
     localStorage.setItem(RECENT_KEY, JSON.stringify(recent))
     set({ recent })
+  },
+  removeRecent: (placeId) => {
+    const recent = get().recent.filter((r) => r.place_id !== placeId)
+    localStorage.setItem(RECENT_KEY, JSON.stringify(recent))
+    set({ recent })
+  },
+  clearRecent: () => {
+    localStorage.removeItem(RECENT_KEY)
+    set({ recent: [] })
   },
 }))
