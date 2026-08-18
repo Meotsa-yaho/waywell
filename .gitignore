@@ -60,3 +60,6 @@ htmlcov/
 .pytest_cache/
 .mypy_cache/
 .tox/
+
+# Claude Code 로컬 설정 (깃 추적 안 함)
+.claude/
