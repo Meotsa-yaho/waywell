@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 
 from apps.common.response import error_response
 from apps.trips.models import Trip
@@ -25,10 +26,11 @@ def _auth_response(account, request) -> Response:
     """JWT + user + 게스트 데이터 이관(A-07): 이 기기 게스트 기록을 계정으로."""
     device_id = request.headers.get("X-Device-Id")
     migrated = 0
-    if device_id:
-        if not account.device_id:
-            account.device_id = device_id
-            account.save(update_fields=["device_id"])
+    # 게스트 기록 이관은 계정에 기기를 '처음' 바인딩할 때 1회만.
+    # (매 로그인마다 하면 남의 device_id로 로그인 시 그 게스트 기록을 반복 귀속 가능 — 표면 축소)
+    if device_id and not account.device_id:
+        account.device_id = device_id
+        account.save(update_fields=["device_id"])
         migrated = Trip.objects.filter(device_id=device_id, account__isnull=True).update(account=account)
     trip_count = Trip.objects.filter(account=account).count()
     return Response({
@@ -39,6 +41,10 @@ def _auth_response(account, request) -> Response:
 
 
 class KakaoLoginView(APIView):
+    # 인증 엔드포인트 남용(계정 스팸·카카오 교환 반복) 완화 — IP당 별도 상한
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth"
+
     def post(self, request):
         code = request.data.get("code")
         redirect_uri = request.data.get("redirect_uri")

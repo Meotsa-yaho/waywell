@@ -86,8 +86,31 @@ def calc_exposure_load(segments: list[dict], env: dict, preset: str) -> dict:
         uv_p, heat_p, air_p = uv_p * f, heat_p * f, air_p * f
 
     uv_s, heat_s, air_s = round(uv_p), round(heat_p), round(air_p)
+    over = uv_s + heat_s + air_s - 100
+    if over > 0:  # 성분 반올림 누적으로 100 초과 가능 → 최대 성분에서 차감(합=score≤100, breakdown 합=score 유지)
+        m = max(uv_s, heat_s, air_s)
+        if uv_s == m:
+            uv_s -= over
+        elif heat_s == m:
+            heat_s -= over
+        else:
+            air_s -= over
     return {
         "score": uv_s + heat_s + air_s,
         "breakdown": {"uv": uv_s, "heat": heat_s, "air": air_s},
         "outdoor_minutes": outdoor_min,
     }
+
+
+if __name__ == "__main__":
+    # 어떤 입력이든 0<=score<=100 이고 breakdown 합==score (반올림 초과 방지) 자체 점검
+    import random
+    for _ in range(3000):
+        env = {"uv": random.uniform(0, 11), "feels_like": random.uniform(20, 40), "pm10": random.uniform(0, 400)}
+        segs = [{"outdoor": True, "minutes": random.randint(0, 60), "kind": random.choice(list(EXPOSURE_PROFILE))}
+                for _ in range(random.randint(1, 6))]
+        r = calc_exposure_load(segs, env, random.choice(list(PRESET_WEIGHTS)))
+        b = r["breakdown"]
+        assert 0 <= r["score"] <= 100, r
+        assert b["uv"] + b["heat"] + b["air"] == r["score"], r
+    print("exposure clamp ok (0<=score<=100, breakdown 합==score)")
