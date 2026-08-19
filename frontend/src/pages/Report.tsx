@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { 
-  Calendar, 
-  TrendingDown, 
-  TrendingUp, 
-  Clock, 
-  Zap, 
-  ShieldCheck, 
-  Sparkles, 
-  Lock, 
+import {
+  Calendar,
+  TrendingDown,
+  TrendingUp,
+  Clock,
+  Zap,
+  ShieldCheck,
+  Sparkles,
+  Lock,
   ChevronRight,
   RefreshCw,
   Sun
@@ -74,9 +74,8 @@ export default function Report() {
 
   if (failed) {
     return (
-      <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${
-        isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
-      }`}>
+      <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
+        }`}>
         <EmptyState
           icon="📡"
           title="리포트를 불러오지 못했어요"
@@ -90,9 +89,8 @@ export default function Report() {
 
   if (loading || !data) {
     return (
-      <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${
-        isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
-      }`}>
+      <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
+        }`}>
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <RefreshCw className="w-7 h-7 text-emerald-500 animate-spin" />
@@ -107,20 +105,18 @@ export default function Report() {
 
   if (!data.has_data) {
     return (
-      <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${
-        isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
-      }`}>
+      <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
+        }`}>
         <div className="py-6">
-          <h1 className={`text-base sm:text-lg font-bold tracking-tight flex items-center gap-1.5 mb-4 ${
-            isDarkMode ? 'text-white' : 'text-slate-900'
-          }`}>
+          <h1 className={`text-base sm:text-lg font-bold tracking-tight flex items-center gap-1.5 mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'
+            }`}>
             <Calendar className="w-4 h-4 text-emerald-500" />
             <span>주간 웰니스 이동 리포트</span>
           </h1>
           <EmptyState
             icon="🚶"
             title="아직 이동 기록이 없어요"
-            hint="첫 이동을 완료하면 주간 노출 부하와 방어 성과가 여기에 멋지게 기록돼요."
+            hint="첫 이동을 완료하면 주간 노출 부하와 방어 성과가 여기에 기록돼요."
             actionLabel="경로 찾기"
             onAction={() => nav('/')}
           />
@@ -150,9 +146,8 @@ export default function Report() {
   const loadChangePct = data.comparison.exposure_load_change_pct;
 
   return (
-    <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${
-      isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
-    }`}>
+    <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
+      }`}>
       <motion.div
         key="tab-report"
         initial={{ opacity: 0, y: 8 }}
@@ -164,9 +159,8 @@ export default function Report() {
         {/* Header with Comparison Badge */}
         <div className="flex items-center justify-between py-1">
           <div>
-            <h1 className={`text-base sm:text-lg font-bold tracking-tight flex items-center gap-1.5 ${
-              isDarkMode ? 'text-white' : 'text-slate-900'
-            }`}>
+            <h1 className={`text-base sm:text-lg font-bold tracking-tight flex items-center gap-1.5 ${isDarkMode ? 'text-white' : 'text-slate-900'
+              }`}>
               <Calendar className="w-4 h-4 text-emerald-500" />
               <span>주간 웰니스 이동 리포트</span>
             </h1>
@@ -176,15 +170,14 @@ export default function Report() {
           </div>
 
           {loadChangePct !== null && (
-            <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-bold ${
-              loadChangePct <= 0
-                ? isDarkMode
-                  ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/60'
-                  : 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
-                : isDarkMode
+            <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-bold ${loadChangePct <= 0
+              ? isDarkMode
+                ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/60'
+                : 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+              : isDarkMode
                 ? 'bg-rose-950/60 text-rose-400 border-rose-800/60'
                 : 'bg-rose-50 text-rose-700 border-rose-200/80'
-            }`}>
+              }`}>
               {loadChangePct <= 0 ? (
                 <>
                   <TrendingDown className="w-3 h-3 text-emerald-500" />
@@ -203,9 +196,8 @@ export default function Report() {
         {/* 3 Summary Stat Cards */}
         <div className="grid grid-cols-3 gap-2">
           {/* Outdoor Exposure */}
-          <div className={`rounded-2xl p-3 border shadow-xs text-center transition-colors ${
-            isDarkMode ? 'bg-slate-900/90 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
-          }`}>
+          <div className={`rounded-2xl p-3 border shadow-xs text-center transition-colors ${isDarkMode ? 'bg-slate-900/90 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
+            }`}>
             <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
               <Clock className="w-3.5 h-3.5 text-emerald-500" />
               <span className="text-[10px] font-medium">야외 노출</span>
@@ -219,9 +211,8 @@ export default function Report() {
           </div>
 
           {/* Exposure Load Score */}
-          <div className={`rounded-2xl p-3 border shadow-xs text-center transition-colors ${
-            isDarkMode ? 'bg-slate-900/90 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
-          }`}>
+          <div className={`rounded-2xl p-3 border shadow-xs text-center transition-colors ${isDarkMode ? 'bg-slate-900/90 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
+            }`}>
             <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
               <Zap className="w-3.5 h-3.5 text-amber-500" />
               <span className="text-[10px] font-medium">누적 부하</span>
@@ -229,17 +220,15 @@ export default function Report() {
             <div className={`text-base sm:text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               {data.today.exposure_load}<span className="text-xs font-semibold text-slate-400">점</span>
             </div>
-            <span className={`text-[9px] font-bold block mt-0.5 ${
-              data.today.exposure_load <= 40 ? 'text-emerald-500' : 'text-amber-500'
-            }`}>
+            <span className={`text-[9px] font-bold block mt-0.5 ${data.today.exposure_load <= 40 ? 'text-emerald-500' : 'text-amber-500'
+              }`}>
               {data.today.exposure_load <= 40 ? '안전 관리 구간' : '주의 관리 구간'}
             </span>
           </div>
 
           {/* UV Minutes / Defense */}
-          <div className={`rounded-2xl p-3 border shadow-xs text-center transition-colors ${
-            isDarkMode ? 'bg-slate-900/90 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
-          }`}>
+          <div className={`rounded-2xl p-3 border shadow-xs text-center transition-colors ${isDarkMode ? 'bg-slate-900/90 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
+            }`}>
             <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
               <Sun className="w-3.5 h-3.5 text-emerald-500" />
               <span className="text-[10px] font-medium">UV 노출</span>
@@ -254,13 +243,11 @@ export default function Report() {
         </div>
 
         {/* Weekly Bar Chart */}
-        <div className={`rounded-2xl p-4 border shadow-xs transition-colors ${
-          isDarkMode ? 'bg-slate-900/90 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
-        }`}>
+        <div className={`rounded-2xl p-4 border shadow-xs transition-colors ${isDarkMode ? 'bg-slate-900/90 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
+          }`}>
           <div className="flex items-center justify-between mb-4">
-            <div className={`flex items-center gap-1 text-xs font-bold ${
-              isDarkMode ? 'text-white' : 'text-slate-800'
-            }`}>
+            <div className={`flex items-center gap-1 text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'
+              }`}>
               <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
               <span>요일별 노출 부하 추이</span>
             </div>
@@ -284,37 +271,33 @@ export default function Report() {
 
               return (
                 <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
-                  <span className={`text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity ${
-                    isDarkMode ? 'text-slate-300' : 'text-slate-500'
-                  }`}>
+                  <span className={`text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity ${isDarkMode ? 'text-slate-300' : 'text-slate-500'
+                    }`}>
                     {item.score}점
                   </span>
-                  <div className={`w-full max-w-[28px] rounded-t-lg relative flex items-end justify-center h-24 overflow-hidden ${
-                    isDarkMode ? 'bg-slate-800' : 'bg-slate-100'
-                  }`}>
+                  <div className={`w-full max-w-[28px] rounded-t-lg relative flex items-end justify-center h-24 overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'
+                    }`}>
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: `${heightPercent}%` }}
                       transition={{ duration: 0.5, ease: 'easeOut', delay: idx * 0.05 }}
-                      className={`w-full rounded-t-lg transition-colors ${
-                        item.isToday
-                          ? 'bg-emerald-500'
-                          : isHigh
+                      className={`w-full rounded-t-lg transition-colors ${item.isToday
+                        ? 'bg-emerald-500'
+                        : isHigh
                           ? 'bg-amber-400'
                           : isDarkMode
-                          ? 'bg-emerald-600 hover:bg-emerald-500'
-                          : 'bg-emerald-400 hover:bg-emerald-500'
-                      }`}
+                            ? 'bg-emerald-600 hover:bg-emerald-500'
+                            : 'bg-emerald-400 hover:bg-emerald-500'
+                        }`}
                     />
                   </div>
                   <span
-                    className={`text-[10px] font-bold ${
-                      item.isToday 
-                        ? isDarkMode 
-                          ? 'text-emerald-400 bg-emerald-950/60 px-1 rounded' 
-                          : 'text-emerald-700 bg-emerald-50 px-1 rounded' 
-                        : 'text-slate-400'
-                    }`}
+                    className={`text-[10px] font-bold ${item.isToday
+                      ? isDarkMode
+                        ? 'text-emerald-400 bg-emerald-950/60 px-1 rounded'
+                        : 'text-emerald-700 bg-emerald-50 px-1 rounded'
+                      : 'text-slate-400'
+                      }`}
                   >
                     {item.day}
                   </span>
@@ -326,12 +309,10 @@ export default function Report() {
 
         {/* AI Wellness Insight Card */}
         {data.coaching && (
-          <div className={`rounded-2xl p-4 border transition-colors ${
-            isDarkMode ? 'bg-slate-900/80 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200/80 text-slate-600'
-          }`}>
-            <div className={`flex items-center gap-1.5 text-xs font-bold mb-1.5 ${
-              isDarkMode ? 'text-slate-200' : 'text-slate-800'
+          <div className={`rounded-2xl p-4 border transition-colors ${isDarkMode ? 'bg-slate-900/80 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200/80 text-slate-600'
             }`}>
+            <div className={`flex items-center gap-1.5 text-xs font-bold mb-1.5 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'
+              }`}>
               <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
               <span>이번 주 이동 건강 코칭</span>
             </div>
@@ -371,16 +352,14 @@ export default function Report() {
         {/* Navigate to History Full List */}
         <button
           onClick={() => nav('/history')}
-          className={`w-full p-4 rounded-2xl border shadow-xs flex items-center justify-between transition-colors cursor-pointer text-left ${
-            isDarkMode 
-              ? 'bg-slate-900/90 border-slate-800 hover:bg-slate-800/80 text-white' 
-              : 'bg-white border-slate-200/80 hover:bg-slate-50 text-slate-900'
-          }`}
+          className={`w-full p-4 rounded-2xl border shadow-xs flex items-center justify-between transition-colors cursor-pointer text-left ${isDarkMode
+            ? 'bg-slate-900/90 border-slate-800 hover:bg-slate-800/80 text-white'
+            : 'bg-white border-slate-200/80 hover:bg-slate-50 text-slate-900'
+            }`}
         >
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-              isDarkMode ? 'bg-slate-800 text-emerald-400' : 'bg-emerald-50 text-emerald-700'
-            }`}>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-slate-800 text-emerald-400' : 'bg-emerald-50 text-emerald-700'
+              }`}>
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>

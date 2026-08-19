@@ -9,7 +9,7 @@
 
 웨이웰(Waywell)은 대중교통 경로 이용 시 발생하는 **야외 노출 부하(자외선, 미세먼지, 날씨 등)를 최소화하는 경로를 추천**하고, 대기 시간을 실내 활동으로 전환할 수 있도록 지원하는 웰니스 내비게이션 서비스(PWA)입니다.
 
-- **문서 버전:** v1.2
+- **문서 버전:** v1.3
 - **우선순위 규정:** `P0` (MVP 필수) / `P1` (여유 시 구현) / `P2` (제안서/컨셉)
 
 ---
@@ -17,8 +17,6 @@
 ## 🛠️ 프로젝트 실행 방법 (Getting Started)
 
 ### 🐍 Server (Backend)
-
-`server` 폴더 기준으로 진행합니다.
 
 ```bash
 # 0. server 폴더로 이동
@@ -64,7 +62,28 @@ python manage.py runserver
 
 ### 💻 Client (Frontend)
 
-- TBD
+```bash
+# 1. frontend 폴더로 이동
+cd frontend
+
+# 2. 의존성 패키지 설치
+npm install
+
+# 3. 환경변수 파일 생성
+# .env.example을 복사해서 .env 파일을 만들고 값을 채워주세요.
+# Windows: copy .env.example .env
+# macOS/Linux: cp .env.example .env
+
+# 4. 개발 서버 실행
+npm run dev
+```
+
+**`.env` 항목** (`frontend/.env.example` 참고)
+
+| 변수명 | 설명 |
+| :--- | :--- |
+| `VITE_KAKAO_REST_KEY` | 카카오 REST API 키 |
+| `VITE_KAKAO_JS_KEY` | 카카오 JS API 키 |
 
 ---
 
@@ -226,11 +245,10 @@ SC-10 설정 ──> SC-11 로그인 / SC-12 회원가입 ──> SC-09 주간 �
 ## 🔌 API Endpoints
 | # | HTTP Method | Endpoint | 담당 App |
 | :---: | :---: | :--- | :--- |
-| **1** | `POST` | `/api/auth/signup` | accounts |
-| **2** | `POST` | `/api/auth/login` | accounts |
-| **3** | `GET` | `/api/me` | accounts |
-| **4** | `PATCH` | `/api/me` | accounts |
-| **5** | `DELETE` | `/api/me` | accounts |
+| **1** | `POST` | `/api/auth/kakao` | accounts |
+| **2** | `GET` | `/api/me` | accounts |
+| **3** | `PATCH` | `/api/me` | accounts |
+| **4** | `DELETE` | `/api/me` | accounts |
 | **6** | `GET` | `/api/places/search` | places |
 | **7** | `GET` | `/api/environment` | environment |
 | **8** | `GET` | `/api/routes` | routes |

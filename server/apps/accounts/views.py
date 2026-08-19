@@ -1,7 +1,3 @@
-"""회원가입·로그인·카카오 로그인·프로필 (A-05/06/09, /me)."""
-from django.contrib.auth.hashers import check_password, make_password
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -40,35 +36,6 @@ def _auth_response(account, request) -> Response:
         "user": {"id": str(account.id), "email": account.email, "preset": account.preset},
         "migration": {"migrated": migrated > 0, "trip_count": trip_count},
     })
-
-
-class SignupView(APIView):
-    def post(self, request):
-        email = (request.data.get("email") or "").strip().lower()
-        password = request.data.get("password") or ""
-        if not email:
-            return error_response("VALIDATION_ERROR", "이메일이 필요해요.", 400)
-        try:
-            validate_password(password)  # Django 검증기(길이·흔한비번·숫자전용 등)
-        except ValidationError as e:
-            return error_response("WEAK_PASSWORD", " ".join(e.messages), 400)
-        if Account.objects.filter(email=email).exists():
-            return error_response("EMAIL_TAKEN", "이미 가입된 이메일이에요.", 409)
-        account = Account.objects.create(
-            email=email, password=make_password(password),
-            preset=request.data.get("preset", "normal"),
-        )
-        return _auth_response(account, request)
-
-
-class LoginView(APIView):
-    def post(self, request):
-        email = (request.data.get("email") or "").strip().lower()
-        password = request.data.get("password") or ""
-        account = Account.objects.filter(email=email).first()
-        if not account or not account.password or not check_password(password, account.password):
-            return error_response("INVALID_CREDENTIALS", "이메일 또는 비밀번호가 올바르지 않아요.", 401)
-        return _auth_response(account, request)
 
 
 class KakaoLoginView(APIView):

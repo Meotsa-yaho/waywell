@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { useSession } from '../store/session'
-import { kakaoRedirectUri } from '../lib/kakaoAuth'
+import { kakaoRedirectUri, startKakaoLogin } from '../lib/kakaoAuth'
 import type { Preset } from '../types/api'
 
 // 카카오 인가 코드 콜백 → 백엔드 교환 → JWT 저장 후 홈
@@ -43,7 +43,10 @@ export default function KakaoCallback() {
       {error ? (
         <>
           <p className="empty">카카오 로그인에 실패했어요.</p>
-          <button className="btn" onClick={() => nav('/login', { replace: true })}>다시 시도</button>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <button className="btn" onClick={startKakaoLogin}>다시 시도</button>
+            <button className="btn outline" onClick={() => nav('/', { replace: true })}>홈으로 가기</button>
+          </div>
         </>
       ) : (
         <div className="card skeleton">카카오 로그인 중…</div>
