@@ -1,0 +1,11 @@
+{
+  "include": [
+    "server",
+    "crawler"
+  ],
+  "extraPaths": [
+    "server"
+  ],
+  "venvPath": "server",
+  "venv": "venv"
+}

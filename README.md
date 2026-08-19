@@ -245,11 +245,10 @@ SC-10 설정 ──> SC-11 로그인 / SC-12 회원가입 ──> SC-09 주간 �
 ## 🔌 API Endpoints
 | # | HTTP Method | Endpoint | 담당 App |
 | :---: | :---: | :--- | :--- |
-| **1** | `POST` | `/api/auth/signup` | accounts |
-| **2** | `POST` | `/api/auth/login` | accounts |
-| **3** | `GET` | `/api/me` | accounts |
-| **4** | `PATCH` | `/api/me` | accounts |
-| **5** | `DELETE` | `/api/me` | accounts |
+| **1** | `POST` | `/api/auth/kakao` | accounts |
+| **2** | `GET` | `/api/me` | accounts |
+| **3** | `PATCH` | `/api/me` | accounts |
+| **4** | `DELETE` | `/api/me` | accounts |
 | **6** | `GET` | `/api/places/search` | places |
 | **7** | `GET` | `/api/environment` | environment |
 | **8** | `GET` | `/api/routes` | routes |

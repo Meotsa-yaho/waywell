@@ -14,8 +14,6 @@ import Report from './pages/Report'
 import Settings from './pages/Settings'
 import PresetSelect from './pages/PresetSelect'
 import Info from './pages/Info'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
 import KakaoCallback from './pages/KakaoCallback'
 import History from './pages/History'
 import NotFound from './pages/NotFound'
@@ -52,8 +50,6 @@ export default function App() {
           <Route path="/routes/:routeId" element={<RouteDetail />} />
           <Route path="/trip" element={<Trip />} />
           <Route path="/trip/shelters" element={<Shelters />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
           <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
           <Route path="/history" element={<History />} />
 
