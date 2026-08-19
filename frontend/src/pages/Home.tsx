@@ -98,6 +98,10 @@ export default function Home() {
   }, []);
 
   const handleRequestRouteCandidates = (originName: string, destName: string) => {
+    if (!destName || !destName.trim()) {
+      showToast('도착지를 설정해주세요.');
+      return;
+    }
     setSearchRouteState({ origin: originName, destination: destName });
     addRecent({
       place_id: `place_${Date.now()}`,
