@@ -89,13 +89,13 @@ def _parse_path(path: dict, origin: list[float] | None = None, dest: list[float]
             seq += 1
             seg_api.append({"seq": seq, "type": "transfer_walk" if not seg_outdoor else "walk",
                             "minutes": st, "outdoor": seg_outdoor, "exposure_minutes": st if seg_outdoor else 0})
-            seg_engine.append({"outdoor": seg_outdoor, "minutes": st})
+            seg_engine.append({"outdoor": seg_outdoor, "minutes": st, "kind": "walk_out" if seg_outdoor else "walk_in"})
 
         elif tt == 2:  # 버스: 대기(야외) + 탑승(실내)
             seq += 1
             seg_api.append({"seq": seq, "type": "bus_wait", "minutes": EST_BUS_WAIT, "outdoor": True,
                             "exposure_minutes": EST_BUS_WAIT, "station": sp.get("startName"), "realtime": False})
-            seg_engine.append({"outdoor": True, "minutes": EST_BUS_WAIT})
+            seg_engine.append({"outdoor": True, "minutes": EST_BUS_WAIT, "kind": "bus_wait"})
             if start:  # 실시간 보정 대상: 승차 정류소 좌표 + 노선번호
                 bus_waits.append({"api": len(seg_api) - 1, "engine": len(seg_engine) - 1,
                                   "lat": start[0], "lng": start[1], "bus_no": _lane_name(sp)})
@@ -103,14 +103,14 @@ def _parse_path(path: dict, origin: list[float] | None = None, dest: list[float]
             seg_api.append({"seq": seq, "type": "bus", "route_name": _lane_name(sp), "minutes": st,
                             "outdoor": False, "exposure_minutes": 0,
                             "from": {"name": sp.get("startName")}, "to": {"name": sp.get("endName")}})
-            seg_engine.append({"outdoor": False, "minutes": st})
+            seg_engine.append({"outdoor": False, "minutes": st, "kind": "bus"})
 
         elif tt == 1:  # 지하철: 탑승(실내)
             seq += 1
             seg_api.append({"seq": seq, "type": "subway", "line": _lane_name(sp), "minutes": st,
                             "outdoor": False, "exposure_minutes": 0,
                             "from": {"name": sp.get("startName")}, "to": {"name": sp.get("endName")}})
-            seg_engine.append({"outdoor": False, "minutes": st})
+            seg_engine.append({"outdoor": False, "minutes": st, "kind": "subway"})
 
     transfers = max(0, info.get("busTransitCount", 0) + info.get("subwayTransitCount", 0) - 1)
     return {
@@ -195,6 +195,14 @@ def apply_realtime_waits(candidates: list[dict], deadline_s: float = 5, budget: 
     ex.shutdown(wait=False, cancel_futures=True)  # 남은 느린 콜은 기다리지 않음
 
 
+def apply_geometry(candidates: list[dict]) -> None:
+    """선택된 경로들에만 실제 선로 좌표(loadLane)를 동시 호출로 붙인다 (제자리 수정)."""
+    if not candidates:
+        return
+    with ThreadPoolExecutor(max_workers=min(len(candidates), 4)) as ex:
+        list(ex.map(_apply_geometry, candidates))
+
+
 def search_routes(from_lat: float, from_lng: float, to_lat: float, to_lng: float,
                   limit: int = 3, with_geometry: bool = False) -> list[dict]:
     r = requests.get(
@@ -216,7 +224,7 @@ def search_routes(from_lat: float, from_lng: float, to_lat: float, to_lng: float
         return []
     origin, dest = [from_lat, from_lng], [to_lat, to_lng]
     parsed = [_parse_path(p, origin, dest) for p in paths[:limit]]
-    if with_geometry:  # 상세 화면에서만 실제 선로 좌표 추가 (구간당 추가 호출)
-        for p in parsed:
-            _apply_geometry(p)
+    if with_geometry and parsed:  # 상세 화면에서만 실제 선로 좌표 추가 (경로당 loadLane 호출을 동시 실행)
+        with ThreadPoolExecutor(max_workers=min(len(parsed), 4)) as ex:
+            list(ex.map(_apply_geometry, parsed))
     return parsed

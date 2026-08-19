@@ -6,24 +6,6 @@ import { api } from '../api/client';
 import EmptyState from '../components/EmptyState';
 import type { TripSummary } from '../types/api';
 
-const STATUS_CONFIG: Record<TripSummary['status'], { label: string; lightClass: string; darkClass: string }> = {
-  in_progress: {
-    label: '이동 중',
-    lightClass: 'bg-amber-100 text-amber-800 border-amber-200',
-    darkClass: 'bg-amber-950/60 text-amber-300 border-amber-800/60',
-  },
-  completed: {
-    label: '완료됨',
-    lightClass: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    darkClass: 'bg-emerald-950/60 text-emerald-300 border-emerald-800/60',
-  },
-  cancelled: {
-    label: '취소됨',
-    lightClass: 'bg-slate-100 text-slate-600 border-slate-200',
-    darkClass: 'bg-slate-800 text-slate-400 border-slate-700',
-  },
-};
-
 function fmtDate(iso: string): string {
   const d = new Date(iso);
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(
@@ -195,7 +177,6 @@ export default function History() {
         >
           <AnimatePresence>
             {trips.map((t) => {
-              const statusStyle = STATUS_CONFIG[t.status] || STATUS_CONFIG.completed;
               const isDeleting = deletingId === t.id;
 
               return (
@@ -219,12 +200,6 @@ export default function History() {
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                        isDarkMode ? statusStyle.darkClass : statusStyle.lightClass
-                      }`}>
-                        {statusStyle.label}
-                      </span>
-
                       {/* Delete Button */}
                       <button
                         type="button"

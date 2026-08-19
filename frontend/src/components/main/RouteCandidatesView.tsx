@@ -12,6 +12,8 @@ import {
   RefreshCw,
   ArrowUpDown,
   Building,
+  Clock,
+  Crosshair,
   X
 } from 'lucide-react';
 import KakaoMap from '../KakaoMap';
@@ -45,6 +47,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
 }) => {
   const nav = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+  const reqIdRef = useRef(0); // 경로 요청 순서 가드 (오래된 응답/실패 무시)
   const fromPlace = useRouteQuery((s) => s.from);
   const toPlace = useRouteQuery((s) => s.to);
   const setPlace = useRouteQuery((s) => s.setPlace);
@@ -58,6 +61,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
   // Suggestions state
   const [originSuggestions, setOriginSuggestions] = useState<Place[]>([]);
   const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
+  const [originFocused, setOriginFocused] = useState(false); // 포커스 시 '현재 위치' 옵션 노출
   const [destSuggestions, setDestSuggestions] = useState<Place[]>([]);
   const [isSearchingDest, setIsSearchingDest] = useState(false);
 
@@ -75,7 +79,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
   const snapPoints = useMemo(() => {
     const h = containerH;
     return {
-      collapsed: 140,
+      collapsed: 88, // 최소화 시 핸들+시간 요약 헤더만 (구간 상세는 숨김). '안내 시작'은 시트 밖 하단 고정
       half: Math.round(h * 0.50),
       expanded: Math.round(h * 0.82),
     };
@@ -109,6 +113,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
   const toLng = toPlace?.lng ?? 127.0276;
 
   const fetchRoutes = (fromCoord: string, toCoord: string, fromName: string, toName: string) => {
+    const reqId = ++reqIdRef.current;
     setLoading(true);
     setError(null);
     api.getRoutes({
@@ -120,6 +125,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
       preset,
     })
       .then((res) => {
+        if (reqId !== reqIdRef.current) return; // 오래된 응답 무시
         if (res.routes && res.routes.length > 0) {
           setRoutes(res.routes);
           const recRoute = res.routes.find((r) => r.recommended) || res.routes[0];
@@ -129,10 +135,11 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
         }
       })
       .catch(() => {
+        if (reqId !== reqIdRef.current) return; // 오래된/취소된 요청의 실패는 무시 (좋은 결과 유지)
         setError('경로를 불러오는 중 오류가 발생했습니다.');
       })
       .finally(() => {
-        setLoading(false);
+        if (reqId === reqIdRef.current) setLoading(false);
       });
   };
 
@@ -185,10 +192,35 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
     setPlace('from', place);
     addRecent(place);
     setOriginSuggestions([]);
+    setOriginFocused(false);
     const fromParam = `${place.lat},${place.lng}`;
     const toParam = `${toLat},${toLng}`;
     fetchRoutes(fromParam, toParam, place.name, destination);
     onShowToast(`출발지를 '${place.name}'(으)로 변경했습니다.`);
+  };
+
+  // 출발지 드롭다운의 '현재 위치로 설정' — GPS 좌표로 출발지 지정 후 재탐색
+  const handleUseCurrentLocation = () => {
+    setOriginSuggestions([]);
+    setOriginFocused(false);
+    if (!navigator.geolocation) {
+      onShowToast('이 기기에서는 현재 위치를 쓸 수 없어요.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        const place: Place = {
+          place_id: 'current', name: '현재 위치', address: '현재 위치', category: '',
+          lat: p.coords.latitude, lng: p.coords.longitude,
+        };
+        setOrigin('현재 위치');
+        setPlace('from', place);
+        fetchRoutes(`${place.lat},${place.lng}`, `${toLat},${toLng}`, '현재 위치', destination);
+        onShowToast('출발지를 현재 위치로 설정했습니다.');
+      },
+      () => onShowToast('현재 위치를 가져오지 못했어요.'),
+      { timeout: 5000, maximumAge: 60000 },
+    );
   };
 
   const handleSelectDest = (place: Place) => {
@@ -287,6 +319,17 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
 
   const handleStartTrip = () => {
     if (!selectedRoute) return;
+    // 이동 중(/trip) 지도에 경로·좌표를 그리도록 선택 경로를 stash
+    localStorage.setItem('active_trip_route', JSON.stringify({
+      from: { lat: fromLat, lng: fromLng, name: origin },
+      to: { lat: toLat, lng: toLng, name: destination },
+      polyline: selectedRoute.polyline,
+      path_segments: selectedRoute.path_segments,
+      segments: selectedRoute.segments,
+      total_minutes: selectedRoute.total_minutes,
+      exposure_load: selectedRoute.exposure_load,
+      outdoor_minutes: selectedRoute.outdoor_minutes,
+    }));
     api.startTrip({
       from_name: origin,
       to_name: destination,
@@ -330,7 +373,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
   ], [fromLat, fromLng, toLat, toLng]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-[calc(100dvh-58px)] overflow-hidden select-none">
+    <div ref={containerRef} className="route-fullscreen relative w-full h-[calc(100dvh-58px)] overflow-hidden select-none">
       {/* 1. Kakao Map Real Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <KakaoMap
@@ -367,7 +410,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
         </div>
 
         {/* Two-Line Editable Origin & Destination Card */}
-        <div className={`pointer-events-auto rounded-2xl p-2.5 sm:p-3 border shadow-md backdrop-blur-md transition-colors relative space-y-1.5 ${isDarkMode ? 'bg-slate-900/90 border-slate-700 text-slate-200' : 'bg-white/95 border-slate-200 text-slate-800'
+        <div className={`pointer-events-auto rounded-2xl p-2.5 sm:p-3 border shadow-md backdrop-blur-md transition-colors relative z-30 space-y-1.5 ${isDarkMode ? 'bg-slate-900/90 border-slate-700 text-slate-200' : 'bg-white/95 border-slate-200 text-slate-800'
           }`}>
           {/* 1. Origin Input */}
           <div className="relative">
@@ -380,6 +423,8 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
                 type="text"
                 value={origin}
                 onChange={(e) => setOrigin(e.target.value)}
+                onFocus={() => setOriginFocused(true)}
+                onBlur={() => setTimeout(() => setOriginFocused(false), 150)}
                 placeholder="출발지 입력"
                 className={`w-full bg-transparent text-xs font-bold placeholder-slate-400 focus:outline-none ${isDarkMode ? 'text-white' : 'text-slate-800'
                   }`}
@@ -400,9 +445,9 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
               ) : null}
             </div>
 
-            {/* Origin Dropdown Suggestions */}
+            {/* Origin Dropdown: 포커스 시 '현재 위치' + 입력 시 검색후보 */}
             <AnimatePresence>
-              {originSuggestions.length > 0 && (
+              {(originFocused || originSuggestions.length > 0) && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -411,6 +456,15 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
                     }`}
                 >
                   <div className="p-1 space-y-0.5">
+                    {/* 현재 위치로 설정 (항상 상단) */}
+                    <div
+                      onMouseDown={(e) => { e.preventDefault(); handleUseCurrentLocation(); }}
+                      className={`p-2 rounded-lg flex items-center gap-2 cursor-pointer transition-colors ${originSuggestions.length > 0 ? 'border-b' : ''} ${isDarkMode ? 'hover:bg-slate-800 text-emerald-400 border-slate-800' : 'hover:bg-emerald-50 text-emerald-700 border-slate-100'
+                        }`}
+                    >
+                      <Crosshair className="w-3.5 h-3.5 shrink-0" />
+                      <span className="text-xs font-bold">📍 현재 위치로 설정</span>
+                    </div>
                     {originSuggestions.map((sug) => (
                       <div
                         key={sug.place_id}
@@ -541,6 +595,12 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
                       추천
                     </span>
                   )}
+                  {r.route_type === 'walk' && (
+                    <span className={`flex items-center gap-0.5 text-[9px] px-1 py-0.2 rounded font-extrabold ${isSelected ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                      <Footprints className="w-2.5 h-2.5" />도보
+                    </span>
+                  )}
                   <span>{r.total_minutes}분</span>
                   <span className={`text-[10px] ${isSelected ? 'text-emerald-100' : 'text-slate-400'}`}>
                     (부하 {r.exposure_load})
@@ -585,7 +645,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
         <motion.div
           id="route-detail-bottom-sheet"
           style={{ height: heightMV }}
-          className={`absolute bottom-0 left-0 right-0 z-30 rounded-t-3xl border-t shadow-2xl transition-colors duration-200 flex flex-col pointer-events-auto ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-800'
+          className={`absolute bottom-[72px] left-0 right-0 z-30 rounded-t-3xl border-t shadow-2xl transition-colors duration-200 flex flex-col pointer-events-auto ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-800'
             }`}
         >
           {/* Grab Handle Header with Real-time Pan Gestures */}
@@ -636,6 +696,18 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
 
           {/* Sheet Scrollable Body */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* 출발시각 넛지 배너 — 실시간 버스 대기가 길 때만 */}
+            {selectedRoute.depart_nudge && (
+              <div className={`p-3 rounded-2xl border text-xs leading-relaxed transition-colors ${isDarkMode ? 'bg-sky-950/30 border-sky-900/50 text-sky-200' : 'bg-sky-50/70 border-sky-200 text-sky-900'
+                }`}>
+                <div className="flex items-center gap-1 font-bold mb-1 text-[11px]">
+                  <Clock className="w-3.5 h-3.5 text-sky-500" />
+                  <span>출발시각 팁 · {selectedRoute.depart_nudge.delay_minutes}분 늦게</span>
+                </div>
+                <p className="text-[11px] font-medium">{selectedRoute.depart_nudge.text}</p>
+              </div>
+            )}
+
             {/* LLM Coaching Banner */}
             {selectedRoute.llm_comment && (
               <div className={`p-3 rounded-2xl border text-xs leading-relaxed transition-colors ${isDarkMode ? 'bg-emerald-950/30 border-emerald-900/50 text-emerald-200' : 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
@@ -694,19 +766,24 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
               </div>
             </div>
           </div>
-
-          {/* Bottom Start Trip CTA */}
-          <div className={`p-3 border-t shrink-0 ${isDarkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
-            <button
-              id="btn-confirm-route"
-              onClick={handleStartTrip}
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-950/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <Navigation className="w-4 h-4" />
-              <span>실시간 안심 이동 안내 시작하기</span>
-            </button>
-          </div>
         </motion.div>
+      )}
+
+      {/* Bottom Start Trip CTA — 시트와 별개로 하단에 항상 고정 (드래그·스냅 상태 무관) */}
+      {selectedRoute && (
+        <div
+          className={`absolute bottom-0 left-0 right-0 z-40 h-[72px] px-3 flex items-center border-t pointer-events-auto ${isDarkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'
+            }`}
+        >
+          <button
+            id="btn-confirm-route"
+            onClick={handleStartTrip}
+            className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-950/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+          >
+            <Navigation className="w-4 h-4" />
+            <span>실시간 안심 이동 안내 시작하기</span>
+          </button>
+        </div>
       )}
     </div>
   );

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 const SOURCES = [
   { icon: '☀️', name: '기상청', desc: '날씨 · 자외선 지수' },
   { icon: '😷', name: '한국환경공단 에어코리아', desc: '미세먼지' },
-  { icon: '🚇', name: 'ODsay', desc: '대중교통 경로' },
+  { icon: '🧭', name: 'SK Tmap', desc: '대중교통 · 보행자 경로' },
+  { icon: '🚇', name: 'ODsay', desc: '대중교통 경로 (보조)' },
   { icon: '🚌', name: '국토교통부 TAGO', desc: '실시간 버스 도착' },
   { icon: '🗺️', name: '카카오', desc: '지도 · 장소 검색' },
 ]

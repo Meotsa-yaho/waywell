@@ -63,3 +63,6 @@ htmlcov/
 
 # Claude Code 로컬 설정 (깃 추적 안 함)
 .claude/
+
+# 그늘막 로컬 저장(수집물, import_shades로 생성)
+server/apps/places/data/shades.json

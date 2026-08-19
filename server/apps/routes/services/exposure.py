@@ -18,6 +18,25 @@ PRESET_WEIGHTS = {
     "heat": {"uv": 1.0, "heat": 1.5, "air": 1.0},
 }
 
+# 구간 종류별 (uv, heat, air) 노출 배율 — 같은 시간이라도 종류마다 노출 성분이 다르다.
+# 버스=도로변 미세↑·햇빛X, 도보/대기=개방 하늘 UV↑. → 프리셋이 경로 순위를 실제로 바꾼다.
+# ponytail: 휴리스틱 상수. 구간별 실측(도로변/그늘/시간대) 붙으면 정교화.
+EXPOSURE_PROFILE = {
+    "subway": (0.0, 0.0, 0.0),    # 지하 실내
+    "bus": (0.0, 0.3, 0.6),       # 차내: 햇빛 없음, 정체 도로변 미세
+    "bus_wait": (1.0, 1.0, 1.0),  # 노변 정류장 야외
+    "walk_out": (1.0, 1.0, 0.5),  # 개방 하늘 UV/더위, 보도 미세 중간
+    "walk_in": (0.0, 0.0, 0.0),   # 역사 내 환승
+}
+
+
+def _profile(seg: dict) -> tuple[float, float, float]:
+    """구간의 (uv, heat, air) 노출 배율. kind 없으면 outdoor 플래그로 폴백(v1 호환)."""
+    k = seg.get("kind")
+    if k in EXPOSURE_PROFILE:
+        return EXPOSURE_PROFILE[k]
+    return (1.0, 1.0, 1.0) if seg.get("outdoor") else (0.0, 0.0, 0.0)
+
 
 def _uv_norm(uv):
     return min(uv / 11.0, 1.0) if uv is not None else 0.0
@@ -50,11 +69,15 @@ def calc_exposure_load(segments: list[dict], env: dict, preset: str) -> dict:
     heat_i = _heat_norm(env.get("feels_like"))
     air_i = _air_norm(env.get("pm10"))
 
+    # 성분별 노출 시간 — 구간 종류 배율 반영 (버스=air 위주, 도보/대기=uv/heat 위주)
+    uv_min = sum(s["minutes"] * _profile(s)[0] for s in segments)
+    heat_min = sum(s["minutes"] * _profile(s)[1] for s in segments)
+    air_min = sum(s["minutes"] * _profile(s)[2] for s in segments)
     outdoor_min = sum(s["minutes"] for s in segments if s.get("outdoor"))
 
-    raw_uv = outdoor_min * W_UV * uv_i * pw["uv"]
-    raw_heat = outdoor_min * W_HEAT * heat_i * pw["heat"]
-    raw_air = outdoor_min * W_AIR * air_i * pw["air"]
+    raw_uv = uv_min * W_UV * uv_i * pw["uv"]
+    raw_heat = heat_min * W_HEAT * heat_i * pw["heat"]
+    raw_air = air_min * W_AIR * air_i * pw["air"]
 
     uv_p, heat_p, air_p = raw_uv * SCALE, raw_heat * SCALE, raw_air * SCALE
     total = uv_p + heat_p + air_p

@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from apps.common.response import error_response
-from .services import kakao_local
+from .services import kakao_local, shade_store
 
 
 class PlaceSearchView(APIView):
@@ -46,3 +46,25 @@ class SheltersView(APIView):
             return error_response("UPSTREAM_TIMEOUT", "주변 장소를 불러오지 못했어요.", 504)
 
         return Response({"shelters": shelters})
+
+
+class ShadesView(APIView):
+    """GET /api/shades?lat=&lng=&radius=  → 근처 야외 그늘막(도보 가까운 순). 로컬 저장분에서 조회."""
+
+    def get(self, request):
+        q = request.query_params
+        try:
+            lat, lng = float(q["lat"]), float(q["lng"])
+        except (KeyError, ValueError):
+            return error_response("VALIDATION_ERROR", "위치(lat, lng)가 필요해요.", 400)
+        try:
+            radius = min(2000, max(50, int(q.get("radius", 500))))
+        except ValueError:
+            radius = 500
+
+        try:
+            shades = shade_store.nearby(lat, lng, radius)
+        except Exception:
+            return error_response("UPSTREAM_TIMEOUT", "그늘막 정보를 불러오지 못했어요.", 504)
+
+        return Response({"shades": shades})

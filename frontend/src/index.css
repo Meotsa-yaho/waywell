@@ -27,6 +27,8 @@ body { background: var(--bg); }
   background: var(--bg);
 }
 .app-main { flex: 1; overflow-y: auto; padding-bottom: 72px; }
+/* 경로 후보는 자체 하단 CTA를 가진 전체화면 → app-main의 스크롤·하단여백(72px) 이중 계산 제거 */
+.app-main:has(.route-fullscreen) { overflow: hidden; padding-bottom: 0; }
 
 /* 데스크톱에선 폰 프레임처럼 보이게 (모바일은 꽉 참) */
 @media (min-width: 481px) {
@@ -40,7 +42,14 @@ html.dark {
   --ink: #f8fafc;
   --muted: #94a3b8;
   --line: #1e293b;
+  --brand-ink: #5eead4;  /* 다크 카드 위 초록 텍스트 가독성 (#5 /trip 등). --brand은 버튼 배경이라 유지 */
 }
+/* 밝은 배경 하드코딩 칩/배너/그라데이션 카드는 다크에서 어두운 배경으로 보정 (텍스트 대비 유지) */
+html.dark .mode-chip,
+html.dark .badge.grade { background: #14261f; }
+html.dark .banner { background: #0d1f19; border-color: #1e3a30; }
+html.dark .env-card,
+html.dark .dev-card { background: linear-gradient(135deg, #0e5a49, #0a3d33); }
 html.dark body {
   background: #020617;
   color: #f8fafc;
@@ -469,6 +478,26 @@ button.depart-now {
   padding: 11px 12px; font-size: 14px; background: var(--card); color: var(--ink); cursor: pointer;
 }
 .muted-field { color: var(--muted); }
+
+/* 실시간 내 위치 마커 (이동 중 지도) — 파란 점 + 맥동 */
+.my-loc-dot {
+  width: 16px; height: 16px; border-radius: 9999px;
+  background: #2b7fff; border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  animation: myloc-pulse 1.6s ease-out infinite;
+}
+@keyframes myloc-pulse {
+  0% { box-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 0 0 0 rgba(43,127,255,0.45); }
+  70% { box-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 0 0 14px rgba(43,127,255,0); }
+  100% { box-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 0 0 0 rgba(43,127,255,0); }
+}
+
+/* 야외 그늘막 지도 마커 */
+.shade-marker {
+  font-size: 16px; line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+  cursor: default; user-select: none;
+}
 
 /* 하단 탭바 */
 .tabbar {

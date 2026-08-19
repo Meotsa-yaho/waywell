@@ -14,7 +14,8 @@ interface SettingsInfoModalProps {
 const DATA_SOURCES = [
   { name: '기상청', desc: '날씨 · 자외선 지수', badge: '실시간 날씨 API' },
   { name: '한국환경공단 에어코리아', desc: '미세먼지 (PM10 · PM2.5)', badge: '대기환경측정망' },
-  { name: 'ODsay', desc: '대중교통 경로', badge: '통합 대중교통' },
+  { name: 'SK Tmap', desc: '대중교통 · 보행자 경로', badge: 'Tmap API' },
+  { name: 'ODsay', desc: '대중교통 경로 (보조)', badge: '통합 대중교통' },
   { name: '국토교통부 TAGO', desc: '실시간 버스 도착', badge: '공공데이터포털' },
   { name: '카카오', desc: '지도 · 장소 검색', badge: 'Kakao Maps API' },
 ];

@@ -21,15 +21,21 @@ interface Props {
   paths?: PathSeg[] // 모드별 색상 구분
   fitBottomPadding?: number // 하단 시트에 가리지 않도록 bounds 아래 여백(px)
   recenterKey?: number // 값이 바뀌면 center로 지도 이동(좌표 동일해도 강제) — 현위치 버튼용
+  myLocation?: { lat: number; lng: number } | null // 실시간 내 위치(맥동 마커)
+  follow?: boolean // true면 내 위치 갱신 시 지도 중심을 따라 이동 (이동 중 화면)
+  onUserDrag?: () => void // 사용자가 지도를 직접 끌면 호출 (팔로우 자동 해제용)
+  shades?: { lat: number; lng: number; name: string }[] // 야외 그늘막(🌂 마커)
   onMapClick?: (lat: number, lng: number) => void
   className?: string
 }
 
-export default function KakaoMap({ center, level = 5, markers = [], polyline, paths, fitBottomPadding = 180, recenterKey, onMapClick }: Props) {
+export default function KakaoMap({ center, level = 5, markers = [], polyline, paths, fitBottomPadding = 180, recenterKey, myLocation, follow, onUserDrag, shades, onMapClick }: Props) {
   const boxRef = useRef<HTMLDivElement>(null)
   const kakaoRef = useRef<any>(null)
   const mapRef = useRef<any>(null)
   const overlaysRef = useRef<any[]>([])
+  const myOverlayRef = useRef<any>(null)
+  const shadeOverlaysRef = useRef<any[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -46,6 +52,9 @@ export default function KakaoMap({ center, level = 5, markers = [], polyline, pa
             onMapClick(e.latLng.getLat(), e.latLng.getLng()),
           )
         }
+        if (onUserDrag) {
+          kakao.maps.event.addListener(mapRef.current, 'dragstart', onUserDrag)
+        }
         redraw()
       })
       .catch((e) => console.error(e))
@@ -54,6 +63,41 @@ export default function KakaoMap({ center, level = 5, markers = [], polyline, pa
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // 실시간 내 위치: 맥동 마커를 제자리 갱신(전체 redraw·bounds 재조정 없이). follow면 중심 이동.
+  useEffect(() => {
+    const kakao = kakaoRef.current
+    const map = mapRef.current
+    if (!kakao || !map || !myLocation) return
+    const pos = new kakao.maps.LatLng(myLocation.lat, myLocation.lng)
+    if (!myOverlayRef.current) {
+      const el = document.createElement('div')
+      el.className = 'my-loc-dot'
+      myOverlayRef.current = new kakao.maps.CustomOverlay({ position: pos, content: el, zIndex: 10 })
+      myOverlayRef.current.setMap(map)
+    } else {
+      myOverlayRef.current.setPosition(pos)
+    }
+    if (follow) map.setCenter(pos)
+  }, [myLocation?.lat, myLocation?.lng, follow])
+
+  // 야외 그늘막 마커 (🌂) — bounds 재조정 없이 제자리 갱신
+  useEffect(() => {
+    const kakao = kakaoRef.current
+    const map = mapRef.current
+    if (!kakao || !map) return
+    shadeOverlaysRef.current.forEach((o) => o.setMap(null))
+    shadeOverlaysRef.current = []
+    for (const s of shades ?? []) {
+      const el = document.createElement('div')
+      el.className = 'shade-marker'
+      el.title = s.name
+      el.textContent = '🌂'
+      const ov = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(s.lat, s.lng), content: el, zIndex: 6, yAnchor: 1 })
+      ov.setMap(map)
+      shadeOverlaysRef.current.push(ov)
+    }
+  }, [JSON.stringify(shades ?? null)])
 
   useEffect(() => {
     const kakao = kakaoRef.current
