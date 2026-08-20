@@ -131,7 +131,7 @@ def build_user_prompt(routes: list[dict], env: dict, preset: str) -> str:
         # 밤(자외선 0)이나 선선한 날에 "자외선 지수 0 —"으로 시작하는 어색한 문구를 막는다.
         "weather_notable": bool(_env_prefix(env, preset)),
         "routes": compact_routes(routes),
-        "note": "exposure_load는 0~100 야외 노출 부하 점수이며 낮을수록 좋다.",
+        "note": "exposure_load와 exposure_breakdown은 0~100 야외 노출 부하 점수다(낮을수록 좋음). environment.uv_index와는 다른 값이니 서로 바꿔 쓰지 말 것. '자외선 지수'라는 표현은 uv_index에만 쓴다.",
     }
     return json.dumps(payload, ensure_ascii=False)
 

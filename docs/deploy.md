@@ -59,6 +59,16 @@
 
 이후 작업은 로컬 PC에서 `ssh root@공인IP`로 붙는 게 편하다(복붙이 자유롭다).
 
+### 브라우저 콘솔의 붙여넣기 제약
+
+가비아 브라우저 터미널은 긴 줄을 붙여넣으면 **뒤가 잘리고**, 역슬래시가 `|`로 들어간다.
+배포 중 이 두 가지로 gunicorn이 두 번 실패했다.
+
+- 긴 파일(`.env`, nginx 설정)은 `nano`로 열어 붙여넣는다. 셸 명령보다 안전하다
+- 붙여넣은 뒤 반드시 확인한다:
+  `awk -F= 'NF>1 {print $1": "length($2)}' .env` (값 길이) / `cat 파일` (잘림·`|` 확인)
+- 가능하면 로컬 PC에서 `ssh root@공인IP`로 접속해 작업한다. 붙여넣기가 정상 동작한다
+
 ## 4. 기본 패키지
 
 ```bash
@@ -131,17 +141,18 @@ After=network.target
 User=waywell
 Group=www-data
 WorkingDirectory=/opt/waywell/server
-ExecStart=/opt/waywell/server/venv/bin/gunicorn --workers 3 --timeout 90 \
-          --bind 127.0.0.1:8000 config.wsgi:application
+ExecStart=/opt/waywell/server/venv/bin/gunicorn config.wsgi:application
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-- `WorkingDirectory`가 `server/`여야 `load_dotenv()`가 `.env`를 찾는다 (`EnvironmentFile`은 불필요)
-- `--timeout 90`: 경로 조회가 Tmap·기상청·에어코리아를 순차로 타서 기본 30초로는 끊길 수 있다
-- 워커 3개 → 0단계의 `CACHES` 설정이 없으면 캐시가 3벌로 쪼개진다
+- `WorkingDirectory`가 `server/`여야 두 가지가 동작한다: `load_dotenv()`의 `.env` 탐색,
+  그리고 gunicorn이 `server/gunicorn.conf.py`(bind·workers·timeout)를 자동으로 읽는 것
+- **옵션을 ExecStart에 늘어놓지 말 것.** 가비아 브라우저 콘솔은 긴 줄을 붙여넣을 때 뒤를 잘라먹고,
+  줄바꿈용 역슬래시가 `|`로 들어간다. 실제로 `--bind` 뒤가 잘려 기동이 두 번 실패했다
+- 워커 3개 → `CACHES` 설정이 없으면 캐시가 3벌로 쪼개진다
 
 ```bash
 systemctl daemon-reload && systemctl enable --now waywell
@@ -172,7 +183,8 @@ npm ci && npm run build      # → frontend/dist
 ```nginx
 server {
     listen 80;
-    server_name 배포도메인;
+    server_name 배포도메인;   # certbot이 이 값으로 블록을 찾는다. `_`(와일드카드)면
+                             # "Could not automatically find a matching server block" 로 실패한다
 
     root /opt/waywell/frontend/dist;
     index index.html;
@@ -204,15 +216,22 @@ nginx -t && systemctl reload nginx
 PWA 서비스워커와 위치 권한(geolocation)은 **HTTPS에서만** 동작한다.
 IP로만 띄우면 홈 화면 설치도, "현재 위치"도, 카카오 로그인도 막힌다.
 
-1. 가비아 DNS에서 **A레코드 → 공인IP**
-2. 인증서 발급:
+1. 가비아 DNS에서 **A레코드 → 공인IP** (호스트에 서브도메인만, 값에 IP만)
+   - 저장 즉시 권한 네임서버에 반영된다. 전파를 기다릴 필요 없다:
+     `nslookup 배포도메인 ns.gabia.co.kr`
+   - 레코드 없이 certbot을 돌리면 `NXDOMAIN`으로 실패한다
+2. 위 9단계의 `server_name`이 `_`가 아니라 실제 도메인인지 먼저 확인
+3. 인증서 발급:
 
 ```bash
 apt -y install certbot python3-certbot-nginx
 certbot --nginx -d 배포도메인
 ```
 
-3. `.env`에서 `SECURE_HTTPS=True` 주석 해제 후 `systemctl restart waywell`
+4. `.env`의 `ALLOWED_HOSTS`·`CORS_ALLOWED_ORIGINS`를 도메인으로 바꾸고
+   `SECURE_HTTPS=True` 주석 해제 → `systemctl restart waywell`
+   - `ALLOWED_HOSTS`를 안 고치면 **API가 전부 400**을 낸다(화면은 뜨는데 데이터가 없다)
+   - 확인: `curl -sI https://배포도메인/api/health/ | grep -i strict-transport`
 
 ## 11. 외부 콘솔에 배포 도메인 등록
 
@@ -220,6 +239,10 @@ certbot --nginx -d 배포도메인
 
 - **카카오** — 플랫폼 Web 사이트 도메인에 `https://배포도메인` 추가, 카카오 로그인 Redirect URI에
   `https://배포도메인/auth/kakao/callback` 추가 (안 하면 지도·로컬 API 403, 로그인 실패)
+  - 콘솔에서 **Client Secret '사용함'** 을 켰다면 `server/.env`의 `KAKAO_CLIENT_SECRET`이 **필수**다.
+    비워두면 로그인 화면까지는 가고 돌아오는 순간 토큰 교환이 실패한다.
+    확인: `journalctl -u waywell | grep -i "kakao token exchange failed"`
+  - 카카오맵 **서비스 활성화(ON)** 는 사이트 도메인 등록과 별개 스위치다
 - **ODsay** — 대시보드 Service URI에 배포 도메인 등록 (안 하면 `ApiKeyAuthFailed`)
 - **Tmap** — 별도 도메인 등록은 없으나 무료 쿼터 429 시 ODsay로 자동 폴백
 
