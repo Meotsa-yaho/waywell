@@ -1,4 +1,5 @@
 """GET /api/routes — 경로 후보 + 노출부하 + 예측등급 (B-04~B-10)."""
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
 
@@ -10,6 +11,7 @@ from apps.environment.services.snapshot import env_for_exposure
 from .services import odsay_client, tmap_transit_client, tmap_pedestrian_client
 from .services.exposure import calc_exposure_load, env_severity
 
+_log = logging.getLogger("routes")
 KST = timezone(timedelta(hours=9))
 
 # E-06 데모 모드: 실제 날씨와 무관하게 조건을 강제 (킬러 장면)
@@ -97,23 +99,33 @@ class RoutesView(APIView):
         f_walk = ex.submit(tmap_pedestrian_client.search_walk_route, from_lat, from_lng, to_lat, to_lng)
 
         source = "tmap"
+        upstream_error = False  # 업스트림 장애(429/쿼터/타임아웃)와 '진짜 무경로'를 구분
         try:  # Tmap 대중교통 우선 (후보 많고 좌표 내장 → geometry 불필요)
             candidates = tmap_transit_client.search_transit_routes(from_lat, from_lng, to_lat, to_lng, limit=8)
-        except Exception:
+        except Exception as e:
+            _log.warning("tmap transit failed: %s", e)
+            upstream_error = True
             candidates = []
         if not candidates:  # 폴백: ODsay (Tmap 실패/무경로/쿼터소진 시)
             source = "odsay"
             try:
                 candidates = odsay_client.search_routes(from_lat, from_lng, to_lat, to_lng, limit=8, with_geometry=False)
-            except Exception:
+                upstream_error = False  # 폴백이 정상 응답(빈 결과 포함)하면 '진짜 무경로'로 확정
+            except Exception as e:
+                _log.warning("odsay fallback failed: %s", e)
+                upstream_error = True
                 candidates = []
         try:
             walk = f_walk.result()  # 도보 후보(짧은 거리만) 또는 None
-        except Exception:
+        except Exception as e:
+            _log.warning("tmap walk failed: %s", e)
             walk = None
         ex.shutdown(wait=False)
 
         if not candidates and not walk:
+            # 업스트림 장애(429/쿼터/타임아웃)면 재시도 가능한 503, 정상 응답인데 경로가 없으면 404
+            if upstream_error:
+                return error_response("UPSTREAM_UNAVAILABLE", "지금은 경로를 불러올 수 없어요. 잠시 후 다시 시도해주세요.", 503)
             return error_response("ROUTE_NOT_FOUND", "이 구간은 경로를 찾지 못했어요", 404)
 
         candidates = _dedup_routes(candidates)  # 사실상 동일한 경로 제거
