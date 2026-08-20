@@ -1,0 +1,5 @@
+# 배포 전용 의존성. 서버에서는 이 파일로 설치한다.
+#   pip install -r requirements-prod.txt
+# 로컬(특히 Windows) 개발은 requirements.txt 만 쓰면 된다 — gunicorn은 Windows에서 실행되지 않는다.
+-r requirements.txt
+gunicorn==26.1.0

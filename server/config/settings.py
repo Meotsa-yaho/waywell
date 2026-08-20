@@ -17,7 +17,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+
+def _csv_env(name: str, default: str = "") -> list[str]:
+    """콤마 구분 env → 리스트. 공백·빈 항목 제거.
+
+    미설정 시 빈 문자열 하나가 남으면 corsheaders.E013으로 서버가 아예 기동하지 않는다
+    ("Origin '' is missing scheme or netloc"). 배포 중 .env 한 줄 누락으로 500도 아닌
+    부팅 실패를 만나지 않도록 여기서 걸러낸다.
+    """
+    return [v.strip() for v in os.getenv(name, default).split(",") if v.strip()]
+
+
+CORS_ALLOWED_ORIGINS = _csv_env("CORS_ALLOWED_ORIGINS")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,7 +44,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # 배포 도메인은 env로 (예: ALLOWED_HOSTS=waywell.testgogo.site). 미설정 시 로컬만 허용.
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = _csv_env("ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 
 # Application definition
@@ -133,6 +144,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+# collectstatic 대상. DEBUG=False(배포)에서는 Django가 static을 서빙하지 않으므로
+# `manage.py collectstatic` 후 Nginx가 이 디렉터리를 /static/ 으로 서빙해야 admin이 깨지지 않는다.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# 캐시 — 경로 후보 캐시·LLM 설명 캐시가 함께 쓴다.
+# 기본값(LocMemCache)은 프로세스별로 분리돼, gunicorn 워커 N개면 캐시도 N벌이 되어
+# 유료 외부 API를 워커 수만큼 중복 호출한다. 파일 기반은 워커끼리 공유된다.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': BASE_DIR / '.cache',
+        'TIMEOUT': 600,
+        'OPTIONS': {'MAX_ENTRIES': 1000},
+    }
+}
 
 
 # Email
