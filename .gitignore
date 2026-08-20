@@ -18,6 +18,10 @@ ENV/
 db.sqlite3
 /media/
 /staticfiles/
+# collectstatic 산출물 (STATIC_ROOT)
+server/staticfiles/
+# FileBasedCache 저장소
+server/.cache/
 
 # IDE/editor
 .vscode/
