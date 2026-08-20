@@ -57,6 +57,8 @@ python manage.py runserver
 | `DEBUG` | 디버그 모드 여부 | `True` |
 | `SECRET_KEY` | Django 시크릿 키 | `django-insecure-...` |
 | `CORS_ALLOWED_ORIGINS` | CORS 허용 origin | `http://localhost:5173,http://127.0.0.1:5173` |
+| `OPENAI_API_KEY` | B-09 LLM 경로 설명용. **비워둬도 동작**(규칙 기반 템플릿 문구로 폴백) | `sk-...` |
+| `OPENAI_MODEL` | (선택) 모델 교체. 기본 `gpt-4o-mini` | `gpt-4o-mini` |
 
 > ⚠️ `.env`는 `.gitignore`에 포함되어 있어 커밋되지 않습니다.
 

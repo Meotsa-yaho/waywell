@@ -162,6 +162,8 @@ REST_FRAMEWORK = {
         "anon": os.getenv("THROTTLE_ANON", "120/min"),
         "user": os.getenv("THROTTLE_USER", "240/min"),
         "auth": os.getenv("THROTTLE_AUTH", "30/min"),  # 로그인(카카오) 엔드포인트 전용 상한
+        # LLM 경로 설명(B-09) 전용 — OpenAI는 호출당 과금이라 다른 프록시보다 훨씬 빡빡하게.
+        "llm": os.getenv("THROTTLE_LLM", "20/min"),
     },
 }
 

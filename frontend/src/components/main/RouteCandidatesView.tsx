@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import KakaoMap from '../KakaoMap';
 import { api } from '../../api/client';
+import { withLlmComments } from '../../lib/explain';
 import { useRouteQuery } from '../../store/route';
 import { useSession } from '../../store/session';
 import type { Route, RouteSegment, Place } from '../../types/api';
@@ -137,6 +138,11 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
           setRoutes(res.routes);
           const recRoute = res.routes.find((r) => r.recommended) || res.routes[0];
           setSelectedRouteId(recRoute.route_id);
+          // B-09 코멘트는 뒤늦게 채운다 — 카드 표시를 LLM 지연으로 붙잡지 않기 위해
+          withLlmComments(res).then((withComments) => {
+            if (reqId !== reqIdRef.current) return; // 그 사이 다른 조회가 시작됐으면 버림
+            setRoutes(withComments);
+          });
         } else {
           setError('해당 구간의 대중교통 경로를 찾지 못했습니다.');
         }

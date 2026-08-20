@@ -1,4 +1,7 @@
-"""GET /api/routes — 경로 후보 + 노출부하 + 예측등급 (B-04~B-10)."""
+"""GET /api/routes — 경로 후보 + 노출부하 + 예측등급 (B-04~B-10).
+POST /api/routes/explain — 경로별 LLM 코멘트 (B-09).
+"""
+import hashlib
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -7,10 +10,11 @@ from datetime import datetime, timezone, timedelta
 from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 
 from apps.common.response import error_response
 from apps.environment.services.snapshot import env_for_exposure
-from .services import odsay_client, tmap_transit_client, tmap_pedestrian_client
+from .services import explain, odsay_client, tmap_transit_client, tmap_pedestrian_client
 from .services.exposure import calc_exposure_load, env_severity
 
 _log = logging.getLogger("routes")
@@ -255,3 +259,40 @@ class RoutesView(APIView):
             },
             "routes": routes,
         })
+
+
+class RoutesExplainView(APIView):
+    """POST /api/routes/explain — 경로 비교 JSON → 경로별 자연어 코멘트 (B-09).
+
+    GET /api/routes 와 분리한 이유: 경로 카드는 즉시 그려야 하고 문구는 나중에 채워도 된다.
+    한 번에 붙이면 LLM 지연(수 초)이 경로 응답 전체를 붙잡는다.
+
+    유료 호출이라 남용 방지 2겹: 스코프 레이트리밋 + 동일 입력 캐시.
+    """
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "llm"
+
+    def post(self, request):
+        body = request.data if isinstance(request.data, dict) else {}
+        routes = body.get("routes")
+        if not isinstance(routes, list) or not routes:
+            return error_response("VALIDATION_ERROR", "설명할 경로(routes)가 필요해요.", 400)
+        if not all(isinstance(r, dict) and r.get("route_id") for r in routes):
+            return error_response("VALIDATION_ERROR", "각 경로에 route_id가 필요해요.", 400)
+
+        env = body.get("environment") if isinstance(body.get("environment"), dict) else {}
+        preset = body.get("preset") or "normal"
+
+        # 같은 경로 조합을 다시 열어도(뒤로가기·재조회) 유료 호출이 반복되지 않게.
+        key = "routes:explain:" + hashlib.sha256(
+            explain.fingerprint(routes, env, preset).encode()
+        ).hexdigest()
+        cached = cache.get(key)
+        if cached:
+            return Response(cached)
+
+        comments, generated_by = explain.explain_routes(routes, env, preset)
+        payload = {"comments": comments, "generated_by": generated_by}
+        if generated_by == "llm":  # 템플릿 결과는 계산이 싸므로 캐시할 이유가 없다
+            cache.set(key, payload, 600)
+        return Response(payload)
