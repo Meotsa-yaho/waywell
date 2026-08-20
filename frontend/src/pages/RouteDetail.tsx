@@ -122,6 +122,17 @@ export default function RouteDetail() {
         <button
           className="topbar-cta"
           onClick={() => {
+            // 이동 중(/trip) 및 대기 장소(/trip/shelters)에서 경로 정보를 읽을 수 있도록 stash
+            localStorage.setItem('active_trip_route', JSON.stringify({
+              from: { lat: fromP.lat, lng: fromP.lng, name: fromP.name },
+              to: { lat: toP.lat, lng: toP.lng, name: toP.name },
+              polyline: route.polyline,
+              path_segments: route.path_segments,
+              segments: route.segments,
+              total_minutes: route.total_minutes,
+              exposure_load: route.exposure_load,
+              outdoor_minutes: route.outdoor_minutes,
+            }))
             // 이동 기록 생성(C-01) 후 이동 화면으로. 실패해도 진입은 함.
             api
               .startTrip({
@@ -184,6 +195,26 @@ export default function RouteDetail() {
               )
             })}
           </ol>
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <button
+              onClick={() => {
+                localStorage.setItem('active_trip_route', JSON.stringify({
+                  from: { lat: fromP.lat, lng: fromP.lng, name: fromP.name },
+                  to: { lat: toP.lat, lng: toP.lng, name: toP.name },
+                  polyline: route.polyline,
+                  path_segments: route.path_segments,
+                  segments: route.segments,
+                  total_minutes: route.total_minutes,
+                  exposure_load: route.exposure_load,
+                  outdoor_minutes: route.outdoor_minutes,
+                }))
+                nav('/trip/shelters')
+              }}
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-700 dark:text-slate-200"
+            >
+              🏢 경로 정류소·실내 대기 장소 보기
+            </button>
+          </div>
         </div>
       </div>
     </div>

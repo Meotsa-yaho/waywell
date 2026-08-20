@@ -65,6 +65,8 @@ export interface RouteSegment {
   station?: string
   station_id?: string
   route_id?: string
+  lat?: number
+  lng?: number
   from?: { name: string; lat?: number; lng?: number }
   to?: { name: string; lat?: number; lng?: number }
   note?: string
