@@ -1,8 +1,10 @@
 """GET /api/routes — 경로 후보 + 노출부하 + 예측등급 (B-04~B-10)."""
 import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
 
+from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -13,6 +15,8 @@ from .services.exposure import calc_exposure_load, env_severity
 
 _log = logging.getLogger("routes")
 KST = timezone(timedelta(hours=9))
+# 유료 라우팅 API(Tmap/ODsay) 호출 절약용 후보 캐시 TTL(초). 좌표만 키로 씀(preset/날씨는 후처리라 무관).
+_ROUTE_CACHE_TTL = int(os.getenv("ROUTE_CACHE_TTL", "600"))
 
 # E-06 데모 모드: 실제 날씨와 무관하게 조건을 강제 (킬러 장면)
 DEMO_ENV = {
@@ -94,39 +98,49 @@ class RoutesView(APIView):
         env = DEMO_ENV.get(demo) or env_for_exposure(from_lat, from_lng)
 
         with_geometry = q.get("geometry") in ("1", "true")  # 상세 화면만 실제 선로 좌표 요청
-        # 도보 전용 후보는 대중교통과 독립 호출이라 동시에 (지연 추가 0)
-        ex = ThreadPoolExecutor(max_workers=1)
-        f_walk = ex.submit(tmap_pedestrian_client.search_walk_route, from_lat, from_lng, to_lat, to_lng)
 
-        source = "tmap"
-        upstream_error = False  # 업스트림 장애(429/쿼터/타임아웃)와 '진짜 무경로'를 구분
-        try:  # Tmap 대중교통 우선 (후보 많고 좌표 내장 → geometry 불필요)
-            candidates = tmap_transit_client.search_transit_routes(from_lat, from_lng, to_lat, to_lng, limit=8)
-        except Exception as e:
-            _log.warning("tmap transit failed: %s", e)
-            upstream_error = True
-            candidates = []
-        if not candidates:  # 폴백: ODsay (Tmap 실패/무경로/쿼터소진 시)
-            source = "odsay"
-            try:
-                candidates = odsay_client.search_routes(from_lat, from_lng, to_lat, to_lng, limit=8, with_geometry=False)
-                upstream_error = False  # 폴백이 정상 응답(빈 결과 포함)하면 '진짜 무경로'로 확정
+        # 같은 출발-도착은 캐시로 재사용 → Tmap/ODsay 반복 호출(쿼터 소진) 방지.
+        # 키는 좌표+geometry만(preset·날씨·정렬은 아래 후처리라 캐시된 후보에 그대로 적용됨).
+        cache_key = "routes:%.5f,%.5f:%.5f,%.5f:g%d" % (from_lat, from_lng, to_lat, to_lng, int(with_geometry))
+        cached = cache.get(cache_key)
+        if cached is not None:
+            candidates, walk, source = cached["candidates"], cached["walk"], cached["source"]
+        else:
+            # 도보 전용 후보는 대중교통과 독립 호출이라 동시에 (지연 추가 0)
+            ex = ThreadPoolExecutor(max_workers=1)
+            f_walk = ex.submit(tmap_pedestrian_client.search_walk_route, from_lat, from_lng, to_lat, to_lng)
+
+            source = "tmap"
+            upstream_error = False  # 업스트림 장애(429/쿼터/타임아웃)와 '진짜 무경로'를 구분
+            try:  # Tmap 대중교통 우선 (후보 많고 좌표 내장 → geometry 불필요)
+                candidates = tmap_transit_client.search_transit_routes(from_lat, from_lng, to_lat, to_lng, limit=8)
             except Exception as e:
-                _log.warning("odsay fallback failed: %s", e)
+                _log.warning("tmap transit failed: %s", e)
                 upstream_error = True
                 candidates = []
-        try:
-            walk = f_walk.result()  # 도보 후보(짧은 거리만) 또는 None
-        except Exception as e:
-            _log.warning("tmap walk failed: %s", e)
-            walk = None
-        ex.shutdown(wait=False)
+            if not candidates:  # 폴백: ODsay (Tmap 실패/무경로/쿼터소진 시)
+                source = "odsay"
+                try:
+                    candidates = odsay_client.search_routes(from_lat, from_lng, to_lat, to_lng, limit=8, with_geometry=False)
+                    upstream_error = False  # 폴백이 정상 응답(빈 결과 포함)하면 '진짜 무경로'로 확정
+                except Exception as e:
+                    _log.warning("odsay fallback failed: %s", e)
+                    upstream_error = True
+                    candidates = []
+            try:
+                walk = f_walk.result()  # 도보 후보(짧은 거리만) 또는 None
+            except Exception as e:
+                _log.warning("tmap walk failed: %s", e)
+                walk = None
+            ex.shutdown(wait=False)
 
-        if not candidates and not walk:
-            # 업스트림 장애(429/쿼터/타임아웃)면 재시도 가능한 503, 정상 응답인데 경로가 없으면 404
-            if upstream_error:
-                return error_response("UPSTREAM_UNAVAILABLE", "지금은 경로를 불러올 수 없어요. 잠시 후 다시 시도해주세요.", 503)
-            return error_response("ROUTE_NOT_FOUND", "이 구간은 경로를 찾지 못했어요", 404)
+            if not candidates and not walk:
+                # 업스트림 장애(429/쿼터/타임아웃)면 재시도 가능한 503, 정상 응답인데 경로가 없으면 404
+                if upstream_error:
+                    return error_response("UPSTREAM_UNAVAILABLE", "지금은 경로를 불러올 수 없어요. 잠시 후 다시 시도해주세요.", 503)
+                return error_response("ROUTE_NOT_FOUND", "이 구간은 경로를 찾지 못했어요", 404)
+            # 성공(비어있지 않음)한 결과만 캐시 — 에러·무경로는 캐시 안 함(쿼터 리셋 후 재시도 가능)
+            cache.set(cache_key, {"candidates": candidates, "walk": walk, "source": source}, _ROUTE_CACHE_TTL)
 
         candidates = _dedup_routes(candidates)  # 사실상 동일한 경로 제거
 
