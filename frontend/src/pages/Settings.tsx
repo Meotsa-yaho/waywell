@@ -195,7 +195,7 @@ export default function Settings() {
           {/* Dark Mode Switch */}
           <div className="flex items-center gap-1.5 shrink-0">
             <span className={`text-[11px] font-semibold hidden sm:inline text-slate-600 dark:text-slate-300`}>
-              "라이트 dark:다크"
+              {isDarkMode ? '라이트' : '다크'}
             </span>
             <button
               id="btn-darkmode-toggle"
@@ -204,7 +204,7 @@ export default function Settings() {
               aria-checked={isDarkMode}
               onClick={handleToggleDarkMode}
               className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none bg-slate-300 dark:bg-emerald-600`}
-              title="다크 모드로 전환 dark:라이트 dark:모드로 dark:전환"
+              title={isDarkMode ? '라이트 모드로 전환' : '다크 모드로 전환'}
             >
               <span className="sr-only">다크모드 스위치</span>
               <span
@@ -237,11 +237,11 @@ export default function Settings() {
                     <span className={`text-xs font-bold text-slate-900 dark:text-white`}>
                       게스트 세션 사용 중
                     </span>
-                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300`}>
+                    <span className={`text-[11px] px-1.5 py-0.2 rounded font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300`}>
                       임시
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-400">기록 영구 저장을 위해 연동을 추천해요</p>
+                  <p className="text-[11px] text-slate-400">기록 영구 저장을 위해 연동을 추천해요</p>
                 </div>
               </div>
 
@@ -280,11 +280,11 @@ export default function Settings() {
                     <span className={`text-xs font-bold text-slate-900 dark:text-white`}>
                       카카오 회원 연동됨
                     </span>
-                    <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">
+                    <span className="text-[11px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">
                       보관 중
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-400">주간 웰니스 데이터가 안전하게 동기화됩니다</p>
+                  <p className="text-[11px] text-slate-400">주간 웰니스 데이터가 안전하게 동기화됩니다</p>
                 </div>
               </div>
 
@@ -318,7 +318,7 @@ export default function Settings() {
             <span className={`text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500`}>
               노출 부하 민감도 프리셋
             </span>
-            <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5">
+            <span className="text-[11px] text-emerald-500 font-bold flex items-center gap-0.5">
               <Sparkles className="w-3 h-3" />
               실시간 경로 반영
             </span>
@@ -353,11 +353,11 @@ export default function Settings() {
                         <span className={`text-xs font-bold text-slate-900 dark:text-white`}>
                           {opt.title}
                         </span>
-                        <span className={`text-[9px] px-1 py-0.2 rounded font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400`}>
+                        <span className={`text-[11px] px-1 py-0.2 rounded font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400`}>
                           {opt.weightText}
                         </span>
                       </div>
-                      <p className={`text-[10px] mt-0.5 text-slate-500 dark:text-slate-400`}>
+                      <p className={`text-[11px] mt-0.5 text-slate-500 dark:text-slate-400`}>
                         {opt.subtitle}
                       </p>
                     </div>
@@ -389,7 +389,7 @@ export default function Settings() {
             </div>
             <div>
               <span className="text-xs font-bold block">홈 화면에 웨이웰 앱 추가</span>
-              <span className="text-[10px] text-emerald-100 block">
+              <span className="text-[11px] text-emerald-100 block">
                 {installed ? '이미 앱으로 설치되어 있습니다' : '앱 설치 없이 모바일 바로가기로 빠른 실행'}
               </span>
             </div>

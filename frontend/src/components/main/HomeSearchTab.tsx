@@ -303,11 +303,11 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
               <span className={`text-xs font-bold truncate text-slate-900 dark:text-white`}>
                 {locationName}
               </span>
-              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-sm shrink-0 bg-emerald-100/70 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300`}>
+              <span className={`text-[11px] font-bold px-1.5 py-0.2 rounded-sm shrink-0 bg-emerald-100/70 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300`}>
                 현재 위치
               </span>
             </div>
-            <p className={`text-[10px] truncate text-slate-500 dark:text-slate-400`}>
+            <p className={`text-[11px] truncate text-slate-500 dark:text-slate-400`}>
               현재 위치 기준 실시간 노출 부하 분석
             </p>
           </div>
@@ -324,7 +324,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
             <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
             <span>현재 위치 환경 정보</span>
           </div>
-          <span className={`text-[10px] font-medium text-slate-500 dark:text-slate-400`}>
+          <span className={`text-[11px] font-medium text-slate-500 dark:text-slate-400`}>
             {secondsAgo < 60 ? `최근 업데이트: ${secondsAgo}초 전` : `최근 업데이트: ${Math.floor(secondsAgo / 60)}분 전`}
           </span>
         </div>
@@ -335,9 +335,9 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
           <div className={`rounded-xl p-2 border text-center transition-colors bg-white/80 border-slate-100 dark:bg-slate-800/80 dark:border-slate-700/60`}>
             <div className={`flex items-center justify-center gap-1 mb-0.5 text-slate-400 dark:text-slate-400`}>
               <Thermometer className="w-3.5 h-3.5 text-rose-500" />
-              <span className="text-[10px] font-medium">체감온도</span>
+              <span className="text-[11px] font-medium">체감온도</span>
             </div>
-            <div className={`text-xs sm:text-sm font-black ${envData?.temperature?.feels_like != null
+            <div className={`text-xs sm:text-sm font-semibold ${envData?.temperature?.feels_like != null
                 ? 'text-slate-800 dark:text-white'
                 : 'text-slate-400'
               }`}>
@@ -349,9 +349,9 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
           <div className={`rounded-xl p-2 border text-center transition-colors bg-white/80 border-slate-100 dark:bg-slate-800/80 dark:border-slate-700/60`}>
             <div className={`flex items-center justify-center gap-1 mb-0.5 text-slate-400 dark:text-slate-400`}>
               <Sun className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[10px] font-medium">자외선</span>
+              <span className="text-[11px] font-medium">자외선</span>
             </div>
-            <div className="text-xs sm:text-sm font-black text-amber-500">
+            <div className="text-xs sm:text-sm font-semibold text-amber-500">
               {envData?.uv?.index != null ? `${envData.uv.index} ${envData.uv.grade || ''}`.trim() : '0 낮음'}
             </div>
           </div>
@@ -360,9 +360,9 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
           <div className={`rounded-xl p-2 border text-center transition-colors bg-white/80 border-slate-100 dark:bg-slate-800/80 dark:border-slate-700/60`}>
             <div className={`flex items-center justify-center gap-1 mb-0.5 text-slate-400 dark:text-slate-400`}>
               <Wind className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="text-[10px] font-medium">미세먼지</span>
+              <span className="text-[11px] font-medium">미세먼지</span>
             </div>
-            <div className={`text-xs sm:text-sm font-black ${envData?.air?.pm10 != null && envData?.air?.pm10_grade ? 'text-emerald-500' : 'text-slate-400'
+            <div className={`text-xs sm:text-sm font-semibold ${envData?.air?.pm10 != null && envData?.air?.pm10_grade ? 'text-emerald-500' : 'text-slate-400'
               }`}>
               {envData?.air?.pm10 != null && envData?.air?.pm10_grade ? `${envData.air.pm10}㎍ ${envData.air.pm10_grade}` : '—'}
             </div>
@@ -371,7 +371,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
 
         {/* Personalized Coaching message based on userPreset */}
         <div className={`rounded-xl p-3 border shadow-2xs transition-colors bg-white border-emerald-100/60 dark:bg-slate-900/90 dark:border-slate-700/80`}>
-          <div className={`flex items-center gap-1.5 mb-1 text-[10px] font-bold text-emerald-800 dark:text-emerald-400`}>
+          <div className={`flex items-center gap-1.5 mb-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-400`}>
             <span>{coaching.icon}</span>
             <span>{coaching.badge}</span>
           </div>
@@ -498,12 +498,12 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                             <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             <div className="min-w-0">
                               <span className="text-xs font-bold block truncate">{sug.name}</span>
-                              <span className="text-[10px] text-slate-400 block truncate">{sug.address}</span>
+                              <span className="text-[11px] text-slate-400 block truncate">{sug.address}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             {sug.distance_m != null && (
-                              <span className="text-[10px] text-slate-400">{sug.distance_m}m</span>
+                              <span className="text-[11px] text-slate-400">{sug.distance_m}m</span>
                             )}
                             <button type="button" onMouseDown={(e) => { e.preventDefault(); toggleFavorite(sug); }} title="즐겨찾기" className="p-0.5">
                               <Star className={`w-3.5 h-3.5 ${favorites.some((f) => f.place_id === sug.place_id) ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-400'}`} />
@@ -513,7 +513,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                       ))
                     ) : quickPicks.length > 0 ? (
                       <>
-                        <div className="px-2 pt-1 pb-0.5 text-[10px] font-bold text-slate-400">⭐ 즐겨찾기 · 최근</div>
+                        <div className="px-2 pt-1 pb-0.5 text-[11px] font-bold text-slate-400">⭐ 즐겨찾기 · 최근</div>
                         {quickPicks.map((p) => (
                           <div
                             key={p.place_id}
@@ -526,7 +526,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                                 : <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
                               <div className="min-w-0">
                                 <span className="text-xs font-bold block truncate">{p.name}</span>
-                                <span className="text-[10px] text-slate-400 block truncate">{p.address || p.category || '최근 장소'}</span>
+                                <span className="text-[11px] text-slate-400 block truncate">{p.address || p.category || '최근 장소'}</span>
                               </div>
                             </div>
                             <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(p); }} title="즐겨찾기" className="p-0.5 shrink-0">
@@ -605,12 +605,12 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                             <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             <div className="min-w-0">
                               <span className="text-xs font-bold block truncate">{sug.name}</span>
-                              <span className="text-[10px] text-slate-400 block truncate">{sug.address}</span>
+                              <span className="text-[11px] text-slate-400 block truncate">{sug.address}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             {sug.distance_m != null && (
-                              <span className="text-[10px] text-slate-400">{sug.distance_m}m</span>
+                              <span className="text-[11px] text-slate-400">{sug.distance_m}m</span>
                             )}
                             <button type="button" onMouseDown={(e) => { e.preventDefault(); toggleFavorite(sug); }} title="즐겨찾기" className="p-0.5">
                               <Star className={`w-3.5 h-3.5 ${favorites.some((f) => f.place_id === sug.place_id) ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-400'}`} />
@@ -620,7 +620,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                       ))
                       : (
                         <>
-                          <div className="px-2 pt-1 pb-0.5 text-[10px] font-bold text-slate-400">⭐ 즐겨찾기 · 최근</div>
+                          <div className="px-2 pt-1 pb-0.5 text-[11px] font-bold text-slate-400">⭐ 즐겨찾기 · 최근</div>
                           {quickPicks.map((p) => (
                             <div
                               key={p.place_id}
@@ -633,7 +633,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                                   : <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
                                 <div className="min-w-0">
                                   <span className="text-xs font-bold block truncate">{p.name}</span>
-                                  <span className="text-[10px] text-slate-400 block truncate">{p.address || p.category || '최근 목적지'}</span>
+                                  <span className="text-[11px] text-slate-400 block truncate">{p.address || p.category || '최근 목적지'}</span>
                                 </div>
                               </div>
                               <button type="button" onMouseDown={(e) => { e.preventDefault(); toggleFavorite(p); }} title="즐겨찾기" className="p-0.5 shrink-0">
@@ -668,12 +668,12 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
             최근 검색한 장소
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-slate-400">{recent.length}개 저장됨</span>
+            <span className="text-[11px] text-slate-400">{recent.length}개 저장됨</span>
             {recent.length > 0 && (
               <button
                 type="button"
                 onClick={handleClearAllRecent}
-                className="text-[10px] text-rose-500 hover:text-rose-600 font-medium flex items-center gap-0.5 cursor-pointer"
+                className="text-[11px] text-rose-500 hover:text-rose-600 font-medium flex items-center gap-0.5 cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" />
                 <span>전체 삭제</span>
@@ -686,7 +686,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
           <div className="text-center py-5">
             <Clock className="w-6 h-6 text-slate-300 dark:text-slate-700 mx-auto mb-1.5" />
             <p className="text-xs text-slate-400">최근 검색한 장소 기록이 없습니다.</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">목적지를 검색하면 여기에 자동으로 저장됩니다.</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">목적지를 검색하면 여기에 자동으로 저장됩니다.</p>
           </div>
         ) : (
           <div className="space-y-1.5">
@@ -704,7 +704,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                     <span className={`text-xs font-bold block truncate text-slate-800 group-hover:text-emerald-700 dark:text-slate-200 dark:group-hover:text-emerald-400`}>
                       {place.name}
                     </span>
-                    <span className="text-[10px] text-slate-400 block truncate">
+                    <span className="text-[11px] text-slate-400 block truncate">
                       {place.address || place.category || '최근 목적지'}
                     </span>
                   </div>

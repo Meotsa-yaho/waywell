@@ -93,7 +93,7 @@ export default function History() {
               이동 기록 전체 보기
             </h1>
             {trips && trips.length > 0 && (
-              <p className={`text-[10px] text-slate-500 dark:text-slate-400`}>
+              <p className={`text-[11px] text-slate-500 dark:text-slate-400`}>
                 총 {trips.length}개의 기록
               </p>
             )}

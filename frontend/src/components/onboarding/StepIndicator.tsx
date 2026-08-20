@@ -60,7 +60,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
         {onToggleDarkMode && (
           <div className="flex items-center gap-1.5 shrink-0">
             <span className={`text-[11px] font-semibold hidden sm:inline text-slate-500 dark:text-slate-400`}>
-              "라이트 dark:다크"
+              {isDarkMode ? '라이트' : '다크'}
             </span>
             <button
               id="btn-onboarding-darkmode-toggle"
@@ -69,7 +69,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
               aria-checked={isDarkMode}
               onClick={onToggleDarkMode}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none bg-slate-300 dark:bg-emerald-600`}
-              title="다크 모드로 전환 dark:라이트 dark:모드로 dark:전환"
+              title={isDarkMode ? '라이트 모드로 전환' : '다크 모드로 전환'}
             >
               <span className="sr-only">다크모드 스위치</span>
               <span
@@ -103,12 +103,12 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
                 className="flex items-center justify-center gap-1 px-1 text-[11px] font-bold transition-colors duration-300 select-none"
               >
                 {isPassed ? (
-                  <span className="flex items-center gap-1 text-emerald-950 font-extrabold drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]">
+                  <span className="flex items-center gap-1 text-emerald-950 font-semibold drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]">
                     <Check className="w-3.5 h-3.5 text-emerald-950 stroke-[3.5] shrink-0" />
                     <span className="truncate">{s.label}</span>
                   </span>
                 ) : isActive ? (
-                  <span className="flex items-center gap-1 text-white font-extrabold drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
+                  <span className="flex items-center gap-1 text-white font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
                     <Check className="w-3.5 h-3.5 text-white/90 stroke-[2.5] shrink-0" />
                     <span className="truncate">{s.label}</span>
                   </span>

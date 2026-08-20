@@ -59,7 +59,7 @@ export const Step3Auth: React.FC<Step3AuthProps> = ({
           <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full mx-auto mb-2.5 flex items-center justify-center text-2xl sm:text-3xl shadow-sm bg-white dark:bg-slate-800 dark:text-white`}>
             {currentOption.icon}
           </div>
-          <div className="inline-flex items-center gap-1 px-3 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-full mb-1.5 uppercase tracking-wide shadow-xs">
+          <div className="inline-flex items-center gap-1 px-3 py-0.5 bg-emerald-600 text-white text-[11px] font-bold rounded-full mb-1.5 uppercase tracking-wide shadow-xs">
             <ShieldCheck className="w-3 h-3" />
             <span>Verified Profile</span>
           </div>
@@ -85,7 +85,7 @@ export const Step3Auth: React.FC<Step3AuthProps> = ({
               <span className={`text-xs font-bold tracking-tight block text-slate-700 dark:text-slate-200`}>
                 실내 대기 중 버스 도착 3분 전 알림 받기
               </span>
-              <span className="text-[10px] text-slate-400 block">
+              <span className="text-[11px] text-slate-400 block">
                 정류장에서 서서 대기하지 않도록 출발 시점 안내
               </span>
             </div>
@@ -146,7 +146,7 @@ export const Step3Auth: React.FC<Step3AuthProps> = ({
               </>
             )}
           </button>
-          <p className="text-[10px] text-slate-400 text-center mt-1">
+          <p className="text-[11px] text-slate-400 text-center mt-1">
             기기 변경 시에도 내 프로필이 안전하게 저장돼요.
           </p>
         </div>

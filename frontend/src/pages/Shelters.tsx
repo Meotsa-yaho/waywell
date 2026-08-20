@@ -261,7 +261,7 @@ export default function Shelters() {
             <RouteIcon className="w-3.5 h-3.5" />
             선택한 경로 대기장소
             {routeStops.length > 0 && (
-              <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+              <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[11px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
                 {routeStops.length}
               </span>
             )}
@@ -279,7 +279,7 @@ export default function Shelters() {
                   <Compass className="w-3 h-3 text-emerald-500" />
                   경로 상 정류소·대기 장소 선택
                 </span>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[11px] text-slate-400">
                   {selectedStopIdx + 1} / {routeStops.length}
                 </span>
               </div>
@@ -301,7 +301,7 @@ export default function Shelters() {
                       </span>
                       <span>{stop.name}</span>
                       <span
-                        className={`text-[10px] px-1 py-0.2 rounded ${
+                        className={`text-[11px] px-1 py-0.2 rounded ${
                           isSelected
                             ? 'bg-emerald-600/60 text-emerald-100'
                             : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'

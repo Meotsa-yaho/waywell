@@ -47,10 +47,10 @@ export const Step1Framing: React.FC<Step1FramingProps> = ({ onNext }) => {
           className={`p-3.5 border rounded-2xl transition-all border-slate-100 bg-slate-50 text-slate-800 opacity-75 hover:opacity-100 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:opacity-80 dark:hover:opacity-100`}
         >
           <div className="flex justify-between items-center mb-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               기존 지도 서비스 (최단시간)
             </span>
-            <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full bg-red-100 text-red-600 dark:bg-red-950/70 dark:text-red-300 dark:border dark:border-red-800/50`}>
+            <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full bg-red-100 text-red-600 dark:bg-red-950/70 dark:text-red-300 dark:border dark:border-red-800/50`}>
               DANGER
             </span>
           </div>
@@ -78,10 +78,10 @@ export const Step1Framing: React.FC<Step1FramingProps> = ({ onNext }) => {
           className={`p-4 border-2 rounded-2xl shadow-sm relative transition-all border-emerald-500 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-950/30 dark:shadow-emerald-950/20`}
         >
           <div className="flex justify-between items-center mb-2">
-            <span className={`text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400`}>
+            <span className={`text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400`}>
               웨이웰 추천 경로
             </span>
-            <span className="px-2.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full text-center shadow-xs">
+            <span className="px-2.5 py-0.5 bg-emerald-500 text-white text-[11px] font-bold rounded-full text-center shadow-xs">
               SAFE
             </span>
           </div>

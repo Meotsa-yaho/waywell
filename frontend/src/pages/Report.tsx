@@ -97,7 +97,7 @@ export default function Report() {
 
           {data?.has_data && loadChangePct !== null && (
             <div
-              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-bold ${
+              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px] font-bold ${
                 loadChangePct <= 0
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800/60'
                   : 'bg-rose-50 text-rose-700 border-rose-200/80 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800/60'
@@ -156,12 +156,12 @@ export default function Report() {
           <div className={`rounded-2xl p-3 border shadow-xs text-center transition-colors bg-white border-slate-200/80 text-slate-900 dark:bg-slate-900/90 dark:border-slate-800 dark:text-slate-100`}>
             <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
               <Clock className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="text-[10px] font-medium">야외 노출</span>
+              <span className="text-[11px] font-medium">야외 노출</span>
             </div>
-            <div className={`text-base sm:text-lg font-black text-slate-900 dark:text-white`}>
+            <div className={`text-base sm:text-lg font-semibold text-slate-900 dark:text-white`}>
               {data.today.outdoor_minutes}<span className="text-xs font-semibold text-slate-400">분</span>
             </div>
-            <span className="text-[9px] text-emerald-500 font-bold block mt-0.5">
+            <span className="text-[11px] text-emerald-500 font-bold block mt-0.5">
               하루 평균 {avgOutdoorMin}분
             </span>
           </div>
@@ -170,12 +170,12 @@ export default function Report() {
           <div className={`rounded-2xl p-3 border shadow-xs text-center transition-colors bg-white border-slate-200/80 text-slate-900 dark:bg-slate-900/90 dark:border-slate-800 dark:text-slate-100`}>
             <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
               <Zap className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[10px] font-medium">누적 부하</span>
+              <span className="text-[11px] font-medium">누적 부하</span>
             </div>
-            <div className={`text-base sm:text-lg font-black text-slate-900 dark:text-white`}>
+            <div className={`text-base sm:text-lg font-semibold text-slate-900 dark:text-white`}>
               {data.today.exposure_load}<span className="text-xs font-semibold text-slate-400">점</span>
             </div>
-            <span className={`text-[9px] font-bold block mt-0.5 ${data.today.exposure_load <= 40 ? 'text-emerald-500' : 'text-amber-500'
+            <span className={`text-[11px] font-bold block mt-0.5 ${data.today.exposure_load <= 40 ? 'text-emerald-500' : 'text-amber-500'
               }`}>
               {data.today.exposure_load <= 40 ? '안전 관리 구간' : '주의 관리 구간'}
             </span>
@@ -185,12 +185,12 @@ export default function Report() {
           <div className={`rounded-2xl p-3 border shadow-xs text-center transition-colors bg-white border-slate-200/80 text-slate-900 dark:bg-slate-900/90 dark:border-slate-800 dark:text-slate-100`}>
             <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
               <Sun className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="text-[10px] font-medium">UV 노출</span>
+              <span className="text-[11px] font-medium">UV 노출</span>
             </div>
-            <div className="text-base sm:text-lg font-black text-emerald-500">
+            <div className="text-base sm:text-lg font-semibold text-emerald-500">
               {data.today.uv_minutes}<span className="text-xs font-semibold text-emerald-600">분</span>
             </div>
-            <span className="text-[9px] text-emerald-500 font-bold block mt-0.5">
+            <span className="text-[11px] text-emerald-500 font-bold block mt-0.5">
               이동 {data.today.trip_count}회 완료
             </span>
           </div>
@@ -203,7 +203,7 @@ export default function Report() {
               <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
               <span>요일별 노출 부하 추이</span>
             </div>
-            <div className="flex items-center gap-3 text-[10px] text-slate-400">
+            <div className="flex items-center gap-3 text-[11px] text-slate-400">
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                 적정 관리
@@ -223,7 +223,7 @@ export default function Report() {
 
               return (
                 <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
-                  <span className={`text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 dark:text-slate-300`}>
+                  <span className={`text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 dark:text-slate-300`}>
                     {item.score}점
                   </span>
                   <div className={`w-full max-w-[28px] rounded-t-lg relative flex items-end justify-center h-24 overflow-hidden bg-slate-100 dark:bg-slate-800`}>
@@ -306,7 +306,7 @@ export default function Report() {
               <strong className="text-xs sm:text-sm font-bold block">
                 이동 기록 전체 보기
               </strong>
-              <span className={`text-[10px] block text-slate-500 dark:text-slate-400`}>
+              <span className={`text-[11px] block text-slate-500 dark:text-slate-400`}>
                 지난 이동 경로 및 노출 부하 상세 목록
               </span>
             </div>

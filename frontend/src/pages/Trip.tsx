@@ -229,14 +229,14 @@ export default function Trip() {
         {/* 항상 보이는 요약: 다음 차량까지 (닫힘 상태에서 이 줄까지만 보임) */}
         <div ref={summaryRef} className="px-4 pb-3 flex items-center justify-between shrink-0">
           <div>
-            <span className="text-[10px] text-slate-400 block">다음 차량까지</span>
+            <span className="text-[11px] text-slate-400 block">다음 차량까지</span>
             {error && !data ? (
-              <strong className="text-lg font-black text-slate-400">정보 없음</strong>
+              <strong className="text-lg font-semibold text-slate-400">정보 없음</strong>
             ) : !data ? (
-              <strong className="text-lg font-black text-slate-400">불러오는 중…</strong>
+              <strong className="text-lg font-semibold text-slate-400">불러오는 중…</strong>
             ) : next ? (
               <div className="flex items-baseline gap-2">
-                <strong className={`text-2xl font-black ${soon ? 'text-emerald-500' : longWait ? 'text-amber-500' : 'text-emerald-500'}`}>
+                <strong className={`text-2xl font-semibold ${soon ? 'text-emerald-500' : longWait ? 'text-amber-500' : 'text-emerald-500'}`}>
                   {next.minutes}분
                 </strong>
                 <span className="text-xs font-semibold text-slate-500">
@@ -244,13 +244,13 @@ export default function Trip() {
                 </span>
               </div>
             ) : (
-              <strong className="text-lg font-black text-slate-400">{data.notice ?? '도착 예정 없음'}</strong>
+              <strong className="text-lg font-semibold text-slate-400">{data.notice ?? '도착 예정 없음'}</strong>
             )}
           </div>
           {/* 야외 대기 누적 */}
           <div className="text-right shrink-0">
-            <span className="text-[10px] text-slate-400 block">🌡️ 야외 대기</span>
-            <strong className={`text-lg font-black ${waitedMin >= 10 ? 'text-amber-500' : 'text-slate-700 dark:text-slate-200'}`}>
+            <span className="text-[11px] text-slate-400 block">🌡️ 야외 대기</span>
+            <strong className={`text-lg font-semibold ${waitedMin >= 10 ? 'text-amber-500' : 'text-slate-700 dark:text-slate-200'}`}>
               {waitedMin}분
             </strong>
           </div>
@@ -312,10 +312,10 @@ export default function Trip() {
               className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800`}
             >
               <Building2 className="w-3.5 h-3.5" /> 근처 그늘막·실내 대기 장소
-              {shades.length > 0 && <span className="text-[10px] font-bold text-amber-500">🌂 {shades.length}</span>}
+              {shades.length > 0 && <span className="text-[11px] font-bold text-amber-500">🌂 {shades.length}</span>}
             </button>
 
-            <p className="text-[10px] text-slate-400 text-center">30초마다 갱신 · 실시간(TAGO)</p>
+            <p className="text-[11px] text-slate-400 text-center">30초마다 갱신 · 실시간(TAGO)</p>
         </div>
         </div>
       </div>
