@@ -1,18 +1,35 @@
 {
   "query": {
-    "from": { "lat": 37.2011, "lng": 127.0983, "name": "동탄역" },
-    "to": { "lat": 37.4979, "lng": 127.0276, "name": "강남역" },
+    "from": {
+      "lat": 37.2011,
+      "lng": 127.0983,
+      "name": "동탄역"
+    },
+    "to": {
+      "lat": 37.4979,
+      "lng": 127.0276,
+      "name": "강남역"
+    },
     "depart_at": "2026-08-12T09:00:00+09:00",
     "preset": "skin"
   },
-  "environment": { "uv": 2, "feels_like": 23.5, "pm10_grade": "좋음", "precipitation": "none" },
+  "environment": {
+    "uv": 2,
+    "feels_like": 23.5,
+    "pm10_grade": "좋음",
+    "precipitation": "none"
+  },
   "routes": [
     {
       "route_id": "r_d4e5f6",
       "rank": 1,
       "recommended": true,
       "exposure_load": 20,
-      "exposure_breakdown": { "uv": 8, "heat": 8, "air": 4 },
+      "exposure_breakdown": {
+        "uv": 8,
+        "heat": 8,
+        "air": 4
+      },
       "outdoor_minutes": 18,
       "indoor_ratio": 0.62,
       "total_minutes": 56,
@@ -23,10 +40,217 @@
       "notice": null,
       "llm_comment": "선선해서 자외선 부담이 낮아요 — 6분 빠른 버스 경로를 추천해요.",
       "segments": [
-        { "seq": 1, "type": "walk", "minutes": 6, "outdoor": true, "exposure_minutes": 6, "from": { "name": "출발지" }, "to": { "name": "버스정류장" } },
-        { "seq": 2, "type": "bus_wait", "minutes": 8, "outdoor": true, "exposure_minutes": 8, "station_id": "23-100", "station": "동탄중앙", "route_id": "1002" },
-        { "seq": 3, "type": "bus", "route_name": "1002", "minutes": 38, "outdoor": false, "exposure_minutes": 0 },
-        { "seq": 4, "type": "walk", "minutes": 4, "outdoor": true, "exposure_minutes": 4, "to": { "name": "강남역" } }
+        {
+          "seq": 1,
+          "type": "walk",
+          "minutes": 6,
+          "outdoor": true,
+          "exposure_minutes": 6,
+          "from": {
+            "name": "출발지"
+          },
+          "to": {
+            "name": "버스정류장"
+          }
+        },
+        {
+          "seq": 2,
+          "type": "bus_wait",
+          "minutes": 8,
+          "outdoor": true,
+          "exposure_minutes": 8,
+          "station_id": "23-100",
+          "station": "동탄중앙",
+          "route_id": "1002"
+        },
+        {
+          "seq": 3,
+          "type": "bus",
+          "route_name": "1002",
+          "minutes": 38,
+          "outdoor": false,
+          "exposure_minutes": 0
+        },
+        {
+          "seq": 4,
+          "type": "walk",
+          "minutes": 4,
+          "outdoor": true,
+          "exposure_minutes": 4,
+          "to": {
+            "name": "강남역"
+          }
+        }
+      ],
+      "polyline": [
+        [
+          37.2011,
+          127.0983
+        ],
+        [
+          37.217586,
+          127.096188
+        ],
+        [
+          37.234056,
+          127.094028
+        ],
+        [
+          37.277775,
+          127.087696
+        ],
+        [
+          37.293638,
+          127.085065
+        ],
+        [
+          37.309425,
+          127.082216
+        ],
+        [
+          37.325127,
+          127.079126
+        ],
+        [
+          37.34074,
+          127.07578
+        ],
+        [
+          37.356259,
+          127.072167
+        ],
+        [
+          37.371685,
+          127.068286
+        ],
+        [
+          37.387019,
+          127.064142
+        ],
+        [
+          37.402265,
+          127.059748
+        ],
+        [
+          37.417429,
+          127.055121
+        ],
+        [
+          37.432521,
+          127.050288
+        ],
+        [
+          37.447552,
+          127.045278
+        ],
+        [
+          37.462533,
+          127.040127
+        ],
+        [
+          37.477479,
+          127.034875
+        ],
+        [
+          37.4979,
+          127.0276
+        ]
+      ],
+      "path_segments": [
+        {
+          "type": "walk",
+          "coords": [
+            [
+              37.2011,
+              127.0983
+            ],
+            [
+              37.217586,
+              127.096188
+            ],
+            [
+              37.234056,
+              127.094028
+            ]
+          ],
+          "outdoor": true
+        },
+        {
+          "type": "bus",
+          "coords": [
+            [
+              37.277775,
+              127.087696
+            ],
+            [
+              37.293638,
+              127.085065
+            ],
+            [
+              37.309425,
+              127.082216
+            ],
+            [
+              37.325127,
+              127.079126
+            ],
+            [
+              37.34074,
+              127.07578
+            ],
+            [
+              37.356259,
+              127.072167
+            ],
+            [
+              37.371685,
+              127.068286
+            ],
+            [
+              37.387019,
+              127.064142
+            ],
+            [
+              37.402265,
+              127.059748
+            ],
+            [
+              37.417429,
+              127.055121
+            ],
+            [
+              37.432521,
+              127.050288
+            ],
+            [
+              37.447552,
+              127.045278
+            ],
+            [
+              37.462533,
+              127.040127
+            ],
+            [
+              37.477479,
+              127.034875
+            ]
+          ],
+          "outdoor": false
+        },
+        {
+          "type": "walk",
+          "coords": [
+            [
+              37.477479,
+              127.034875
+            ],
+            [
+              37.4979,
+              127.0276
+            ]
+          ],
+          "outdoor": true
+        }
       ]
     },
     {
@@ -34,7 +258,11 @@
       "rank": 2,
       "recommended": false,
       "exposure_load": 14,
-      "exposure_breakdown": { "uv": 6, "heat": 4, "air": 4 },
+      "exposure_breakdown": {
+        "uv": 6,
+        "heat": 4,
+        "air": 4
+      },
       "outdoor_minutes": 7,
       "indoor_ratio": 0.89,
       "total_minutes": 62,
@@ -45,12 +273,267 @@
       "notice": null,
       "llm_comment": "노출은 가장 적지만 6분 더 걸려요.",
       "segments": [
-        { "seq": 1, "type": "walk", "minutes": 4, "outdoor": true, "exposure_minutes": 4, "from": { "name": "출발지" }, "to": { "name": "동탄역 2번 출구" } },
-        { "seq": 2, "type": "subway_wait", "minutes": 3, "outdoor": false, "exposure_minutes": 0, "station": "동탄역" },
-        { "seq": 3, "type": "subway", "line": "GTX-A", "minutes": 22, "outdoor": false, "exposure_minutes": 0, "from": { "name": "동탄역" }, "to": { "name": "수서역" } },
-        { "seq": 4, "type": "bus_wait", "minutes": 3, "outdoor": true, "exposure_minutes": 3, "station_id": "23-456", "station": "수서역 정류장", "route_id": "4432" },
-        { "seq": 5, "type": "bus", "route_name": "4432", "minutes": 25, "outdoor": false, "exposure_minutes": 0 },
-        { "seq": 6, "type": "walk", "minutes": 5, "outdoor": false, "exposure_minutes": 0, "note": "지하 연결통로" }
+        {
+          "seq": 1,
+          "type": "walk",
+          "minutes": 4,
+          "outdoor": true,
+          "exposure_minutes": 4,
+          "from": {
+            "name": "출발지"
+          },
+          "to": {
+            "name": "동탄역 2번 출구"
+          }
+        },
+        {
+          "seq": 2,
+          "type": "subway_wait",
+          "minutes": 3,
+          "outdoor": false,
+          "exposure_minutes": 0,
+          "station": "동탄역"
+        },
+        {
+          "seq": 3,
+          "type": "subway",
+          "line": "GTX-A",
+          "minutes": 22,
+          "outdoor": false,
+          "exposure_minutes": 0,
+          "from": {
+            "name": "동탄역"
+          },
+          "to": {
+            "name": "수서역"
+          }
+        },
+        {
+          "seq": 4,
+          "type": "bus_wait",
+          "minutes": 3,
+          "outdoor": true,
+          "exposure_minutes": 3,
+          "station_id": "23-456",
+          "station": "수서역 정류장",
+          "route_id": "4432"
+        },
+        {
+          "seq": 5,
+          "type": "bus",
+          "route_name": "4432",
+          "minutes": 25,
+          "outdoor": false,
+          "exposure_minutes": 0
+        },
+        {
+          "seq": 6,
+          "type": "walk",
+          "minutes": 5,
+          "outdoor": false,
+          "exposure_minutes": 0,
+          "note": "지하 연결통로"
+        }
+      ],
+      "polyline": [
+        [
+          37.2011,
+          127.0983
+        ],
+        [
+          37.219826,
+          127.092531
+        ],
+        [
+          37.23388,
+          127.088234
+        ],
+        [
+          37.248622,
+          127.083784
+        ],
+        [
+          37.263391,
+          127.079409
+        ],
+        [
+          37.278192,
+          127.075129
+        ],
+        [
+          37.293033,
+          127.070961
+        ],
+        [
+          37.307918,
+          127.066919
+        ],
+        [
+          37.322852,
+          127.063017
+        ],
+        [
+          37.337837,
+          127.059261
+        ],
+        [
+          37.35219,
+          127.055817
+        ],
+        [
+          37.367192,
+          127.052377
+        ],
+        [
+          37.382247,
+          127.049083
+        ],
+        [
+          37.39735,
+          127.045929
+        ],
+        [
+          37.412498,
+          127.042906
+        ],
+        [
+          37.427688,
+          127.039998
+        ],
+        [
+          37.442912,
+          127.037191
+        ],
+        [
+          37.458164,
+          127.034464
+        ],
+        [
+          37.473438,
+          127.031798
+        ],
+        [
+          37.485667,
+          127.029693
+        ],
+        [
+          37.4979,
+          127.0276
+        ]
+      ],
+      "path_segments": [
+        {
+          "type": "walk",
+          "coords": [
+            [
+              37.2011,
+              127.0983
+            ],
+            [
+              37.219826,
+              127.092531
+            ]
+          ],
+          "outdoor": true
+        },
+        {
+          "type": "subway",
+          "coords": [
+            [
+              37.23388,
+              127.088234
+            ],
+            [
+              37.248622,
+              127.083784
+            ],
+            [
+              37.263391,
+              127.079409
+            ],
+            [
+              37.278192,
+              127.075129
+            ],
+            [
+              37.293033,
+              127.070961
+            ],
+            [
+              37.307918,
+              127.066919
+            ],
+            [
+              37.322852,
+              127.063017
+            ],
+            [
+              37.337837,
+              127.059261
+            ]
+          ],
+          "outdoor": false
+        },
+        {
+          "type": "bus",
+          "coords": [
+            [
+              37.35219,
+              127.055817
+            ],
+            [
+              37.367192,
+              127.052377
+            ],
+            [
+              37.382247,
+              127.049083
+            ],
+            [
+              37.39735,
+              127.045929
+            ],
+            [
+              37.412498,
+              127.042906
+            ],
+            [
+              37.427688,
+              127.039998
+            ],
+            [
+              37.442912,
+              127.037191
+            ],
+            [
+              37.458164,
+              127.034464
+            ],
+            [
+              37.473438,
+              127.031798
+            ]
+          ],
+          "outdoor": false
+        },
+        {
+          "type": "walk",
+          "coords": [
+            [
+              37.473438,
+              127.031798
+            ],
+            [
+              37.485667,
+              127.029693
+            ],
+            [
+              37.4979,
+              127.0276
+            ]
+          ],
+          "outdoor": false
+        }
       ]
     }
   ]

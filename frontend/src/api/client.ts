@@ -73,9 +73,21 @@ export const api = {
   getEnvironment: (lat: number, lng: number) =>
     http.get<Environment>('/environment', { params: { lat, lng } }).then((r) => r.data),
 
-  // 경로는 백엔드 구현 완료 → 목업 모드여도 실 API 호출 (demo_weather 지원)
+  // 경로 조회. 외부 API(Tmap/ODsay) 일일 한도가 소진되면 서버가 503을 주는데,
+  // 그때는 번들된 예시 경로로 대체해 화면이 비지 않게 한다 (시연 중 한도 초과 대비).
+  // 대체분은 fallback: true 로 표시해 화면에서 안내한다.
   getRoutes: (params: RouteParams) =>
-    http.get<RoutesResponse>('/routes', { params }).then((r) => r.data),
+    http
+      .get<RoutesResponse>('/routes', { params })
+      .then((r) => r.data)
+      .catch(async (err) => {
+        if (err?.response?.status !== 503) throw err
+        const file = params.demo_weather === 'uv_high' ? 'routes.uv_high.json' : 'routes.success.json'
+        const res = await fetch(`/mock/${file}`)
+        if (!res.ok) throw err
+        const data = (await res.json()) as RoutesResponse
+        return { ...data, fallback: true }
+      }),
 
   // 도착정보는 백엔드(TAGO) 구현 완료 → 목업 모드여도 실 API 호출
   getArrival: (station_id: string, route_id?: string, city_code?: string) =>

@@ -96,6 +96,8 @@ export interface Route {
 }
 
 export interface RoutesResponse {
+  /** 외부 경로 API 한도 초과(503) 시 번들 예시 데이터로 대체됐음을 표시 */
+  fallback?: boolean
   query: {
     from: { lat: number; lng: number; name: string }
     to: { lat: number; lng: number; name: string }

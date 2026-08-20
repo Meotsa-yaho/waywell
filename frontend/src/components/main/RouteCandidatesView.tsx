@@ -82,6 +82,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFallback, setIsFallback] = useState(false);
 
   // 3-Stage Snap Heights in Pixels
   const [snapState, setSnapState] = useState<SheetSnapState>('half');
@@ -141,6 +142,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
       .then((res) => {
         if (reqId !== reqIdRef.current) return; // 오래된 응답 무시
         if (res.routes && res.routes.length > 0) {
+          setIsFallback(Boolean(res.fallback));
           setRoutes(res.routes);
           const recRoute = res.routes.find((r) => r.recommended) || res.routes[0];
           setSelectedRouteId(recRoute.route_id);
@@ -759,6 +761,11 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
 
           {/* Sheet Scrollable Body */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {isFallback && (
+              <div className="rounded-[var(--r-md)] border border-[var(--warn)]/40 bg-[var(--warn-tint)] px-3 py-2 text-[12px] text-[var(--warn)]">
+                외부 경로 API 일일 한도를 초과해 예시 경로를 표시하고 있어요.
+              </div>
+            )}
             {/* 데모 모드 가상 환경 지표 안내 스트립 */}
             {isDemoActive && (
               <div className="flex items-center justify-between rounded-[var(--r-md)] border border-dashed border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2 text-[12px]">
