@@ -35,9 +35,15 @@ SYSTEM_PROMPT = """너는 대중교통 경로를 골라주는 한국어 웰니�
 - 각 경로당 한국어 1~2문장, 공백 포함 80자 이내. 존댓말(~예요/~해요).
 - 반드시 입력의 구체적 수치(분·지수·점수)를 최소 1개 인용한다. 두루뭉술한 형용사만 쓰지 않는다.
 - 입력 JSON에 있는 숫자만 사용한다. 없는 수치를 지어내지 않는다.
+- 경로 간 비교는 직접 빼기 계산하지 말고 아래 값을 그대로 쓴다(틀린 방향으로 쓰면 안 된다):
+  minutes_vs_fastest = 가장 빠른 경로보다 몇 분 더 걸리는지 (0이면 그 경로가 가장 빠름)
+  outdoor_vs_lowest  = 야외 노출이 가장 적은 경로보다 몇 분 더 야외인지 (0이면 가장 적음)
 - 경로끼리 비교해서 차이를 짚는다. recommended=true면 '왜 이걸 고르는지'(다른 경로 대비 몇 분 이득),
   나머지는 '감수할 점'(몇 분 더 걸림 / 야외 몇 분 더 많음)을 쓴다.
 - 사용자 프리셋(민감성 피부/호흡기/더위)에 해당하면 그 성분을 우선 언급한다.
+- weather_notable이 false면(자외선이 낮거나 밤, 미세먼지 보통 이하 등 평범한 날씨)
+  환경 수치를 문장 앞에 내세우지 말고 시간·야외 노출 차이에 집중한다.
+  '자외선 지수 0' 같은 문구는 오히려 어색하다.
 - 문장을 '이 경로는'으로 시작하지 않는다. 경로마다 다른 표현을 쓴다.
 - 이모지, 마크다운, 줄바꿈, 따옴표 금지. 인사말·사족 금지.
 
@@ -45,8 +51,11 @@ SYSTEM_PROMPT = """너는 대중교통 경로를 골라주는 한국어 웰니�
   "자외선 지수 8 — 6분 늦지만 야외 노출이 11분 적은 지하철 경로를 추천해요."
   "가장 빠르지만 환승 대기 18분이 모두 뙤약볕이에요."
   "노출은 가장 적지만 6분 더 걸려요."
-나쁜 예(수치 없음·중복 표현):
+weather_notable이 false일 때의 좋은 예:
+  "6분 더 걸리지만 야외에 있는 시간이 11분 짧아요."
+나쁜 예(수치 없음·중복 표현·평범한 날씨를 굳이 앞세움):
   "이 경로는 자외선 노출이 적어 민감성 피부에 좋아요."
+  "자외선 지수 0 — 2분 더 걸리지만 야외 노출이 2분 적어요."
 
 출력은 JSON 객체 하나: {"comments": {"<route_id>": "<문장>", ...}}
 입력에 있는 모든 route_id를 빠짐없이 포함한다."""
@@ -91,6 +100,21 @@ def compact_routes(routes: list[dict]) -> list[dict]:
             "transfers": r.get("transfers"),
             **_segment_digest(r.get("segments") or []),
         })
+
+    # 경로 간 비교값은 서버에서 계산해 넘긴다. 모델에게 뺄셈을 시키면 방향을 틀린다
+    # (38분 경로를 40분 경로보다 "2분 더 걸린다"고 쓰는 실제 오류가 있었다).
+    totals = [r["total_minutes"] for r in out if isinstance(r["total_minutes"], (int, float))]
+    outdoors = [r["outdoor_minutes"] for r in out if isinstance(r["outdoor_minutes"], (int, float))]
+    if totals and outdoors:
+        fastest, lowest = min(totals), min(outdoors)
+        for r in out:
+            t, o = r["total_minutes"], r["outdoor_minutes"]
+            if isinstance(t, (int, float)):
+                r["minutes_vs_fastest"] = round(t - fastest)
+                r["is_fastest"] = t == fastest
+            if isinstance(o, (int, float)):
+                r["outdoor_vs_lowest"] = round(o - lowest)
+                r["is_lowest_outdoor"] = o == lowest
     return out
 
 
@@ -103,6 +127,9 @@ def build_user_prompt(routes: list[dict], env: dict, preset: str) -> str:
             "pm10_grade": env.get("pm10_grade"),
             "precipitation": env.get("precipitation"),
         },
+        # 지금 날씨가 실제로 언급할 만한지 — 템플릿의 접두사 판정을 그대로 쓴다(두 경로 일관).
+        # 밤(자외선 0)이나 선선한 날에 "자외선 지수 0 —"으로 시작하는 어색한 문구를 막는다.
+        "weather_notable": bool(_env_prefix(env, preset)),
         "routes": compact_routes(routes),
         "note": "exposure_load는 0~100 야외 노출 부하 점수이며 낮을수록 좋다.",
     }

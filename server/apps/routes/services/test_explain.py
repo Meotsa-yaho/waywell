@@ -83,6 +83,38 @@ def test_prompt_has_no_secrets_and_is_json():
     assert p["environment"]["uv_index"] == 9 and len(p["routes"]) == 3
 
 
+def test_compact_precomputes_comparisons():
+    # ROUTES: r_0=44분/야외7, r_1=38분/야외18, r_2=50분/야외12 → 최속 r_1, 최소노출 r_0
+    c = {r["route_id"]: r for r in explain.compact_routes(ROUTES)}
+    assert c["r_1"]["is_fastest"] and c["r_1"]["minutes_vs_fastest"] == 0
+    assert c["r_0"]["minutes_vs_fastest"] == 6 and c["r_2"]["minutes_vs_fastest"] == 12
+    assert c["r_0"]["is_lowest_outdoor"] and c["r_0"]["outdoor_vs_lowest"] == 0
+    assert c["r_1"]["outdoor_vs_lowest"] == 11 and c["r_2"]["outdoor_vs_lowest"] == 5
+
+
+def test_comparisons_never_negative():
+    # 음수가 나오면 모델이 방향을 반대로 쓴다 — 최속/최소는 항상 0이 기준
+    for r in explain.compact_routes(ROUTES):
+        assert r["minutes_vs_fastest"] >= 0 and r["outdoor_vs_lowest"] >= 0
+
+
+def test_prompt_flags_weather_notable():
+    import json
+    # 폭염·자외선 9 → 언급할 만함 / 선선한 밤 → 굳이 앞세우지 말 것
+    assert json.loads(explain.build_user_prompt(ROUTES, HOT, "skin"))["weather_notable"] is True
+    assert json.loads(explain.build_user_prompt(ROUTES, MILD, "skin"))["weather_notable"] is False
+
+
+def test_weather_notable_matches_template_prefix():
+    # 템플릿 접두사와 판정이 어긋나면 LLM/템플릿 문구 톤이 갈린다
+    import json
+    for env in (HOT, MILD, {"uv": 0, "feels_like": 26, "pm10_grade": "보통", "precipitation": "none"}):
+        for preset in ("normal", "skin", "respiratory", "heat"):
+            flag = json.loads(explain.build_user_prompt(ROUTES, env, preset))["weather_notable"]
+            has_prefix = not explain.template_comments(ROUTES, env, preset)["r_0"].startswith(("야외", "가장", "40분", "44분"))
+            assert flag == has_prefix, (env, preset, flag)
+
+
 def test_parse_accepts_both_shapes():
     ids = ["r_0", "r_1"]
     wrapped = explain.parse_comments({"comments": {"r_0": "짧은 문구예요.", "r_1": "다른 문구예요."}}, ids)
