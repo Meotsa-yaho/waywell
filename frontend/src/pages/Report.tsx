@@ -72,82 +72,34 @@ export default function Report() {
     loadReport();
   }, []);
 
-  if (failed) {
-    return (
-      <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
-        }`}>
-        <EmptyState
-          icon="📡"
-          title="리포트를 불러오지 못했어요"
-          hint="네트워크 상태를 확인해주세요."
-          actionLabel="다시 시도"
-          onAction={loadReport}
-        />
-      </div>
-    );
-  }
-
-  if (loading || !data) {
-    return (
-      <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
-        }`}>
-        <div className="flex items-center justify-center py-20">
-          <div className="flex flex-col items-center gap-3">
-            <RefreshCw className="w-7 h-7 text-emerald-500 animate-spin" />
-            <p className={`text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              주간 웰니스 리포트 계산 중...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data.has_data) {
-    return (
-      <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
-        }`}>
-        <div className="py-6">
-          <h1 className={`text-base sm:text-lg font-bold tracking-tight flex items-center gap-1.5 mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'
-            }`}>
-            <Calendar className="w-4 h-4 text-emerald-500" />
-            <span>주간 웰니스 이동 리포트</span>
-          </h1>
-          <EmptyState
-            icon="🚶"
-            title="아직 이동 기록이 없어요"
-            hint="첫 이동을 완료하면 주간 노출 부하와 방어 성과가 여기에 기록돼요."
-            actionLabel="경로 찾기"
-            onAction={() => nav('/')}
-          />
-        </div>
-      </div>
-    );
-  }
-
   const todayStr = new Date().toISOString().slice(0, 10);
-  const maxScore = Math.max(...data.daily.map((d) => d.exposure_load), 50);
+  const maxScore = data?.has_data ? Math.max(...data.daily.map((d) => d.exposure_load), 50) : 50;
 
-  const weeklyChartData = data.daily.map((d) => {
-    const dateObj = new Date(d.date);
-    const dayName = DAY_NAMES[dateObj.getDay()] || d.date.slice(5);
-    const isToday = d.date === todayStr;
-    return {
-      day: dayName,
-      date: d.date.slice(5),
-      score: d.exposure_load,
-      outdoorMin: d.outdoor_minutes,
-      isToday,
-    };
-  });
+  const weeklyChartData = data?.has_data
+    ? data.daily.map((d) => {
+        const dateObj = new Date(d.date);
+        const dayName = DAY_NAMES[dateObj.getDay()] || d.date.slice(5);
+        const isToday = d.date === todayStr;
+        return {
+          day: dayName,
+          date: d.date.slice(5),
+          score: d.exposure_load,
+          outdoorMin: d.outdoor_minutes,
+          isToday,
+        };
+      })
+    : [];
 
-  const totalOutdoorMin = data.daily.reduce((acc, cur) => acc + cur.outdoor_minutes, 0);
-  const avgOutdoorMin = data.daily.length > 0 ? Math.round(totalOutdoorMin / data.daily.length) : 0;
-  const loadChangePct = data.comparison.exposure_load_change_pct;
+  const totalOutdoorMin = data?.has_data ? data.daily.reduce((acc, cur) => acc + cur.outdoor_minutes, 0) : 0;
+  const avgOutdoorMin = data?.has_data && data.daily.length > 0 ? Math.round(totalOutdoorMin / data.daily.length) : 0;
+  const loadChangePct = data?.has_data ? data.comparison.exposure_load_change_pct : null;
 
   return (
-    <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
-      }`}>
+    <div
+      className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${
+        isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
+      }`}
+    >
       <motion.div
         key="tab-report"
         initial={{ opacity: 0, y: 8 }}
@@ -159,8 +111,11 @@ export default function Report() {
         {/* Header with Comparison Badge */}
         <div className="flex items-center justify-between py-1">
           <div>
-            <h1 className={`text-base sm:text-lg font-bold tracking-tight flex items-center gap-1.5 ${isDarkMode ? 'text-white' : 'text-slate-900'
-              }`}>
+            <h1
+              className={`text-base sm:text-lg font-bold tracking-tight flex items-center gap-1.5 ${
+                isDarkMode ? 'text-white' : 'text-slate-900'
+              }`}
+            >
               <Calendar className="w-4 h-4 text-emerald-500" />
               <span>주간 웰니스 이동 리포트</span>
             </h1>
@@ -169,15 +124,18 @@ export default function Report() {
             </p>
           </div>
 
-          {loadChangePct !== null && (
-            <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-bold ${loadChangePct <= 0
-              ? isDarkMode
-                ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/60'
-                : 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
-              : isDarkMode
-                ? 'bg-rose-950/60 text-rose-400 border-rose-800/60'
-                : 'bg-rose-50 text-rose-700 border-rose-200/80'
-              }`}>
+          {data?.has_data && loadChangePct !== null && (
+            <div
+              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-bold ${
+                loadChangePct <= 0
+                  ? isDarkMode
+                    ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/60'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                  : isDarkMode
+                    ? 'bg-rose-950/60 text-rose-400 border-rose-800/60'
+                    : 'bg-rose-50 text-rose-700 border-rose-200/80'
+              }`}
+            >
               {loadChangePct <= 0 ? (
                 <>
                   <TrendingDown className="w-3 h-3 text-emerald-500" />
@@ -192,6 +150,38 @@ export default function Report() {
             </div>
           )}
         </div>
+
+        {failed ? (
+          <div className="py-6">
+            <EmptyState
+              icon="📡"
+              title="리포트를 불러오지 못했어요"
+              hint="네트워크 상태를 확인해주세요."
+              actionLabel="다시 시도"
+              onAction={loadReport}
+            />
+          </div>
+        ) : loading || !data ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <RefreshCw className="w-7 h-7 text-emerald-500 animate-spin" />
+              <p className={`text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                주간 웰니스 리포트 계산 중...
+              </p>
+            </div>
+          </div>
+        ) : !data.has_data ? (
+          <div className="pt-6">
+            <EmptyState
+              icon="🚶"
+              title="아직 이동 기록이 없어요"
+              hint="첫 이동을 완료하면 주간 노출 부하와 방어 성과가 여기에 기록돼요."
+              actionLabel="경로 찾기"
+              onAction={() => nav('/')}
+            />
+          </div>
+        ) : (
+          <>
 
         {/* 3 Summary Stat Cards */}
         <div className="grid grid-cols-3 gap-2">
@@ -373,6 +363,8 @@ export default function Report() {
           </div>
           <ChevronRight className="w-4 h-4 text-slate-400" />
         </button>
+        </>
+        )}
       </motion.div>
     </div>
   );
