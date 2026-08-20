@@ -12,11 +12,15 @@ _KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json"
 _WALK_M_PER_MIN = 67  # 도보 약 4km/h
 
 
-def search_places(q: str, lat: float | None = None, lng: float | None = None, size: int = 10) -> list[dict]:
-    """키워드 장소 검색(B-02). 좌표 주면 거리순 정렬 + 거리 표기."""
+def search_places(q: str, lat: float | None = None, lng: float | None = None, size: int = 15) -> list[dict]:
+    """키워드 장소 검색(B-02).
+
+    정렬은 '정확도(관련도)' 기본 — 이름으로 찾을 때 엉뚱한 근처 부분매치가 위로 오는 걸 방지.
+    좌표를 주면 거리 표기 + 지역 가중치(가까운 동명 지점 우선)에 쓰인다.
+    """
     params: dict = {"query": q, "size": size}
     if lat is not None and lng is not None:
-        params.update(x=lng, y=lat, sort="distance")
+        params.update(x=lng, y=lat)  # 정렬은 정확도(기본), 좌표는 거리·지역 가중치용
     r = requests.get(
         _KEYWORD_URL,
         params=params,

@@ -4,6 +4,7 @@ import { useSession } from '../store/session';
 import { useRouteQuery } from '../store/route';
 import { HomeSearchTab } from '../components/main/HomeSearchTab';
 import { RouteCandidatesView } from '../components/main/RouteCandidatesView';
+import { LocationConsent } from '../components/LocationConsent';
 import { loadKakao } from '../lib/kakao';
 
 const DEFAULT = { lat: 37.2011, lng: 127.0983 }; // 동탄역
@@ -56,46 +57,31 @@ export default function Home() {
     }, 2800);
   };
 
-  // GPS Current Location detection with Kakao Reverse Geocoding
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (p) => {
-          const loc = { lat: p.coords.latitude, lng: p.coords.longitude };
-          setCenter(loc);
-
-          loadKakao()
-            .then((kakao: any) => {
-              new kakao.maps.services.Geocoder().coord2Address(
-                loc.lng,
-                loc.lat,
-                (res: any[], status: string) => {
-                  if (status === kakao.maps.services.Status.OK && res[0]) {
-                    const addr =
-                      res[0].road_address?.address_name ||
-                      res[0].address?.address_name ||
-                      '현재 위치';
-                    setLocationName(addr);
-                    if (!fromPlace) {
-                      setPlace('from', {
-                        place_id: 'current',
-                        name: addr,
-                        address: addr,
-                        category: '',
-                        ...loc,
-                      });
-                    }
-                  }
+  // GPS 현재 위치 + 카카오 역지오코딩. LocationConsent가 허용 시(또는 이미 허용됨) 호출.
+  const requestLocation = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        const loc = { lat: p.coords.latitude, lng: p.coords.longitude };
+        setCenter(loc);
+        loadKakao()
+          .then((kakao: any) => {
+            new kakao.maps.services.Geocoder().coord2Address(loc.lng, loc.lat, (res: any[], status: string) => {
+              if (status === kakao.maps.services.Status.OK && res[0]) {
+                const addr = res[0].road_address?.address_name || res[0].address?.address_name || '현재 위치';
+                setLocationName(addr);
+                if (!fromPlace) {
+                  setPlace('from', { place_id: 'current', name: addr, address: addr, category: '', ...loc });
                 }
-              );
-            })
-            .catch(() => {});
-        },
-        () => {},
-        { timeout: 5000, maximumAge: 60000 }
-      );
-    }
-  }, []);
+              }
+            });
+          })
+          .catch(() => {});
+      },
+      () => {},
+      { timeout: 5000, maximumAge: 60000 }
+    );
+  };
 
   const handleRequestRouteCandidates = (originName: string, destName: string) => {
     if (!destName || !destName.trim()) {
@@ -122,6 +108,9 @@ export default function Home() {
     <div className={`min-h-full font-sans transition-colors duration-200 ${
       searchRouteState ? 'pb-0 overflow-hidden' : 'pb-20 p-4 sm:p-5'
     } ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
+      {/* A-03 위치정보 사전 동의 */}
+      <LocationConsent isDarkMode={isDarkMode} onAllow={requestLocation} />
+
       {/* Toast Notification Popup */}
       <AnimatePresence>
         {toastMessage && (

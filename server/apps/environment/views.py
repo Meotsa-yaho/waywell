@@ -55,26 +55,35 @@ class EnvironmentView(APIView):
 
         partial = False
 
-        # 날씨 (기온·습도·풍속·강수)
-        temperature = precipitation = None
+        # 날씨 (기온·습도·풍속·강수). 순간 실패면 최근값(1h 내)으로 폴백, 장기 실패만 partial.
+        temperature = precipitation = feels = None
+        wkey = f"env:last:weather:{nx}:{ny}"
         try:
             w = kma_client.get_weather(lat, lng)
             feels = apparent_temperature(w["temp"], w["humidity"], w["wind"])
             temperature = {"current": w["temp"], "feels_like": feels, "humidity": int(w["humidity"])}
             precipitation = {"type": _PTY.get(w["pty"], "none"), "probability": 0 if w["pty"] == 0 else 80}
+            cache.set(wkey, {"temperature": temperature, "precipitation": precipitation, "feels": feels}, 3600)
         except Exception as e:
-            partial = True
-            feels = None
-            _log.warning("weather fetch failed: %s", e)
+            last = cache.get(wkey)
+            if last:
+                temperature, precipitation, feels = last["temperature"], last["precipitation"], last["feels"]
+            else:
+                partial = True
+                _log.warning("weather fetch failed: %s", e)
 
-        # 자외선
+        # 자외선. 순간 실패면 최근값(1h 내)으로 폴백.
         uv = None
+        ukey = f"env:last:uv:{nx}:{ny}"
         try:
             idx = kma_client.get_uv(lat, lng)
             uv = {"index": idx, "grade": _uv_grade(idx)}
+            cache.set(ukey, uv, 3600)
         except Exception as e:
-            partial = True
-            _log.warning("uv fetch failed: %s", e)
+            uv = cache.get(ukey)
+            if uv is None:
+                partial = True
+                _log.warning("uv fetch failed: %s", e)
 
         # 미세먼지
         air = None

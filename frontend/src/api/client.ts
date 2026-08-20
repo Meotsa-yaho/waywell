@@ -7,12 +7,14 @@ import type {
   AuthResponse,
   Place,
   Shelter,
+  Shade,
   Arrival,
   Trip,
   TripSummary,
 } from '../types/api'
 
-const http = axios.create({ baseURL: '/api', timeout: 10000 })
+// 경로(geometry+실날씨)·환경 조회는 외부 API(ODsay·기상청) 지연이 커 10초로는 자주 헛끊김 → 25초.
+const http = axios.create({ baseURL: '/api', timeout: 25000 })
 
 // 게스트/로그인 신원 헤더 부착 (API 명세서 1장)
 http.interceptors.request.use((config) => {
@@ -65,6 +67,10 @@ export const api = {
   // 실내 대기장소는 백엔드(카카오 로컬) 구현 완료 → 목업 모드여도 실 API
   getShelters: (lat: number, lng: number) =>
     http.get<{ shelters: Shelter[] }>('/shelters', { params: { lat, lng } }).then((r) => r.data.shelters),
+
+  // 근처 야외 그늘막 (백엔드 로컬 저장분 → 외부 API 매번 호출 없음)
+  getShades: (lat: number, lng: number, radius?: number) =>
+    http.get<{ shades: Shade[] }>('/shades', { params: { lat, lng, radius } }).then((r) => r.data.shades),
 
   // 이동 기록·리포트는 백엔드 구현 완료 → 목업 모드여도 실 API. POST/PATCH는 slash 필수(Django APPEND_SLASH)
   listTrips: () =>

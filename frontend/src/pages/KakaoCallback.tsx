@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { useSession } from '../store/session'
-import { kakaoRedirectUri, startKakaoLogin } from '../lib/kakaoAuth'
+import { kakaoRedirectUri, startKakaoLogin, consumeKakaoState } from '../lib/kakaoAuth'
 import type { Preset } from '../types/api'
 
 // 카카오 인가 코드 콜백 → 백엔드 교환 → JWT 저장 후 홈
@@ -19,6 +19,7 @@ export default function KakaoCallback() {
     done.current = true
     const code = params.get('code')
     if (!code) return setError(true)
+    if (!consumeKakaoState(params.get('state'))) return setError(true) // CSRF: state 불일치 시 거부
     api
       .kakaoLogin(code, kakaoRedirectUri())
       .then((res) => {

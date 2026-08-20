@@ -1,0 +1,26 @@
+name: security-audit
+
+# 서버 의존성 CVE 정기 점검 (pip-audit). 리포트만 — 머지는 차단하지 않음.
+on:
+  push:
+    branches: [main]
+    paths: ['server/requirements.txt']
+  pull_request:
+    paths: ['server/requirements.txt']
+  schedule:
+    - cron: '0 0 * * 1'   # 매주 월요일 00:00 UTC
+  workflow_dispatch:
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: pip-audit (server 의존성 CVE)
+        continue-on-error: true   # 취약점 리포트만, 빌드/머지 차단 X
+        run: |
+          pip install pip-audit
+          pip-audit -r server/requirements.txt

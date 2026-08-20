@@ -161,5 +161,17 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": os.getenv("THROTTLE_ANON", "120/min"),
         "user": os.getenv("THROTTLE_USER", "240/min"),
+        "auth": os.getenv("THROTTLE_AUTH", "30/min"),  # 로그인(카카오) 엔드포인트 전용 상한
     },
 }
+
+# 프로덕션 HTTPS 하드닝 (옵트인: SECURE_HTTPS=True). Nginx 뒤 배포 기준.
+# 로컬(http) 개발을 깨지 않도록 기본 off — 배포 시에만 켠다.
+if os.getenv("SECURE_HTTPS", "False") == "True":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")  # Nginx가 X-Forwarded-Proto 전달
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1년
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True

@@ -14,7 +14,8 @@ import {
   Navigation,
   Trash2,
   Building,
-  Crosshair
+  Crosshair,
+  Star
 } from 'lucide-react';
 import type { Preset, Environment, Place } from '../../types/api';
 import { useRouteQuery } from '../../store/route';
@@ -66,9 +67,11 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
   const toPlace = useRouteQuery((s) => s.to);
   const setPlace = useRouteQuery((s) => s.setPlace);
   const recent = useRouteQuery((s) => s.recent);
+  const favorites = useRouteQuery((s) => s.favorites);
   const addRecent = useRouteQuery((s) => s.addRecent);
   const removeRecent = useRouteQuery((s) => s.removeRecent);
   const clearRecent = useRouteQuery((s) => s.clearRecent);
+  const toggleFavorite = useRouteQuery((s) => s.toggleFavorite);
   const departAt = useRouteQuery((s) => s.departAt);
   const setDepartAt = useRouteQuery((s) => s.setDepartAt);
 
@@ -84,6 +87,17 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
   const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
   const [destSuggestions, setDestSuggestions] = useState<Place[]>([]);
   const [isSearchingDest, setIsSearchingDest] = useState(false);
+  const [destFocused, setDestFocused] = useState(false); // 포커스 시(빈 입력) 최근/즐겨찾기 드롭다운 (#1)
+  const [originFocused, setOriginFocused] = useState(false);
+
+  // 최근·즐겨찾기 병합(즐겨찾기 우선, 중복 제거) — 포커스 드롭다운용
+  const quickPicks = [
+    ...favorites,
+    ...recent.filter((r) => !favorites.some((f) => f.place_id === r.place_id)),
+  ].slice(0, 6);
+  const showDestQuick = destFocused && destSuggestions.length === 0 && quickPicks.length > 0;
+  // 출발지: 포커스+빈입력이면 '현재 위치로 설정' + 즐겨찾기·최근 (항상 현재위치 옵션은 보임)
+  const showOriginQuick = originFocused && originSuggestions.length === 0;
 
   const coaching = PRESET_COACHING[userPreset] || PRESET_COACHING.normal;
 
@@ -174,6 +188,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
     setPlace('from', place);
     addRecent(place);
     setOriginSuggestions([]);
+    setOriginFocused(false); // 선택 후 드롭다운 닫기 (도착지와 동일 동작)
     onShowToast(`출발지로 '${place.name}'을(를) 선택했습니다.`);
   };
 
@@ -189,6 +204,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
       lng,
     });
     setOriginSuggestions([]);
+    setOriginFocused(false); // 선택 후 드롭다운 닫기
     onShowToast('출발지를 현재 위치로 설정했습니다.');
   };
 
@@ -230,6 +246,13 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
 
     const finalOrigin = origin.trim() || locationName || '서울시 강남구';
     const finalDest = trimmedDest;
+
+    // 출발지=목적지면 경로가 없어 상세 화면이 오류 → 검색 단계에서 차단 (이름 또는 좌표 동일)
+    const sameCoord = !!fromPlace && !!toPlace && fromPlace.lat === toPlace.lat && fromPlace.lng === toPlace.lng;
+    if (finalOrigin === finalDest || sameCoord) {
+      onShowToast('출발지와 도착지가 같아요. 다른 장소를 선택해주세요.');
+      return;
+    }
 
     // Ensure fromPlace is valid
     if (!fromPlace || fromPlace.name !== finalOrigin) {
@@ -325,10 +348,10 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
               <span className="text-[10px] font-medium">체감온도</span>
             </div>
             <div className={`text-xs sm:text-sm font-black ${envData?.temperature?.feels_like != null
-              ? isDarkMode ? 'text-white' : 'text-slate-800'
-              : 'text-rose-500'
+                ? isDarkMode ? 'text-white' : 'text-slate-800'
+                : 'text-slate-400'
               }`}>
-              {envData?.temperature?.feels_like != null ? `${envData.temperature.feels_like}℃` : '에러'}
+              {envData?.temperature?.feels_like != null ? `${envData.temperature.feels_like}℃` : '—'}
             </div>
           </div>
 
@@ -353,9 +376,9 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
               <Wind className="w-3.5 h-3.5 text-emerald-500" />
               <span className="text-[10px] font-medium">미세먼지</span>
             </div>
-            <div className={`text-xs sm:text-sm font-black ${envData?.air?.pm10 != null && envData?.air?.pm10_grade ? 'text-emerald-500' : 'text-rose-500'
+            <div className={`text-xs sm:text-sm font-black ${envData?.air?.pm10 != null && envData?.air?.pm10_grade ? 'text-emerald-500' : 'text-slate-400'
               }`}>
-              {envData?.air?.pm10 != null && envData?.air?.pm10_grade ? `${envData.air.pm10}㎍ ${envData.air.pm10_grade}` : '에러'}
+              {envData?.air?.pm10 != null && envData?.air?.pm10_grade ? `${envData.air.pm10}㎍ ${envData.air.pm10_grade}` : '—'}
             </div>
           </div>
         </div>
@@ -406,30 +429,34 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
             </button>
 
             {isTimeDropdownOpen && (
-              <div className={`absolute right-0 mt-1 w-28 border rounded-xl shadow-lg py-1 z-20 text-[11px] ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-600'
+              <div className={`absolute right-0 mt-1 w-44 border rounded-xl shadow-lg p-1.5 z-20 text-[11px] ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-600'
                 }`}>
-                {['지금 출발', '10분 후', '30분 후', '1시간 후'].map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => {
-                      setDepartTime(t);
-                      if (t === '지금 출발') setDepartAt(null);
-                      else setDepartAt(t);
-                      setIsTimeDropdownOpen(false);
+                {/* 지금 출발 (기본) */}
+                <button
+                  type="button"
+                  onClick={() => { setDepartTime('지금 출발'); setDepartAt(null); setIsTimeDropdownOpen(false); }}
+                  className={`w-full text-left px-2 py-1.5 rounded-lg cursor-pointer ${!departAt
+                      ? isDarkMode ? 'font-bold text-emerald-400 bg-emerald-950/40' : 'font-bold text-emerald-700 bg-emerald-50/50'
+                      : isDarkMode ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-emerald-50'
+                    }`}
+                >
+                  지금 출발
+                </button>
+                {/* 시각 지정 — --:-- 를 바로 눌러 설정(네이티브 피커 즉시 오픈), 선택 시 닫힘 */}
+                <label className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer ${isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-emerald-50'}`}>
+                  <span className="shrink-0">시각 지정</span>
+                  <input
+                    type="time"
+                    value={departAt && /^\d{1,2}:\d{2}$/.test(departAt) ? departAt : ''}
+                    onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v) { setDepartAt(v); setDepartTime(`${v} 출발`); setIsTimeDropdownOpen(false); }
                     }}
-                    className={`w-full text-left px-3 py-1.5 cursor-pointer ${departTime === t
-                      ? isDarkMode
-                        ? 'font-bold text-emerald-400 bg-emerald-950/40'
-                        : 'font-bold text-emerald-700 bg-emerald-50/50'
-                      : isDarkMode
-                        ? 'text-slate-300 hover:bg-slate-700'
-                        : 'text-slate-600 hover:bg-emerald-50'
+                    className={`flex-1 min-w-0 bg-transparent border rounded-md px-1.5 py-0.5 text-[11px] cursor-pointer focus:outline-none focus:border-emerald-500 ${isDarkMode ? 'border-slate-600 text-white [color-scheme:dark]' : 'border-slate-300 text-slate-800'
                       }`}
-                  >
-                    {t}
-                  </button>
-                ))}
+                  />
+                </label>
               </div>
             )}
           </div>
@@ -448,7 +475,9 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                 type="text"
                 value={origin}
                 onChange={(e) => setOrigin(e.target.value)}
-                placeholder="출발지 입력"
+                onFocus={() => setOriginFocused(true)}
+                onBlur={() => setTimeout(() => setOriginFocused(false), 150)}
+                placeholder="출발지 입력 (예: 강남역, 판교역)"
                 className={`w-full bg-transparent text-xs font-semibold placeholder-slate-400 focus:outline-none ${isDarkMode ? 'text-white' : 'text-slate-800'
                   }`}
               />
@@ -469,9 +498,9 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
               ) : null}
             </div>
 
-            {/* Origin Auto-complete Suggestions Dropdown */}
+            {/* Origin Dropdown: 입력 시 검색후보 / 포커스+빈입력 시 현재위치 + 즐겨찾기·최근 (#1) */}
             <AnimatePresence>
-              {originSuggestions.length > 0 && (
+              {(originSuggestions.length > 0 || showOriginQuick) && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -480,9 +509,9 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                     }`}
                 >
                   <div className="p-1.5 space-y-1">
-                    {/* Current Location Option */}
+                    {/* Current Location Option (항상 상단) */}
                     <div
-                      onClick={handleResetCurrentLocation}
+                      onMouseDown={(e) => { e.preventDefault(); handleResetCurrentLocation(); }}
                       className={`p-2 rounded-lg flex items-center gap-2 cursor-pointer transition-colors border-b ${isDarkMode
                         ? 'hover:bg-slate-800 text-emerald-400 border-slate-800'
                         : 'hover:bg-emerald-50 text-emerald-700 border-slate-100'
@@ -492,25 +521,57 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                       <span className="text-xs font-bold">📍 현재 위치로 설정 ({locationName})</span>
                     </div>
 
-                    {originSuggestions.map((sug) => (
-                      <div
-                        key={sug.place_id}
-                        onClick={() => handleSelectOriginSuggestion(sug)}
-                        className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
-                          }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          <div className="min-w-0">
-                            <span className="text-xs font-bold block truncate">{sug.name}</span>
-                            <span className="text-[10px] text-slate-400 block truncate">{sug.address}</span>
+                    {originSuggestions.length > 0 ? (
+                      originSuggestions.map((sug) => (
+                        <div
+                          key={sug.place_id}
+                          onClick={() => handleSelectOriginSuggestion(sug)}
+                          className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
+                            }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <div className="min-w-0">
+                              <span className="text-xs font-bold block truncate">{sug.name}</span>
+                              <span className="text-[10px] text-slate-400 block truncate">{sug.address}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {sug.distance_m != null && (
+                              <span className="text-[10px] text-slate-400">{sug.distance_m}m</span>
+                            )}
+                            <button type="button" onMouseDown={(e) => { e.preventDefault(); toggleFavorite(sug); }} title="즐겨찾기" className="p-0.5">
+                              <Star className={`w-3.5 h-3.5 ${favorites.some((f) => f.place_id === sug.place_id) ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-400'}`} />
+                            </button>
                           </div>
                         </div>
-                        {sug.distance_m != null && (
-                          <span className="text-[10px] text-slate-400 shrink-0">{sug.distance_m}m</span>
-                        )}
-                      </div>
-                    ))}
+                      ))
+                    ) : quickPicks.length > 0 ? (
+                      <>
+                        <div className="px-2 pt-1 pb-0.5 text-[10px] font-bold text-slate-400">⭐ 즐겨찾기 · 최근</div>
+                        {quickPicks.map((p) => (
+                          <div
+                            key={p.place_id}
+                            onMouseDown={(e) => { e.preventDefault(); handleSelectOriginSuggestion(p); }}
+                            className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
+                              }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              {favorites.some((f) => f.place_id === p.place_id)
+                                ? <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
+                                : <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                              <div className="min-w-0">
+                                <span className="text-xs font-bold block truncate">{p.name}</span>
+                                <span className="text-[10px] text-slate-400 block truncate">{p.address || p.category || '최근 장소'}</span>
+                              </div>
+                            </div>
+                            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(p); }} title="즐겨찾기" className="p-0.5 shrink-0">
+                              <Star className={`w-3.5 h-3.5 ${favorites.some((f) => f.place_id === p.place_id) ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-400'}`} />
+                            </button>
+                          </div>
+                        ))}
+                      </>
+                    ) : null}
                   </div>
                 </motion.div>
               )}
@@ -543,7 +604,9 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                 type="text"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                placeholder="어디로 가시나요? (예: 강남역)"
+                onFocus={() => setDestFocused(true)}
+                onBlur={() => setTimeout(() => setDestFocused(false), 150)}
+                placeholder="어디로 가시나요? (예: 강남역, 판교역)"
                 className={`w-full bg-transparent text-xs font-semibold placeholder-slate-400 focus:outline-none ${isDarkMode ? 'text-white' : 'text-slate-800'
                   }`}
               />
@@ -564,9 +627,9 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
               ) : null}
             </div>
 
-            {/* Destination Auto-complete Suggestions Dropdown */}
+            {/* Destination Dropdown: 입력 시 검색후보 / 포커스+빈입력 시 즐겨찾기·최근 (#1) */}
             <AnimatePresence>
-              {destSuggestions.length > 0 && (
+              {(destSuggestions.length > 0 || showDestQuick) && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -575,25 +638,57 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                     }`}
                 >
                   <div className="p-1.5 space-y-1">
-                    {destSuggestions.map((sug) => (
-                      <div
-                        key={sug.place_id}
-                        onClick={() => handleSelectDestSuggestion(sug)}
-                        className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
-                          }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          <div className="min-w-0">
-                            <span className="text-xs font-bold block truncate">{sug.name}</span>
-                            <span className="text-[10px] text-slate-400 block truncate">{sug.address}</span>
+                    {destSuggestions.length > 0
+                      ? destSuggestions.map((sug) => (
+                        <div
+                          key={sug.place_id}
+                          onClick={() => handleSelectDestSuggestion(sug)}
+                          className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
+                            }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <div className="min-w-0">
+                              <span className="text-xs font-bold block truncate">{sug.name}</span>
+                              <span className="text-[10px] text-slate-400 block truncate">{sug.address}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {sug.distance_m != null && (
+                              <span className="text-[10px] text-slate-400">{sug.distance_m}m</span>
+                            )}
+                            <button type="button" onMouseDown={(e) => { e.preventDefault(); toggleFavorite(sug); }} title="즐겨찾기" className="p-0.5">
+                              <Star className={`w-3.5 h-3.5 ${favorites.some((f) => f.place_id === sug.place_id) ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-400'}`} />
+                            </button>
                           </div>
                         </div>
-                        {sug.distance_m != null && (
-                          <span className="text-[10px] text-slate-400 shrink-0">{sug.distance_m}m</span>
-                        )}
-                      </div>
-                    ))}
+                      ))
+                      : (
+                        <>
+                          <div className="px-2 pt-1 pb-0.5 text-[10px] font-bold text-slate-400">⭐ 즐겨찾기 · 최근</div>
+                          {quickPicks.map((p) => (
+                            <div
+                              key={p.place_id}
+                              onClick={() => handleSelectRecent(p)}
+                              className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
+                                }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                {favorites.some((f) => f.place_id === p.place_id)
+                                  ? <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
+                                  : <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                                <div className="min-w-0">
+                                  <span className="text-xs font-bold block truncate">{p.name}</span>
+                                  <span className="text-[10px] text-slate-400 block truncate">{p.address || p.category || '최근 목적지'}</span>
+                                </div>
+                              </div>
+                              <button type="button" onMouseDown={(e) => { e.preventDefault(); toggleFavorite(p); }} title="즐겨찾기" className="p-0.5 shrink-0">
+                                <Star className={`w-3.5 h-3.5 ${favorites.some((f) => f.place_id === p.place_id) ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-400'}`} />
+                              </button>
+                            </div>
+                          ))}
+                        </>
+                      )}
                   </div>
                 </motion.div>
               )}
@@ -667,14 +762,24 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={(e) => handleDeleteRecent(place.place_id, e)}
-                  className="p-1 text-slate-400 hover:text-rose-500 transition-colors opacity-60 hover:opacity-100 cursor-pointer shrink-0 ml-1"
-                  title="기록 삭제"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-0.5 shrink-0 ml-1">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(place); }}
+                    className="p-1 cursor-pointer"
+                    title="즐겨찾기"
+                  >
+                    <Star className={`w-3.5 h-3.5 ${favorites.some((f) => f.place_id === place.place_id) ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-400'}`} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteRecent(place.place_id, e)}
+                    className="p-1 text-slate-400 hover:text-rose-500 transition-colors opacity-60 hover:opacity-100 cursor-pointer"
+                    title="기록 삭제"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

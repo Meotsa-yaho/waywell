@@ -18,6 +18,25 @@ PRESET_WEIGHTS = {
     "heat": {"uv": 1.0, "heat": 1.5, "air": 1.0},
 }
 
+# 구간 종류별 (uv, heat, air) 노출 배율 — 같은 시간이라도 종류마다 노출 성분이 다르다.
+# 버스=도로변 미세↑·햇빛X, 도보/대기=개방 하늘 UV↑. → 프리셋이 경로 순위를 실제로 바꾼다.
+# ponytail: 휴리스틱 상수. 구간별 실측(도로변/그늘/시간대) 붙으면 정교화.
+EXPOSURE_PROFILE = {
+    "subway": (0.0, 0.0, 0.0),    # 지하 실내
+    "bus": (0.0, 0.3, 0.6),       # 차내: 햇빛 없음, 정체 도로변 미세
+    "bus_wait": (1.0, 1.0, 1.0),  # 노변 정류장 야외
+    "walk_out": (1.0, 1.0, 0.5),  # 개방 하늘 UV/더위, 보도 미세 중간
+    "walk_in": (0.0, 0.0, 0.0),   # 역사 내 환승
+}
+
+
+def _profile(seg: dict) -> tuple[float, float, float]:
+    """구간의 (uv, heat, air) 노출 배율. kind 없으면 outdoor 플래그로 폴백(v1 호환)."""
+    k = seg.get("kind")
+    if k in EXPOSURE_PROFILE:
+        return EXPOSURE_PROFILE[k]
+    return (1.0, 1.0, 1.0) if seg.get("outdoor") else (0.0, 0.0, 0.0)
+
 
 def _uv_norm(uv):
     return min(uv / 11.0, 1.0) if uv is not None else 0.0
@@ -50,11 +69,15 @@ def calc_exposure_load(segments: list[dict], env: dict, preset: str) -> dict:
     heat_i = _heat_norm(env.get("feels_like"))
     air_i = _air_norm(env.get("pm10"))
 
+    # 성분별 노출 시간 — 구간 종류 배율 반영 (버스=air 위주, 도보/대기=uv/heat 위주)
+    uv_min = sum(s["minutes"] * _profile(s)[0] for s in segments)
+    heat_min = sum(s["minutes"] * _profile(s)[1] for s in segments)
+    air_min = sum(s["minutes"] * _profile(s)[2] for s in segments)
     outdoor_min = sum(s["minutes"] for s in segments if s.get("outdoor"))
 
-    raw_uv = outdoor_min * W_UV * uv_i * pw["uv"]
-    raw_heat = outdoor_min * W_HEAT * heat_i * pw["heat"]
-    raw_air = outdoor_min * W_AIR * air_i * pw["air"]
+    raw_uv = uv_min * W_UV * uv_i * pw["uv"]
+    raw_heat = heat_min * W_HEAT * heat_i * pw["heat"]
+    raw_air = air_min * W_AIR * air_i * pw["air"]
 
     uv_p, heat_p, air_p = raw_uv * SCALE, raw_heat * SCALE, raw_air * SCALE
     total = uv_p + heat_p + air_p
@@ -63,8 +86,31 @@ def calc_exposure_load(segments: list[dict], env: dict, preset: str) -> dict:
         uv_p, heat_p, air_p = uv_p * f, heat_p * f, air_p * f
 
     uv_s, heat_s, air_s = round(uv_p), round(heat_p), round(air_p)
+    over = uv_s + heat_s + air_s - 100
+    if over > 0:  # 성분 반올림 누적으로 100 초과 가능 → 최대 성분에서 차감(합=score≤100, breakdown 합=score 유지)
+        m = max(uv_s, heat_s, air_s)
+        if uv_s == m:
+            uv_s -= over
+        elif heat_s == m:
+            heat_s -= over
+        else:
+            air_s -= over
     return {
         "score": uv_s + heat_s + air_s,
         "breakdown": {"uv": uv_s, "heat": heat_s, "air": air_s},
         "outdoor_minutes": outdoor_min,
     }
+
+
+if __name__ == "__main__":
+    # 어떤 입력이든 0<=score<=100 이고 breakdown 합==score (반올림 초과 방지) 자체 점검
+    import random
+    for _ in range(3000):
+        env = {"uv": random.uniform(0, 11), "feels_like": random.uniform(20, 40), "pm10": random.uniform(0, 400)}
+        segs = [{"outdoor": True, "minutes": random.randint(0, 60), "kind": random.choice(list(EXPOSURE_PROFILE))}
+                for _ in range(random.randint(1, 6))]
+        r = calc_exposure_load(segs, env, random.choice(list(PRESET_WEIGHTS)))
+        b = r["breakdown"]
+        assert 0 <= r["score"] <= 100, r
+        assert b["uv"] + b["heat"] + b["air"] == r["score"], r
+    print("exposure clamp ok (0<=score<=100, breakdown 합==score)")

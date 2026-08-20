@@ -73,6 +73,7 @@ export interface RouteSegment {
 
 export interface Route {
   route_id: string
+  route_type?: 'transit' | 'walk' // walk = 도보 전용 후보
   rank: number
   recommended: boolean
   exposure_load: number
@@ -85,6 +86,7 @@ export interface Route {
   prediction_grade: PredictionGrade
   data_source: DataSource
   notice: string | null
+  depart_nudge?: { delay_minutes: number; station: string; text: string } | null // 출발시각 넛지
   llm_comment: string | null
   polyline?: [number, number][] // [lat, lng][] — 지도 경로선(전체)
   path_segments?: { type: 'walk' | 'bus' | 'subway'; coords: [number, number][]; outdoor?: boolean }[] // 모드별 색상 구분용
@@ -129,6 +131,17 @@ export interface Shelter {
   distance_m: number
   walk_minutes: number
   map_url: string
+}
+
+// 야외 그늘막 (전국그늘막쉼터표준데이터, 로컬 저장분)
+export interface Shade {
+  name: string
+  address: string
+  lat: number
+  lng: number
+  type: string
+  distance_m: number
+  walk_minutes: number
 }
 
 export interface Trip {

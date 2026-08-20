@@ -2,6 +2,7 @@
 from datetime import datetime, timezone, timedelta
 
 from django.conf import settings
+from django.core.cache import cache
 from django.utils import timezone as dj_tz
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -169,17 +170,24 @@ class ArrivalView(APIView):
         route_id = q.get("route_id")
         city_code = q.get("city_code", DEFAULT_CITY_CODE)
 
+        last_key = f"arrival:last:{station_id}:{route_id or ''}"
         data_source, grade, notice = "tago", "realtime", None
         try:
             arrivals = tago_client.get_arrivals(city_code, station_id, route_id)
         except Exception:
             arrivals = []
 
-        if not arrivals:  # live 실패/없음 → 크롤러 스냅샷 폴백
+        if arrivals:
+            cache.set(last_key, arrivals, 120)  # 직전 정상값 2분 보관 (새로고침 깜빡임 방지)
+        else:  # live 실패/없음 → 크롤러 스냅샷 → 직전 정상값 순으로 폴백
             cached = _snapshot_arrivals(station_id, route_id)
+            last = cache.get(last_key)
             if cached:
                 arrivals, data_source, grade = cached, "tago_cache", "estimated"
                 notice = "실시간 연결이 지연돼 최근 수집 정보로 안내해요."
+            elif last:  # TAGO가 순간적으로 빈 응답 → 방금 전 정상값 유지 (있다↔없다 플리커 제거)
+                arrivals, data_source, grade = last, "tago_cache", "estimated"
+                notice = "실시간 정보가 잠시 끊겨 최근 정보로 안내해요."
             else:
                 notice = "곧 도착 예정인 차량이 없어요."
 
