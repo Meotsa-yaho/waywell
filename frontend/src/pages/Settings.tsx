@@ -1,26 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Settings as SettingsIcon, 
-  User, 
-  Sun, 
-  Moon, 
-  Thermometer, 
-  Wind, 
-  Scale, 
-  Smartphone, 
-  Check, 
-  RotateCcw, 
-  Sparkles, 
-  ChevronRight, 
-  Database, 
-  FileText, 
-  Shield, 
+import {
+  Settings as SettingsIcon,
+  User,
+  Sun,
+  Moon,
+  Thermometer,
+  Wind,
+  Scale,
+  Smartphone,
+  Check,
+  RotateCcw,
+  Sparkles,
+  ChevronRight,
+  Database,
+  FileText,
+  Shield,
   Users,
   LogOut,
   Trash2
 } from 'lucide-react';
+import { useTheme } from '../store/theme';
 import { useSession } from '../store/session';
 import { useRouteQuery } from '../store/route';
 import { api } from '../api/client';
@@ -30,11 +31,11 @@ import { SettingsInfoModal } from '../components/SettingsInfoModal';
 import type { SettingsInfoType } from '../components/SettingsInfoModal';
 import type { Preset } from '../types/api';
 
-const PRESET_OPTIONS: { 
-  id: Preset; 
-  title: string; 
-  subtitle: string; 
-  icon: React.ReactNode; 
+const PRESET_OPTIONS: {
+  id: Preset;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
   weightText: string;
 }[] = [
   {
@@ -67,17 +68,6 @@ const PRESET_OPTIONS: {
   },
 ];
 
-const getSystemDarkModePreference = (): boolean => {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('theme_dark_mode');
-    if (saved !== null) return saved === 'true';
-    if (window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-  }
-  return false;
-};
-
 export default function Settings() {
   const nav = useNavigate();
   const preset = useSession((s) => s.preset);
@@ -95,11 +85,8 @@ export default function Settings() {
   const [profileClickCount, setProfileClickCount] = useState<number>(0);
   const isDemoMode = profileClickCount >= 5;
 
-  // Dark Mode State
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(getSystemDarkModePreference);
-  const [hasManualDarkModeToggle, setHasManualDarkModeToggle] = useState<boolean>(() => {
-    return typeof window !== 'undefined' && localStorage.getItem('theme_dark_mode') !== null;
-  });
+  const isDarkMode = useTheme((s) => s.isDark);
+  const setDark = useTheme((s) => s.setDark);
 
   const handleProfileClick = () => {
     setProfileClickCount((prev) => {
@@ -119,19 +106,6 @@ export default function Settings() {
     }, 250);
   };
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-      if (!hasManualDarkModeToggle) {
-        setIsDarkMode(e.matches);
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleSystemThemeChange);
-    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
-  }, [hasManualDarkModeToggle]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -141,14 +115,9 @@ export default function Settings() {
   };
 
   const handleToggleDarkMode = () => {
-    setHasManualDarkModeToggle(true);
-    setIsDarkMode((prev) => {
-      const next = !prev;
-      localStorage.setItem('theme_dark_mode', String(next));
-      window.dispatchEvent(new Event('theme-change'));
-      showToast(next ? '🌙 다크 모드가 적용되었습니다.' : '☀️ 라이트 모드가 적용되었습니다.');
-      return next;
-    });
+    const next = !isDarkMode;
+    setDark(next);
+    showToast(next ? '다크 모드로 전환했어요.' : '라이트 모드로 전환했어요.');
   };
 
   const handleChangePreset = (newPreset: Preset) => {
@@ -188,9 +157,7 @@ export default function Settings() {
   };
 
   return (
-    <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 ${
-      isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
-    }`}>
+    <div className={`min-h-full pb-20 p-4 sm:p-5 font-sans transition-colors duration-200 bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100`}>
       {/* Toast Notification Popup */}
       <AnimatePresence>
         {toastMessage && (
@@ -216,23 +183,19 @@ export default function Settings() {
         {/* Header with Dark Mode Switch on Top Right */}
         <div className="flex items-center justify-between py-1">
           <div>
-            <h1 className={`text-base sm:text-lg font-bold tracking-tight flex items-center gap-1.5 ${
-              isDarkMode ? 'text-white' : 'text-slate-900'
-            }`}>
+            <h1 className={`text-base sm:text-lg font-bold tracking-tight flex items-center gap-1.5 text-slate-900 dark:text-white`}>
               <SettingsIcon className="w-4 h-4 text-emerald-500" />
               <span>환경 설정 및 프로필</span>
             </h1>
-            <p className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            <p className={`text-[11px] text-slate-500 dark:text-slate-400`}>
               내 계정 및 경로 노출 부하 알고리즘 맞춤 조정
             </p>
           </div>
 
           {/* Dark Mode Switch */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className={`text-[11px] font-semibold hidden sm:inline ${
-              isDarkMode ? 'text-slate-300' : 'text-slate-600'
-            }`}>
-              {isDarkMode ? '다크' : '라이트'}
+            <span className={`text-[11px] font-semibold hidden sm:inline text-slate-600 dark:text-slate-300`}>
+              "라이트 dark:다크"
             </span>
             <button
               id="btn-darkmode-toggle"
@@ -240,16 +203,12 @@ export default function Settings() {
               role="switch"
               aria-checked={isDarkMode}
               onClick={handleToggleDarkMode}
-              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none ${
-                isDarkMode ? 'bg-emerald-600' : 'bg-slate-300'
-              }`}
-              title={isDarkMode ? '라이트 모드로 전환' : '다크 모드로 전환'}
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none bg-slate-300 dark:bg-emerald-600`}
+              title="다크 모드로 전환 dark:라이트 dark:모드로 dark:전환"
             >
               <span className="sr-only">다크모드 스위치</span>
               <span
-                className={`pointer-events-none flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md transform ring-0 transition duration-200 ease-in-out ${
-                  isDarkMode ? 'translate-x-5 text-emerald-700' : 'translate-x-0 text-slate-500'
-                }`}
+                className={`pointer-events-none flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md transform ring-0 transition duration-200 ease-in-out translate-x-0 text-slate-500 dark:translate-x-5 dark:text-emerald-700`}
               >
                 {isDarkMode ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
               </span>
@@ -258,35 +217,27 @@ export default function Settings() {
         </div>
 
         {/* Account Section */}
-        <div className={`rounded-2xl p-4 border shadow-xs transition-colors ${
-          isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/80'
-        }`}>
-          <span className={`text-[11px] font-bold uppercase tracking-wider block mb-2 ${
-            isDarkMode ? 'text-slate-500' : 'text-slate-400'
-          }`}>
+        <div className={`rounded-2xl p-4 border shadow-xs transition-colors bg-white border-slate-200/80 dark:bg-slate-900/90 dark:border-slate-800`}>
+          <span className={`text-[11px] font-bold uppercase tracking-wider block mb-2 text-slate-400 dark:text-slate-500`}>
             계정 상태
           </span>
 
           {isGuest ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div 
+                <div
                   onClick={handleProfileClick}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer select-none active:scale-95 transition-transform ${
-                    isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
-                  }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer select-none active:scale-95 transition-transform bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400`}
                   title="프로필"
                 >
                   <User className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                    <span className={`text-xs font-bold text-slate-900 dark:text-white`}>
                       게스트 세션 사용 중
                     </span>
-                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold ${
-                      isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'
-                    }`}>
+                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300`}>
                       임시
                     </span>
                   </div>
@@ -317,7 +268,7 @@ export default function Settings() {
           ) : (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div 
+                <div
                   onClick={handleProfileClick}
                   className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-900 font-bold text-sm cursor-pointer select-none active:scale-95 transition-transform"
                   title="프로필"
@@ -326,7 +277,7 @@ export default function Settings() {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                    <span className={`text-xs font-bold text-slate-900 dark:text-white`}>
                       카카오 회원 연동됨
                     </span>
                     <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">
@@ -350,11 +301,7 @@ export default function Settings() {
                 )}
                 <button
                   onClick={handleLogout}
-                  className={`h-9 px-3 inline-flex items-center justify-center gap-1 border font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer ${
-                    isDarkMode 
-                      ? 'border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200' 
-                      : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                  }`}
+                  className={`h-9 px-3 inline-flex items-center justify-center gap-1 border font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer border-slate-200 hover:bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200`}
                   title="로그아웃"
                 >
                   <LogOut className="w-3.5 h-3.5" />
@@ -366,13 +313,9 @@ export default function Settings() {
         </div>
 
         {/* Preset Radio Cards */}
-        <div className={`rounded-2xl p-4 border shadow-xs space-y-2.5 transition-colors ${
-          isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/80'
-        }`}>
+        <div className={`rounded-2xl p-4 border shadow-xs space-y-2.5 transition-colors bg-white border-slate-200/80 dark:bg-slate-900/90 dark:border-slate-800`}>
           <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold uppercase tracking-wider ${
-              isDarkMode ? 'text-slate-500' : 'text-slate-400'
-            }`}>
+            <span className={`text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500`}>
               노출 부하 민감도 프리셋
             </span>
             <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5">
@@ -391,36 +334,30 @@ export default function Settings() {
                   onClick={() => handleChangePreset(opt.id)}
                   className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                     isSelected
-                      ? isDarkMode
-                        ? 'border-emerald-500 bg-emerald-950/40 shadow-xs'
-                        : 'border-emerald-500 bg-emerald-50/70 shadow-xs'
-                      : isDarkMode
-                      ? 'border-slate-800 hover:border-slate-700 bg-slate-950/60'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                      ? 'border-emerald-500 bg-emerald-50/70 shadow-xs dark:bg-emerald-950/40'
+                      : 'border-slate-200 hover:border-slate-300 bg-white dark:border-slate-800 dark:hover:border-slate-700 dark:bg-slate-950/60'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        isSelected 
-                          ? isDarkMode ? 'bg-emerald-900/50 shadow-2xs' : 'bg-white shadow-2xs'
-                          : isDarkMode ? 'bg-slate-800' : 'bg-slate-100'
+                        isSelected
+                          ? 'bg-white shadow-2xs dark:bg-emerald-900/50'
+                          : 'bg-slate-100 dark:bg-slate-800'
                       }`}
                     >
                       {opt.icon}
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                        <span className={`text-xs font-bold text-slate-900 dark:text-white`}>
                           {opt.title}
                         </span>
-                        <span className={`text-[9px] px-1 py-0.2 rounded font-medium ${
-                          isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
-                        }`}>
+                        <span className={`text-[9px] px-1 py-0.2 rounded font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400`}>
                           {opt.weightText}
                         </span>
                       </div>
-                      <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      <p className={`text-[10px] mt-0.5 text-slate-500 dark:text-slate-400`}>
                         {opt.subtitle}
                       </p>
                     </div>
@@ -430,9 +367,7 @@ export default function Settings() {
                     className={`w-5 h-5 rounded-full flex items-center justify-center border transition-colors shrink-0 ${
                       isSelected
                         ? 'border-emerald-600 bg-emerald-600 text-white'
-                        : isDarkMode
-                        ? 'border-slate-700 bg-slate-800'
-                        : 'border-slate-300 bg-white'
+                        : 'border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800'
                     }`}
                   >
                     {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -463,27 +398,21 @@ export default function Settings() {
         </div>
 
         {/* Service & Legal Information Section */}
-        <div className={`rounded-2xl p-4 border shadow-xs space-y-2 transition-colors ${
-          isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/80'
-        }`}>
-          <span className={`text-[11px] font-bold uppercase tracking-wider block mb-1.5 ${
-            isDarkMode ? 'text-slate-500' : 'text-slate-400'
-          }`}>
+        <div className={`rounded-2xl p-4 border shadow-xs space-y-2 transition-colors bg-white border-slate-200/80 dark:bg-slate-900/90 dark:border-slate-800`}>
+          <span className={`text-[11px] font-bold uppercase tracking-wider block mb-1.5 text-slate-400 dark:text-slate-500`}>
             서비스 및 법적 정보
           </span>
 
-          <div className={`divide-y text-xs ${isDarkMode ? 'divide-slate-800/80' : 'divide-slate-100'}`}>
+          <div className={`divide-y text-xs divide-slate-100 dark:divide-slate-800/80`}>
             {/* 1. 데이터 출처 */}
             <button
               id="btn-info-sources"
               onClick={() => setActiveInfoModal('sources')}
-              className={`w-full py-2.5 px-1 flex items-center justify-between transition-colors cursor-pointer group ${
-                isDarkMode ? 'hover:text-emerald-400' : 'hover:text-emerald-600'
-              }`}
+              className={`w-full py-2.5 px-1 flex items-center justify-between transition-colors cursor-pointer group hover:text-emerald-600 dark:hover:text-emerald-400`}
             >
               <div className="flex items-center gap-2.5">
                 <Database className="w-4 h-4 text-emerald-500" />
-                <span className={`font-semibold ${isDarkMode ? 'text-slate-200 group-hover:text-emerald-400' : 'text-slate-700 group-hover:text-emerald-600'}`}>
+                <span className={`font-semibold text-slate-700 group-hover:text-emerald-600 dark:text-slate-200 dark:group-hover:text-emerald-400`}>
                   데이터 출처
                 </span>
               </div>
@@ -497,13 +426,11 @@ export default function Settings() {
             <button
               id="btn-info-terms"
               onClick={() => setActiveInfoModal('terms')}
-              className={`w-full py-2.5 px-1 flex items-center justify-between transition-colors cursor-pointer group ${
-                isDarkMode ? 'hover:text-emerald-400' : 'hover:text-emerald-600'
-              }`}
+              className={`w-full py-2.5 px-1 flex items-center justify-between transition-colors cursor-pointer group hover:text-emerald-600 dark:hover:text-emerald-400`}
             >
               <div className="flex items-center gap-2.5">
                 <FileText className="w-4 h-4 text-teal-500" />
-                <span className={`font-semibold ${isDarkMode ? 'text-slate-200 group-hover:text-emerald-400' : 'text-slate-700 group-hover:text-emerald-600'}`}>
+                <span className={`font-semibold text-slate-700 group-hover:text-emerald-600 dark:text-slate-200 dark:group-hover:text-emerald-400`}>
                   이용약관
                 </span>
               </div>
@@ -517,13 +444,11 @@ export default function Settings() {
             <button
               id="btn-info-privacy"
               onClick={() => setActiveInfoModal('privacy')}
-              className={`w-full py-2.5 px-1 flex items-center justify-between transition-colors cursor-pointer group ${
-                isDarkMode ? 'hover:text-emerald-400' : 'hover:text-emerald-600'
-              }`}
+              className={`w-full py-2.5 px-1 flex items-center justify-between transition-colors cursor-pointer group hover:text-emerald-600 dark:hover:text-emerald-400`}
             >
               <div className="flex items-center gap-2.5">
                 <Shield className="w-4 h-4 text-blue-500" />
-                <span className={`font-semibold ${isDarkMode ? 'text-slate-200 group-hover:text-emerald-400' : 'text-slate-700 group-hover:text-emerald-600'}`}>
+                <span className={`font-semibold text-slate-700 group-hover:text-emerald-600 dark:text-slate-200 dark:group-hover:text-emerald-400`}>
                   개인정보처리방침
                 </span>
               </div>
@@ -537,13 +462,11 @@ export default function Settings() {
             <button
               id="btn-info-team"
               onClick={() => setActiveInfoModal('team')}
-              className={`w-full py-2.5 px-1 flex items-center justify-between transition-colors cursor-pointer group ${
-                isDarkMode ? 'hover:text-emerald-400' : 'hover:text-emerald-600'
-              }`}
+              className={`w-full py-2.5 px-1 flex items-center justify-between transition-colors cursor-pointer group hover:text-emerald-600 dark:hover:text-emerald-400`}
             >
               <div className="flex items-center gap-2.5">
                 <Users className="w-4 h-4 text-amber-500" />
-                <span className={`font-semibold ${isDarkMode ? 'text-slate-200 group-hover:text-emerald-400' : 'text-slate-700 group-hover:text-emerald-600'}`}>
+                <span className={`font-semibold text-slate-700 group-hover:text-emerald-600 dark:text-slate-200 dark:group-hover:text-emerald-400`}>
                   만든 사람
                 </span>
               </div>
@@ -558,11 +481,7 @@ export default function Settings() {
         {/* Restart Onboarding Button */}
         <button
           onClick={() => nav('/onboarding')}
-          className={`w-full py-3 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
-            isDarkMode 
-              ? 'border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200' 
-              : 'border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-800'
-          }`}
+          className={`w-full py-3 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-800 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200`}
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>온보딩 가이드 다시 체험하기</span>
@@ -581,7 +500,7 @@ export default function Settings() {
           </div>
         )}
 
-        <p className={`text-[11px] text-center pt-2 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>
+        <p className={`text-[11px] text-center pt-2 text-slate-400 dark:text-slate-600`}>
           웨이웰 v0.1.0
         </p>
 
@@ -589,7 +508,6 @@ export default function Settings() {
         <SettingsInfoModal
           type={activeInfoModal}
           isOpen={Boolean(activeInfoModal)}
-          isDarkMode={isDarkMode}
           onClose={() => setActiveInfoModal(null)}
         />
       </motion.div>

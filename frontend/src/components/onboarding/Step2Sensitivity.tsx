@@ -6,7 +6,6 @@ import { SENSITIVITY_OPTIONS } from '../../data/onboardingOptions';
 
 interface Step2SensitivityProps {
   selectedSensitivity: SensitivityId;
-  isDarkMode?: boolean;
   onSelect: (id: SensitivityId) => void;
   onNext: () => void;
   onSkip: () => void;
@@ -14,7 +13,6 @@ interface Step2SensitivityProps {
 
 export const Step2Sensitivity: React.FC<Step2SensitivityProps> = ({
   selectedSensitivity,
-  isDarkMode = false,
   onSelect,
   onNext,
   onSkip,
@@ -30,21 +28,15 @@ export const Step2Sensitivity: React.FC<Step2SensitivityProps> = ({
     >
       {/* Header */}
       <div className="space-y-1.5">
-        <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-bold ${
-          isDarkMode 
-            ? 'bg-emerald-950/60 border-emerald-800/60 text-emerald-300' 
-            : 'bg-emerald-50 border-emerald-200/70 text-emerald-800'
-        }`}>
+        <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-bold bg-emerald-50 border-emerald-200/70 text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-800/60 dark:text-emerald-300`}>
           <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-500" />
           <span>개인화 노출 부하 프로필</span>
         </div>
-        <h1 className={`text-xl sm:text-2xl font-bold leading-tight tracking-tight ${
-          isDarkMode ? 'text-white' : 'text-emerald-900'
-        }`}>
+        <h1 className={`text-xl sm:text-2xl font-bold leading-tight tracking-tight text-emerald-900 dark:text-white`}>
           출퇴근길, 가장 피하고<br />
-          <span className={isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}>싶은 상황을 골라주세요!</span>
+          <span className="text-emerald-700 dark:text-emerald-400">싶은 상황을 골라주세요!</span>
         </h1>
-        <p className={`text-xs sm:text-sm leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+        <p className={`text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-slate-400`}>
           선택한 설정에 따라 맞춤형 경로 가중치가 적용됩니다.
         </p>
       </div>
@@ -61,21 +53,17 @@ export const Step2Sensitivity: React.FC<Step2SensitivityProps> = ({
               onClick={() => onSelect(option.id)}
               className={`p-3 rounded-2xl cursor-pointer transition-all duration-200 flex items-center justify-between gap-3 text-left ${
                 isSelected
-                  ? isDarkMode
-                    ? 'border-2 border-emerald-500 bg-emerald-950/40 shadow-xs'
-                    : 'border-2 border-emerald-500 bg-emerald-50 shadow-xs'
-                  : isDarkMode
-                  ? 'border border-slate-800 bg-slate-900/80 hover:bg-slate-800/80'
-                  : 'border border-slate-100 bg-white hover:bg-slate-50'
+                  ? 'border-2 border-emerald-500 bg-emerald-50 shadow-xs dark:bg-emerald-950/40'
+                  : 'border border-slate-100 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/80'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 {/* Icon Circle */}
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 transition-colors ${
-                    isSelected 
-                      ? isDarkMode ? 'bg-emerald-900/60 shadow-xs' : 'bg-white shadow-xs' 
-                      : isDarkMode ? 'bg-slate-800' : 'bg-slate-50'
+                    isSelected
+                      ? 'bg-white shadow-xs dark:bg-emerald-900/60'
+                      : 'bg-slate-50 dark:bg-slate-800'
                   }`}
                 >
                   <span>{option.icon}</span>
@@ -86,9 +74,9 @@ export const Step2Sensitivity: React.FC<Step2SensitivityProps> = ({
                   <div className="flex items-center gap-1.5">
                     <h2
                       className={`text-xs sm:text-sm font-bold truncate ${
-                        isSelected 
-                          ? isDarkMode ? 'text-white' : 'text-emerald-950' 
-                          : isDarkMode ? 'text-slate-200' : 'text-slate-700'
+                        isSelected
+                          ? 'text-emerald-950 dark:text-white'
+                          : 'text-slate-700 dark:text-slate-200'
                       }`}
                     >
                       {option.title}
@@ -105,9 +93,7 @@ export const Step2Sensitivity: React.FC<Step2SensitivityProps> = ({
                 className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                   isSelected
                     ? 'border-emerald-500 bg-emerald-500 text-white'
-                    : isDarkMode
-                    ? 'border-slate-700 bg-slate-800'
-                    : 'border-slate-300 bg-white'
+                    : 'border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800'
                 }`}
               >
                 {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -124,11 +110,7 @@ export const Step2Sensitivity: React.FC<Step2SensitivityProps> = ({
           <button
             id="step2-skip-btn"
             onClick={onSkip}
-            className={`flex-1 py-3.5 font-bold rounded-xl text-xs transition-all cursor-pointer text-center focus:outline-none focus:ring-2 ${
-              isDarkMode 
-                ? 'bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 focus:ring-slate-700' 
-                : 'bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-600 focus:ring-slate-300'
-            }`}
+            className={`flex-1 py-3.5 font-bold rounded-xl text-xs transition-all cursor-pointer text-center focus:outline-none focus:ring-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-600 focus:ring-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:active:bg-slate-600 dark:text-slate-300 dark:focus:ring-slate-700`}
           >
             건너뛰기
           </button>
@@ -137,9 +119,7 @@ export const Step2Sensitivity: React.FC<Step2SensitivityProps> = ({
           <button
             id="step2-next-btn"
             onClick={onNext}
-            className={`flex-[2] py-3.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-[0.99] ${
-              isDarkMode ? 'shadow-emerald-950/50' : 'shadow-emerald-200'
-            }`}
+            className={`flex-[2] py-3.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-[0.99] shadow-emerald-200 dark:shadow-emerald-950/50`}
           >
             <span>다음 단계로</span>
             <ArrowRight className="w-3.5 h-3.5" />

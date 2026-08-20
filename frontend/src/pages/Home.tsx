@@ -9,15 +9,6 @@ import { loadKakao } from '../lib/kakao';
 
 const DEFAULT = { lat: 37.2011, lng: 127.0983 }; // 동탄역
 
-const getSystemDarkModePreference = (): boolean => {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('theme_dark_mode');
-    if (saved !== null) return saved === 'true';
-    if (window.matchMedia) return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
-  return false;
-};
-
 // SC-03 / SC-05 홈 — 홈 검색 탭 & 카카오 지도 기반 경로 후보 탐색 뷰
 export default function Home() {
   const preset = useSession((s) => s.preset);
@@ -53,22 +44,6 @@ export default function Home() {
       });
     }
   }, [isDemoActive, fromPlace?.name, toPlace?.name]);
-
-  // Dark Mode State
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(getSystemDarkModePreference);
-
-  useEffect(() => {
-    const handleThemeChange = () => {
-      const saved = localStorage.getItem('theme_dark_mode');
-      if (saved !== null) setIsDarkMode(saved === 'true');
-    };
-    window.addEventListener('storage', handleThemeChange);
-    window.addEventListener('theme-change', handleThemeChange);
-    return () => {
-      window.removeEventListener('storage', handleThemeChange);
-      window.removeEventListener('theme-change', handleThemeChange);
-    };
-  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -130,9 +105,9 @@ export default function Home() {
   return (
     <div className={`min-h-full font-sans transition-colors duration-200 ${
       searchRouteState ? 'pb-0 overflow-hidden' : 'pb-20 p-4 sm:p-5'
-    } ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
+    } bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100`}>
       {/* A-03 위치정보 사전 동의 */}
-      <LocationConsent isDarkMode={isDarkMode} onAllow={requestLocation} />
+      <LocationConsent onAllow={requestLocation} />
 
       {/* Toast Notification Popup */}
       <AnimatePresence>
@@ -154,7 +129,6 @@ export default function Home() {
             key="route-candidates"
             originName={searchRouteState.origin}
             destinationName={searchRouteState.destination}
-            isDarkMode={isDarkMode}
             onBackToSearch={handleBackToSearch}
             onShowToast={showToast}
           />
@@ -162,7 +136,6 @@ export default function Home() {
           <HomeSearchTab
             key="home-search"
             userPreset={preset}
-            isDarkMode={isDarkMode}
             locationName={locationName}
             lat={center.lat}
             lng={center.lng}

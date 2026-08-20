@@ -7,14 +7,6 @@ import KakaoMap from '../components/KakaoMap'
 import { api } from '../api/client'
 import type { Arrival, RouteSegment, Shade } from '../types/api'
 
-// 다크모드: ShellLayout이 html.dark 클래스를 붙이는 effect보다 초기 렌더가 먼저라
-// 클래스 대신 저장값(localStorage)을 직접 읽는다 (새로고침 시 다크 해제 버그 방지).
-const readDark = (): boolean => {
-  const saved = localStorage.getItem('theme_dark_mode')
-  if (saved !== null) return saved === 'true'
-  return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-color-scheme: dark)').matches
-}
-
 type NotifPerm = NotificationPermission | 'unsupported'
 const initNotifPerm = (): NotifPerm =>
   typeof Notification === 'undefined' ? 'unsupported' : Notification.permission
@@ -47,7 +39,6 @@ function loadActiveRoute(): ActiveRoute | null {
 // SC-07 이동 중 — 전체화면 지도(경로 + 실시간 내 위치 팔로우) + 하단 시트(도착정보·노출·쉼터)
 export default function Trip() {
   const nav = useNavigate()
-  const [isDark, setIsDark] = useState(readDark)
   const [data, setData] = useState<Arrival | null>(null)
   const [error, setError] = useState(false)
   const [notifPerm, setNotifPerm] = useState<NotifPerm>(initNotifPerm)
@@ -70,15 +61,6 @@ export default function Trip() {
   const route = routeRef.current
 
   // 다크모드 동기화 (설정 변경 시)
-  useEffect(() => {
-    const h = () => setIsDark(readDark())
-    window.addEventListener('theme-change', h)
-    window.addEventListener('storage', h)
-    return () => {
-      window.removeEventListener('theme-change', h)
-      window.removeEventListener('storage', h)
-    }
-  }, [])
 
   // 뷰포트 높이 추적 → 시트 스냅 높이 갱신
   useEffect(() => {
@@ -165,8 +147,8 @@ export default function Trip() {
   const mapCenter = route?.from ?? myLoc ?? FALLBACK
   const markers = route ? [route.from, route.to] : []
 
-  const card = isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-800'
-  const chip = isDark ? 'bg-slate-900/90 border-slate-700 text-slate-200' : 'bg-white/90 border-slate-200 text-slate-700'
+  const card = 'bg-white border-slate-200 text-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100'
+  const chip = 'bg-white/90 border-slate-200 text-slate-700 dark:bg-slate-900/90 dark:border-slate-700 dark:text-slate-200'
 
   // 하단 시트: 높이는 CSS 트랜지션으로 스냅. 드래그 중엔 dragH로 실시간 추종(트랜지션 off).
   // 네이티브 pointer 이벤트로 드래그(마우스/터치) + 탭 토글.
@@ -191,7 +173,7 @@ export default function Trip() {
   }
 
   return (
-    <div className={`relative w-full h-[100dvh] overflow-hidden select-none ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
+    <div className={`relative w-full h-[100dvh] overflow-hidden select-none bg-slate-100 dark:bg-slate-950`}>
       {/* 전체화면 지도: 경로 + 실시간 내 위치(팔로우) */}
       <div className="absolute inset-0 z-0">
         <KakaoMap
@@ -240,7 +222,7 @@ export default function Trip() {
           onPointerCancel={onHandleUp}
           className="w-full pt-2.5 pb-1.5 flex flex-col items-center gap-1 shrink-0 cursor-grab active:cursor-grabbing touch-none select-none"
         >
-          <span className={`w-10 h-1.5 rounded-full ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`} />
+          <span className={`w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700`} />
           {open ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronUp className="w-4 h-4 text-slate-400" />}
         </div>
 
@@ -268,7 +250,7 @@ export default function Trip() {
           {/* 야외 대기 누적 */}
           <div className="text-right shrink-0">
             <span className="text-[10px] text-slate-400 block">🌡️ 야외 대기</span>
-            <strong className={`text-lg font-black ${waitedMin >= 10 ? 'text-amber-500' : isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+            <strong className={`text-lg font-black ${waitedMin >= 10 ? 'text-amber-500' : 'text-slate-700 dark:text-slate-200'}`}>
               {waitedMin}분
             </strong>
           </div>
@@ -306,7 +288,7 @@ export default function Trip() {
               <div className="space-y-1.5">
                 <span className="text-[11px] font-bold text-slate-400">다음 차량</span>
                 {data.arrivals.slice(1, 4).map((a) => (
-                  <div key={a.seq} className={`flex items-center justify-between p-2.5 rounded-xl border text-xs ${isDark ? 'border-slate-800 bg-slate-800/40' : 'border-slate-100 bg-slate-50'}`}>
+                  <div key={a.seq} className={`flex items-center justify-between p-2.5 rounded-xl border text-xs border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/40`}>
                     <span className="flex items-center gap-1.5 font-bold">
                       <Bus className="w-3.5 h-3.5 text-emerald-500" />{a.route_name}번
                     </span>
@@ -318,7 +300,7 @@ export default function Trip() {
 
             {/* 목적지 */}
             {route && (
-              <div className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs ${isDark ? 'border-slate-800 bg-slate-800/40' : 'border-slate-100 bg-slate-50'}`}>
+              <div className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/40`}>
                 <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                 <span className="font-bold truncate">{route.to.name}</span>
                 {route.total_minutes != null && <span className="text-slate-400 ml-auto shrink-0">약 {route.total_minutes}분</span>}
@@ -327,7 +309,7 @@ export default function Trip() {
 
             <button
               onClick={() => nav('/trip/shelters')}
-              className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border ${isDark ? 'border-slate-700 text-slate-200 hover:bg-slate-800' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+              className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800`}
             >
               <Building2 className="w-3.5 h-3.5" /> 근처 그늘막·실내 대기 장소
               {shades.length > 0 && <span className="text-[10px] font-bold text-amber-500">🌂 {shades.length}</span>}
@@ -339,7 +321,7 @@ export default function Trip() {
       </div>
 
       {/* 하단 고정: 이동 종료 */}
-      <div className={`absolute bottom-0 left-0 right-0 z-40 h-16 px-3 flex items-center border-t ${isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
+      <div className={`absolute bottom-0 left-0 right-0 z-40 h-16 px-3 flex items-center border-t border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-900`}>
         <button
           onClick={endTrip}
           className="w-full py-3 bg-slate-800 dark:bg-slate-700 hover:opacity-90 active:scale-[0.99] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all"

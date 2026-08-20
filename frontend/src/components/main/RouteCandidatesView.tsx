@@ -28,7 +28,6 @@ import type { Route, RouteSegment, Place } from '../../types/api';
 interface RouteCandidatesViewProps {
   originName: string;
   destinationName: string;
-  isDarkMode?: boolean;
   onBackToSearch: () => void;
   onShowToast: (msg: string) => void;
 }
@@ -52,7 +51,6 @@ function exposureLevel(score: number) {
 export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
   originName: initialOriginName,
   destinationName: initialDestName,
-  isDarkMode = false,
   onBackToSearch,
   onShowToast,
 }) => {
@@ -486,32 +484,22 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
           <button
             id="btn-back-to-search"
             onClick={onBackToSearch}
-            className={`pointer-events-auto flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl shadow-md backdrop-blur-md transition-all active:scale-95 cursor-pointer border ${isDarkMode
-              ? 'bg-slate-900/90 text-slate-200 border-slate-700 hover:bg-slate-800'
-              : 'bg-white/90 text-slate-700 border-slate-200 hover:bg-white'
-              }`}
+            className={`pointer-events-auto flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl shadow-md backdrop-blur-md transition-all active:scale-95 cursor-pointer border bg-white/90 text-slate-700 border-slate-200 hover:bg-white dark:bg-slate-900/90 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800`}
           >
             <ArrowLeft className="w-4 h-4" />
             <span>검색 조건 변경</span>
           </button>
 
-          <span className={`pointer-events-auto text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md backdrop-blur-md border ${isDarkMode
-            ? 'text-emerald-300 bg-emerald-950/80 border-emerald-700/60'
-            : 'text-emerald-800 bg-white/90 border-emerald-200'
-            }`}>
+          <span className={`pointer-events-auto text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md backdrop-blur-md border text-emerald-800 bg-white/90 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/80 dark:border-emerald-700/60`}>
             신체 부하 경로 분석 완료
           </span>
         </div>
 
         {/* Two-Line Editable Origin & Destination Card */}
-        <div className={`pointer-events-auto rounded-2xl p-2.5 sm:p-3 border shadow-md backdrop-blur-md transition-colors relative z-30 space-y-1.5 ${isDarkMode ? 'bg-slate-900/90 border-slate-700 text-slate-200' : 'bg-white/95 border-slate-200 text-slate-800'
-          }`}>
+        <div className={`pointer-events-auto rounded-2xl p-2.5 sm:p-3 border shadow-md backdrop-blur-md transition-colors relative z-30 space-y-1.5 bg-white/95 border-slate-200 text-slate-800 dark:bg-slate-900/90 dark:border-slate-700 dark:text-slate-200`}>
           {/* 1. Origin Input */}
           <div className="relative">
-            <div className={`flex items-center border rounded-xl px-2.5 py-1.5 transition-all ${isDarkMode
-              ? 'bg-slate-800/90 border-slate-700 focus-within:border-emerald-500'
-              : 'bg-slate-50 border-slate-200 focus-within:border-emerald-500'
-              }`}>
+            <div className={`flex items-center border rounded-xl px-2.5 py-1.5 transition-all bg-slate-50 border-slate-200 focus-within:border-emerald-500 dark:bg-slate-800/90 dark:border-slate-700 dark:focus-within:border-emerald-500`}>
               <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 shrink-0"></span>
               <input
                 type="text"
@@ -520,8 +508,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
                 onFocus={() => setOriginFocused(true)}
                 onBlur={() => setTimeout(() => setOriginFocused(false), 150)}
                 placeholder="출발지 입력"
-                className={`w-full bg-transparent text-xs font-bold placeholder-slate-400 focus:outline-none ${isDarkMode ? 'text-white' : 'text-slate-800'
-                  }`}
+                className={`w-full bg-transparent text-xs font-bold placeholder-slate-400 focus:outline-none text-slate-800 dark:text-white`}
               />
               {isSearchingOrigin ? (
                 <div className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0 mr-1" />
@@ -546,15 +533,13 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className={`absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-2xl z-50 overflow-hidden ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
-                    }`}
+                  className={`absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-2xl z-50 overflow-hidden bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700`}
                 >
                   <div className="p-1 space-y-0.5">
                     {/* 현재 위치로 설정 (항상 상단) */}
                     <div
                       onMouseDown={(e) => { e.preventDefault(); handleUseCurrentLocation(); }}
-                      className={`p-2 rounded-lg flex items-center gap-2 cursor-pointer transition-colors ${originSuggestions.length > 0 ? 'border-b' : ''} ${isDarkMode ? 'hover:bg-slate-800 text-emerald-400 border-slate-800' : 'hover:bg-emerald-50 text-emerald-700 border-slate-100'
-                        }`}
+                      className={`p-2 rounded-lg flex items-center gap-2 cursor-pointer transition-colors ${originSuggestions.length > 0 ? 'border-b' : ''} hover:bg-emerald-50 text-emerald-700 border-slate-100 dark:hover:bg-slate-800 dark:text-emerald-400 dark:border-slate-800`}
                     >
                       <Crosshair className="w-3.5 h-3.5 shrink-0" />
                       <span className="text-xs font-bold">📍 현재 위치로 설정</span>
@@ -563,8 +548,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
                       <div
                         key={sug.place_id}
                         onClick={() => handleSelectOrigin(sug)}
-                        className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
-                          }`}
+                        className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors hover:bg-emerald-50 text-slate-800 dark:hover:bg-slate-800 dark:text-slate-200`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -589,10 +573,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
             <button
               type="button"
               onClick={handleSwap}
-              className={`w-6 h-6 border rounded-full shadow-xs flex items-center justify-center transition-all cursor-pointer ${isDarkMode
-                ? 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-300 hover:text-emerald-400'
-                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-500 hover:text-emerald-700'
-                }`}
+              className={`w-6 h-6 border rounded-full shadow-xs flex items-center justify-center transition-all cursor-pointer bg-white hover:bg-slate-50 border-slate-200 text-slate-500 hover:text-emerald-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:text-emerald-400`}
               title="출발지/도착지 변경"
             >
               <ArrowUpDown className="w-3 h-3" />
@@ -601,18 +582,14 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
 
           {/* 2. Destination Input */}
           <div className="relative">
-            <div className={`flex items-center border rounded-xl px-2.5 py-1.5 transition-all ${isDarkMode
-              ? 'bg-slate-800/90 border-slate-700 focus-within:border-emerald-500'
-              : 'bg-slate-50 border-slate-200 focus-within:border-emerald-500'
-              }`}>
+            <div className={`flex items-center border rounded-xl px-2.5 py-1.5 transition-all bg-slate-50 border-slate-200 focus-within:border-emerald-500 dark:bg-slate-800/90 dark:border-slate-700 dark:focus-within:border-emerald-500`}>
               <span className="w-2 h-2 rounded-full bg-rose-500 mr-2 shrink-0"></span>
               <input
                 type="text"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 placeholder="도착지 입력"
-                className={`w-full bg-transparent text-xs font-bold placeholder-slate-400 focus:outline-none ${isDarkMode ? 'text-white' : 'text-slate-800'
-                  }`}
+                className={`w-full bg-transparent text-xs font-bold placeholder-slate-400 focus:outline-none text-slate-800 dark:text-white`}
               />
               {isSearchingDest ? (
                 <div className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0 mr-1" />
@@ -637,16 +614,14 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className={`absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-2xl z-50 overflow-hidden ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
-                    }`}
+                  className={`absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-2xl z-50 overflow-hidden bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700`}
                 >
                   <div className="p-1 space-y-0.5">
                     {destSuggestions.map((sug) => (
                       <div
                         key={sug.place_id}
                         onClick={() => handleSelectDest(sug)}
-                        className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
-                          }`}
+                        className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors hover:bg-emerald-50 text-slate-800 dark:hover:bg-slate-800 dark:text-slate-200`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -710,8 +685,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
       {/* Loading Overlay */}
       {loading && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 backdrop-blur-xs">
-          <div className={`p-4 rounded-2xl border shadow-xl flex items-center gap-2.5 text-xs font-bold ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'
-            }`}>
+          <div className={`p-4 rounded-2xl border shadow-xl flex items-center gap-2.5 text-xs font-bold bg-white text-slate-800 border-slate-200 dark:bg-slate-900 dark:text-white dark:border-slate-700`}>
             <RefreshCw className="w-4 h-4 text-emerald-500 animate-spin" />
             <span>경로를 찾는 중</span>
           </div>
@@ -721,8 +695,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
       {/* Error Overlay */}
       {error && (
         <div className="absolute inset-0 z-30 flex items-center justify-center p-4 bg-black/30 backdrop-blur-xs">
-          <div className={`max-w-xs w-full p-5 rounded-2xl border shadow-xl text-center space-y-3 ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'
-            }`}>
+          <div className={`max-w-xs w-full p-5 rounded-2xl border shadow-xl text-center space-y-3 bg-white text-slate-800 border-slate-200 dark:bg-slate-900 dark:text-white dark:border-slate-700`}>
             <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
             <p className="text-xs font-bold">{error}</p>
             <button
@@ -740,8 +713,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
         <motion.div
           id="route-detail-bottom-sheet"
           style={{ height: heightMV }}
-          className={`absolute bottom-[72px] left-0 right-0 z-30 rounded-t-3xl border-t shadow-2xl transition-colors duration-200 flex flex-col pointer-events-auto ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-800'
-            }`}
+          className={`absolute bottom-[72px] left-0 right-0 z-30 rounded-t-3xl border-t shadow-2xl transition-colors duration-200 flex flex-col pointer-events-auto bg-white border-slate-200 text-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100`}
         >
           {/* Grab Handle Header with Real-time Pan Gestures */}
           <motion.div
@@ -751,7 +723,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
             onClick={toggleSnap}
             className="w-full pt-3 pb-2.5 flex items-center justify-center cursor-grab active:cursor-grabbing shrink-0 select-none touch-none"
           >
-            <div className={`w-10 h-1.5 rounded-full ${isDarkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-300 hover:bg-slate-400'} transition-colors`} />
+            <div className={`w-10 h-1.5 rounded-full bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors`} />
           </motion.div>
 
           {/* Sheet Main Header */}
@@ -868,8 +840,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
       {/* Bottom Start Trip CTA — 시트와 별개로 하단에 항상 고정 (드래그·스냅 상태 무관) */}
       {selectedRoute && (
         <div
-          className={`absolute bottom-0 left-0 right-0 z-40 h-[72px] px-3 flex items-center border-t pointer-events-auto ${isDarkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'
-            }`}
+          className={`absolute bottom-0 left-0 right-0 z-40 h-[72px] px-3 flex items-center border-t pointer-events-auto border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-900`}
         >
           <button
             id="btn-confirm-route"

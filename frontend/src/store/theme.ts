@@ -37,3 +37,13 @@ export const useTheme = create<ThemeState>((set, get) => {
     toggle: () => get().setDark(!get().isDark),
   }
 })
+
+// 직접 고른 적이 없으면 OS 설정을 따라간다
+if (typeof window !== 'undefined' && window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (localStorage.getItem(KEY) === null) {
+      applyToDocument(e.matches)
+      useTheme.setState({ isDark: e.matches })
+    }
+  })
+}

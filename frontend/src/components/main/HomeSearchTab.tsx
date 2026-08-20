@@ -23,7 +23,6 @@ import { api } from '../../api/client';
 
 interface HomeSearchTabProps {
   userPreset: Preset;
-  isDarkMode?: boolean;
   onRequestRouteCandidates: (originName: string, destName: string) => void;
   onShowToast: (msg: string) => void;
   locationName?: string;
@@ -56,7 +55,6 @@ const PRESET_COACHING: Record<Preset, { badge: string; text: string; icon: strin
 
 export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
   userPreset,
-  isDarkMode = false,
   onRequestRouteCandidates,
   onShowToast,
   locationName = '서울시 강남구',
@@ -297,21 +295,19 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
       {/* Top Location Header */}
       <div className="py-1">
         <div className="flex items-center gap-1.5 min-w-0">
-          <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-emerald-950 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
-            }`}>
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400`}>
             <MapPin className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1">
-              <span className={`text-xs font-bold truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <span className={`text-xs font-bold truncate text-slate-900 dark:text-white`}>
                 {locationName}
               </span>
-              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-sm shrink-0 ${isDarkMode ? 'bg-emerald-900/60 text-emerald-300' : 'bg-emerald-100/70 text-emerald-800'
-                }`}>
+              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-sm shrink-0 bg-emerald-100/70 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300`}>
                 현재 위치
               </span>
             </div>
-            <p className={`text-[10px] truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            <p className={`text-[10px] truncate text-slate-500 dark:text-slate-400`}>
               현재 위치 기준 실시간 노출 부하 분석
             </p>
           </div>
@@ -321,18 +317,14 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
       {/* Today's Environment Card */}
       <div
         id="environmental-status-card"
-        className={`rounded-2xl p-4 border shadow-xs transition-colors ${isDarkMode
-          ? 'bg-gradient-to-br from-emerald-950/30 via-slate-900 to-slate-900 border-emerald-900/40 text-slate-100'
-          : 'bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white border-emerald-100/80 text-slate-800'
-          }`}
+        className={`rounded-2xl p-4 border shadow-xs transition-colors bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white border-emerald-100/80 text-slate-800 dark:bg-gradient-to-br dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900 dark:border-emerald-900/40 dark:text-slate-100`}
       >
         <div className="flex items-center justify-between mb-3">
-          <div className={`flex items-center gap-1 text-[11px] font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-900'
-            }`}>
+          <div className={`flex items-center gap-1 text-[11px] font-bold text-emerald-900 dark:text-emerald-400`}>
             <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
             <span>현재 위치 환경 정보</span>
           </div>
-          <span className={`text-[10px] font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+          <span className={`text-[10px] font-medium text-slate-500 dark:text-slate-400`}>
             {secondsAgo < 60 ? `최근 업데이트: ${secondsAgo}초 전` : `최근 업데이트: ${Math.floor(secondsAgo / 60)}분 전`}
           </span>
         </div>
@@ -340,15 +332,13 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
         {/* 3 Weather / Environment Badges */}
         <div className="grid grid-cols-3 gap-2 mb-3">
           {/* Feels Like Temp */}
-          <div className={`rounded-xl p-2 border text-center transition-colors ${isDarkMode ? 'bg-slate-800/80 border-slate-700/60' : 'bg-white/80 border-slate-100'
-            }`}>
-            <div className={`flex items-center justify-center gap-1 mb-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-400'
-              }`}>
+          <div className={`rounded-xl p-2 border text-center transition-colors bg-white/80 border-slate-100 dark:bg-slate-800/80 dark:border-slate-700/60`}>
+            <div className={`flex items-center justify-center gap-1 mb-0.5 text-slate-400 dark:text-slate-400`}>
               <Thermometer className="w-3.5 h-3.5 text-rose-500" />
               <span className="text-[10px] font-medium">체감온도</span>
             </div>
             <div className={`text-xs sm:text-sm font-black ${envData?.temperature?.feels_like != null
-                ? isDarkMode ? 'text-white' : 'text-slate-800'
+                ? 'text-slate-800 dark:text-white'
                 : 'text-slate-400'
               }`}>
               {envData?.temperature?.feels_like != null ? `${envData.temperature.feels_like}℃` : '—'}
@@ -356,10 +346,8 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
           </div>
 
           {/* UV Index */}
-          <div className={`rounded-xl p-2 border text-center transition-colors ${isDarkMode ? 'bg-slate-800/80 border-slate-700/60' : 'bg-white/80 border-slate-100'
-            }`}>
-            <div className={`flex items-center justify-center gap-1 mb-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-400'
-              }`}>
+          <div className={`rounded-xl p-2 border text-center transition-colors bg-white/80 border-slate-100 dark:bg-slate-800/80 dark:border-slate-700/60`}>
+            <div className={`flex items-center justify-center gap-1 mb-0.5 text-slate-400 dark:text-slate-400`}>
               <Sun className="w-3.5 h-3.5 text-amber-500" />
               <span className="text-[10px] font-medium">자외선</span>
             </div>
@@ -369,10 +357,8 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
           </div>
 
           {/* PM10 Dust */}
-          <div className={`rounded-xl p-2 border text-center transition-colors ${isDarkMode ? 'bg-slate-800/80 border-slate-700/60' : 'bg-white/80 border-slate-100'
-            }`}>
-            <div className={`flex items-center justify-center gap-1 mb-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-400'
-              }`}>
+          <div className={`rounded-xl p-2 border text-center transition-colors bg-white/80 border-slate-100 dark:bg-slate-800/80 dark:border-slate-700/60`}>
+            <div className={`flex items-center justify-center gap-1 mb-0.5 text-slate-400 dark:text-slate-400`}>
               <Wind className="w-3.5 h-3.5 text-emerald-500" />
               <span className="text-[10px] font-medium">미세먼지</span>
             </div>
@@ -384,17 +370,12 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
         </div>
 
         {/* Personalized Coaching message based on userPreset */}
-        <div className={`rounded-xl p-3 border shadow-2xs transition-colors ${isDarkMode
-          ? 'bg-slate-900/90 border-slate-700/80'
-          : 'bg-white border-emerald-100/60'
-          }`}>
-          <div className={`flex items-center gap-1.5 mb-1 text-[10px] font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-800'
-            }`}>
+        <div className={`rounded-xl p-3 border shadow-2xs transition-colors bg-white border-emerald-100/60 dark:bg-slate-900/90 dark:border-slate-700/80`}>
+          <div className={`flex items-center gap-1.5 mb-1 text-[10px] font-bold text-emerald-800 dark:text-emerald-400`}>
             <span>{coaching.icon}</span>
             <span>{coaching.badge}</span>
           </div>
-          <p className={`text-[11px] leading-relaxed font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-700'
-            }`}>
+          <p className={`text-[11px] leading-relaxed font-medium text-slate-700 dark:text-slate-300`}>
             {coaching.text}
           </p>
         </div>
@@ -403,12 +384,10 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
       {/* Origin / Destination Search Form */}
       <form
         onSubmit={handleSubmitSearch}
-        className={`rounded-2xl p-4 border shadow-xs space-y-3 transition-colors ${isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/80'
-          }`}
+        className={`rounded-2xl p-4 border shadow-xs space-y-3 transition-colors bg-white border-slate-200/80 dark:bg-slate-900/90 dark:border-slate-800`}
       >
         <div className="flex items-center justify-between">
-          <h2 className={`text-xs font-bold flex items-center gap-1.5 ${isDarkMode ? 'text-white' : 'text-slate-800'
-            }`}>
+          <h2 className={`text-xs font-bold flex items-center gap-1.5 text-slate-800 dark:text-white`}>
             <Navigation className="w-3.5 h-3.5 text-emerald-500" />
             <span>최소 부하 경로 탐색</span>
           </h2>
@@ -418,10 +397,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
             <button
               type="button"
               onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold border rounded-lg transition-colors cursor-pointer ${isDarkMode
-                ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
-                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                }`}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold border rounded-lg transition-colors cursor-pointer bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700`}
             >
               <Clock className="w-3 h-3 text-slate-400" />
               <span>{departTime}</span>
@@ -429,21 +405,20 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
             </button>
 
             {isTimeDropdownOpen && (
-              <div className={`absolute right-0 mt-1 w-44 border rounded-xl shadow-lg p-1.5 z-20 text-[11px] ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-600'
-                }`}>
+              <div className={`absolute right-0 mt-1 w-44 border rounded-xl shadow-lg p-1.5 z-20 text-[11px] bg-white border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200`}>
                 {/* 지금 출발 (기본) */}
                 <button
                   type="button"
                   onClick={() => { setDepartTime('지금 출발'); setDepartAt(null); setIsTimeDropdownOpen(false); }}
                   className={`w-full text-left px-2 py-1.5 rounded-lg cursor-pointer ${!departAt
-                      ? isDarkMode ? 'font-bold text-emerald-400 bg-emerald-950/40' : 'font-bold text-emerald-700 bg-emerald-50/50'
-                      : isDarkMode ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-emerald-50'
+                      ? 'font-semibold text-emerald-700 bg-emerald-50/50 dark:text-emerald-400 dark:bg-emerald-950/40'
+                      : 'text-slate-600 hover:bg-emerald-50 dark:text-slate-300 dark:hover:bg-slate-700'
                     }`}
                 >
                   지금 출발
                 </button>
                 {/* 시각 지정 — --:-- 를 바로 눌러 설정(네이티브 피커 즉시 오픈), 선택 시 닫힘 */}
-                <label className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer ${isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-emerald-50'}`}>
+                <label className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-50 dark:hover:bg-slate-700`}>
                   <span className="shrink-0">시각 지정</span>
                   <input
                     type="time"
@@ -453,8 +428,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                       const v = e.target.value;
                       if (v) { setDepartAt(v); setDepartTime(`${v} 출발`); setIsTimeDropdownOpen(false); }
                     }}
-                    className={`flex-1 min-w-0 bg-transparent border rounded-md px-1.5 py-0.5 text-[11px] cursor-pointer focus:outline-none focus:border-emerald-500 ${isDarkMode ? 'border-slate-600 text-white [color-scheme:dark]' : 'border-slate-300 text-slate-800'
-                      }`}
+                    className={`flex-1 min-w-0 bg-transparent border rounded-md px-1.5 py-0.5 text-[11px] cursor-pointer focus:outline-none focus:border-emerald-500 border-slate-300 text-slate-800 dark:border-slate-600 dark:text-white dark:[color-scheme:dark]`}
                   />
                 </label>
               </div>
@@ -466,10 +440,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
         <div className="relative space-y-2">
           {/* Origin Input with Search Suggestions */}
           <div className="relative">
-            <div className={`flex items-center border rounded-xl px-3 py-2.5 transition-all ${isDarkMode
-              ? 'bg-slate-800/80 border-slate-700 focus-within:border-emerald-500 focus-within:bg-slate-800'
-              : 'bg-slate-50 border-slate-200 focus-within:border-emerald-500 focus-within:bg-white'
-              }`}>
+            <div className={`flex items-center border rounded-xl px-3 py-2.5 transition-all bg-slate-50 border-slate-200 focus-within:border-emerald-500 focus-within:bg-white dark:bg-slate-800/80 dark:border-slate-700 dark:focus-within:border-emerald-500 dark:focus-within:bg-slate-800`}>
               <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 shrink-0"></span>
               <input
                 type="text"
@@ -478,8 +449,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                 onFocus={() => setOriginFocused(true)}
                 onBlur={() => setTimeout(() => setOriginFocused(false), 150)}
                 placeholder="출발지 입력 (예: 강남역, 판교역)"
-                className={`w-full bg-transparent text-xs font-semibold placeholder-slate-400 focus:outline-none ${isDarkMode ? 'text-white' : 'text-slate-800'
-                  }`}
+                className={`w-full bg-transparent text-xs font-semibold placeholder-slate-400 focus:outline-none text-slate-800 dark:text-white`}
               />
               {isSearchingOrigin ? (
                 <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0 mr-1" />
@@ -505,17 +475,13 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className={`absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-xl z-40 overflow-hidden ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
-                    }`}
+                  className={`absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-xl z-40 overflow-hidden bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700`}
                 >
                   <div className="p-1.5 space-y-1">
                     {/* Current Location Option (항상 상단) */}
                     <div
                       onMouseDown={(e) => { e.preventDefault(); handleResetCurrentLocation(); }}
-                      className={`p-2 rounded-lg flex items-center gap-2 cursor-pointer transition-colors border-b ${isDarkMode
-                        ? 'hover:bg-slate-800 text-emerald-400 border-slate-800'
-                        : 'hover:bg-emerald-50 text-emerald-700 border-slate-100'
-                        }`}
+                      className={`p-2 rounded-lg flex items-center gap-2 cursor-pointer transition-colors border-b hover:bg-emerald-50 text-emerald-700 border-slate-100 dark:hover:bg-slate-800 dark:text-emerald-400 dark:border-slate-800`}
                     >
                       <Crosshair className="w-3.5 h-3.5 shrink-0" />
                       <span className="text-xs font-bold">📍 현재 위치로 설정 ({locationName})</span>
@@ -526,8 +492,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                         <div
                           key={sug.place_id}
                           onClick={() => handleSelectOriginSuggestion(sug)}
-                          className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
-                            }`}
+                          className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors hover:bg-emerald-50 text-slate-800 dark:hover:bg-slate-800 dark:text-slate-200`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -553,8 +518,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                           <div
                             key={p.place_id}
                             onMouseDown={(e) => { e.preventDefault(); handleSelectOriginSuggestion(p); }}
-                            className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
-                              }`}
+                            className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors hover:bg-emerald-50 text-slate-800 dark:hover:bg-slate-800 dark:text-slate-200`}
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               {favorites.some((f) => f.place_id === p.place_id)
@@ -583,10 +547,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
             <button
               type="button"
               onClick={handleSwap}
-              className={`w-7 h-7 border rounded-full shadow-xs flex items-center justify-center transition-all cursor-pointer ${isDarkMode
-                ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 hover:text-emerald-400'
-                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-500 hover:text-emerald-700'
-                }`}
+              className={`w-7 h-7 border rounded-full shadow-xs flex items-center justify-center transition-all cursor-pointer bg-white hover:bg-slate-50 border-slate-200 text-slate-500 hover:text-emerald-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:text-emerald-400`}
               title="출발지/도착지 변경"
             >
               <ArrowUpDown className="w-3.5 h-3.5" />
@@ -595,10 +556,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
 
           {/* Destination Input with Search Suggestions */}
           <div className="relative">
-            <div className={`flex items-center border rounded-xl px-3 py-2.5 transition-all ${isDarkMode
-              ? 'bg-slate-800/80 border-slate-700 focus-within:border-emerald-500 focus-within:bg-slate-800'
-              : 'bg-slate-50 border-slate-200 focus-within:border-emerald-500 focus-within:bg-white'
-              }`}>
+            <div className={`flex items-center border rounded-xl px-3 py-2.5 transition-all bg-slate-50 border-slate-200 focus-within:border-emerald-500 focus-within:bg-white dark:bg-slate-800/80 dark:border-slate-700 dark:focus-within:border-emerald-500 dark:focus-within:bg-slate-800`}>
               <span className="w-2 h-2 rounded-full bg-rose-500 mr-2 shrink-0"></span>
               <input
                 type="text"
@@ -607,8 +565,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                 onFocus={() => setDestFocused(true)}
                 onBlur={() => setTimeout(() => setDestFocused(false), 150)}
                 placeholder="어디로 가시나요? (예: 강남역, 판교역)"
-                className={`w-full bg-transparent text-xs font-semibold placeholder-slate-400 focus:outline-none ${isDarkMode ? 'text-white' : 'text-slate-800'
-                  }`}
+                className={`w-full bg-transparent text-xs font-semibold placeholder-slate-400 focus:outline-none text-slate-800 dark:text-white`}
               />
               {isSearchingDest ? (
                 <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0 mr-1" />
@@ -634,8 +591,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className={`absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-xl z-30 overflow-hidden ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
-                    }`}
+                  className={`absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-xl z-30 overflow-hidden bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700`}
                 >
                   <div className="p-1.5 space-y-1">
                     {destSuggestions.length > 0
@@ -643,8 +599,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                         <div
                           key={sug.place_id}
                           onClick={() => handleSelectDestSuggestion(sug)}
-                          className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
-                            }`}
+                          className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors hover:bg-emerald-50 text-slate-800 dark:hover:bg-slate-800 dark:text-slate-200`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -670,8 +625,7 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
                             <div
                               key={p.place_id}
                               onClick={() => handleSelectRecent(p)}
-                              className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-emerald-50 text-slate-800'
-                                }`}
+                              className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors hover:bg-emerald-50 text-slate-800 dark:hover:bg-slate-800 dark:text-slate-200`}
                             >
                               <div className="flex items-center gap-2 min-w-0">
                                 {favorites.some((f) => f.place_id === p.place_id)
@@ -708,10 +662,9 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
       </form>
 
       {/* Recent Search Places List (Real User Data from useRouteQuery) */}
-      <div className={`rounded-2xl p-4 border shadow-xs transition-colors ${isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/80'
-        }`}>
+      <div className={`rounded-2xl p-4 border shadow-xs transition-colors bg-white border-slate-200/80 dark:bg-slate-900/90 dark:border-slate-800`}>
         <div className="flex items-center justify-between mb-2.5">
-          <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+          <span className={`text-xs font-bold text-slate-800 dark:text-white`}>
             최근 검색한 장소
           </span>
           <div className="flex items-center gap-2">
@@ -741,19 +694,14 @@ export const HomeSearchTab: React.FC<HomeSearchTabProps> = ({
               <div
                 key={place.place_id}
                 onClick={() => handleSelectRecent(place)}
-                className={`group flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${isDarkMode
-                  ? 'border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700'
-                  : 'border-slate-100 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-200'
-                  }`}
+                className={`group flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer border-slate-100 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-200 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:bg-slate-800 dark:hover:border-slate-700`}
               >
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-white text-slate-500 shadow-2xs'
-                    }`}>
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-white text-slate-500 shadow-2xs dark:bg-slate-700 dark:text-slate-300`}>
                     <Clock className="w-3.5 h-3.5 text-emerald-500" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className={`text-xs font-bold block truncate ${isDarkMode ? 'text-slate-200 group-hover:text-emerald-400' : 'text-slate-800 group-hover:text-emerald-700'
-                      }`}>
+                    <span className={`text-xs font-bold block truncate text-slate-800 group-hover:text-emerald-700 dark:text-slate-200 dark:group-hover:text-emerald-400`}>
                       {place.name}
                     </span>
                     <span className="text-[10px] text-slate-400 block truncate">
