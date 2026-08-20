@@ -6,6 +6,7 @@ import { useRouteQuery } from '../store/route'
 import { modeChips } from '../lib/segments'
 import EmptyState from '../components/EmptyState'
 import type { RoutesResponse } from '../types/api'
+import { withLlmComments } from '../lib/explain'
 
 const gradeLabel: Record<string, string> = {
   precise: '정밀 예측',
@@ -58,7 +59,11 @@ export default function RouteCompare() {
         from: fromParam, to: toParam, from_name: fromP.name, to_name: toP.name,
         preset, sort, demo_weather: weather === 'uv_high' ? 'uv_high' : 'clear',
       })
-      .then(setData)
+      .then((res) => {
+        setData(res)
+        // B-09 코멘트는 도착하는 대로 덧붙인다(경로 표시를 막지 않음)
+        withLlmComments(res).then((routes) => setData((prev) => (prev === res ? { ...res, routes } : prev)))
+      })
       .catch(() => setError('이 구간은 대중교통 경로를 찾지 못했어요'))
   }, [fromParam, toParam, sort, weather, preset])
 

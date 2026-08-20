@@ -1,6 +1,7 @@
 import axios from 'axios'
 import type {
   Environment,
+  ExplainResponse,
   RoutesResponse,
   WeeklyReport,
   Me,
@@ -35,6 +36,22 @@ export interface RouteParams {
   sort?: 'exposure' | 'duration' | 'recommend'
   demo_weather?: string
   geometry?: string // '1' 이면 실제 선로 좌표 포함 (상세 화면)
+}
+
+// B-09 LLM 설명 요청 — 좌표·폴리라인은 문구 생성에 쓰이지 않아 빼고 보낸다(모바일 업로드 절감)
+export interface ExplainParams {
+  preset: string
+  environment: RoutesResponse['environment']
+  routes: {
+    route_id: string
+    recommended: boolean
+    total_minutes: number
+    outdoor_minutes: number
+    exposure_load: number
+    exposure_breakdown: { uv: number; heat: number; air: number }
+    transfers: number
+    segments: { type: string; minutes: number; line?: string; route_name?: string; station?: string }[]
+  }[]
 }
 
 export const api = {
@@ -87,6 +104,11 @@ export const api = {
 
   clearAllTrips: () =>
     http.delete<{ deleted: boolean; count: number }>('/trips/').then((r) => r.data),
+
+  // 경로별 LLM 코멘트 (B-09). 키 미설정·장애 시에도 템플릿 문구가 오므로 항상 200.
+  // 경로 조회보다 짧은 타임아웃 — 문구는 부가 정보라 오래 붙잡을 이유가 없다.
+  explainRoutes: (body: ExplainParams) =>
+    http.post<ExplainResponse>('/routes/explain/', body, { timeout: 12000 }).then((r) => r.data),
 
   getWeeklyReport: (week_of?: string) =>
     http.get<WeeklyReport>('/report/weekly/', { params: { week_of } }).then((r) => r.data),
