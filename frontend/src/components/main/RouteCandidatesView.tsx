@@ -41,6 +41,14 @@ const gradeLabel: Record<string, string> = {
   estimated: '추정',
 };
 
+// 점수만 보여주면 42점이 좋은 건지 알 수 없다. 단계 라벨을 같이 준다.
+function exposureLevel(score: number) {
+  if (score <= 20) return { label: '노출 적음', tone: 'text-[var(--ok)]' };
+  if (score <= 45) return { label: '노출 보통', tone: 'text-[var(--ink-soft)]' };
+  if (score <= 70) return { label: '노출 많음', tone: 'text-[var(--warn)]' };
+  return { label: '노출 심함', tone: 'text-[var(--danger)]' };
+}
+
 export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
   originName: initialOriginName,
   destinationName: initialDestName,
@@ -562,11 +570,11 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
                           <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                           <div className="min-w-0">
                             <span className="text-xs font-bold block truncate">{sug.name}</span>
-                            <span className="text-[10px] text-slate-400 block truncate">{sug.address}</span>
+                            <span className="block truncate text-[12px] text-[var(--muted)]">{sug.address}</span>
                           </div>
                         </div>
                         {sug.distance_m != null && (
-                          <span className="text-[10px] text-slate-400 shrink-0">{sug.distance_m}m</span>
+                          <span className="shrink-0 text-[12px] text-[var(--muted)]">{sug.distance_m}m</span>
                         )}
                       </div>
                     ))}
@@ -644,11 +652,11 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
                           <Building className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                           <div className="min-w-0">
                             <span className="text-xs font-bold block truncate">{sug.name}</span>
-                            <span className="text-[10px] text-slate-400 block truncate">{sug.address}</span>
+                            <span className="block truncate text-[12px] text-[var(--muted)]">{sug.address}</span>
                           </div>
                         </div>
                         {sug.distance_m != null && (
-                          <span className="text-[10px] text-slate-400 shrink-0">{sug.distance_m}m</span>
+                          <span className="shrink-0 text-[12px] text-[var(--muted)]">{sug.distance_m}m</span>
                         )}
                       </div>
                     ))}
@@ -668,28 +676,29 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
                 <button
                   key={r.route_id}
                   onClick={() => setSelectedRouteId(r.route_id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border shadow-md backdrop-blur-md transition-all whitespace-nowrap cursor-pointer ${isSelected
-                    ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-950/30'
-                    : isDarkMode
-                      ? 'bg-slate-900/85 border-slate-700 text-slate-300 hover:bg-slate-800'
-                      : 'bg-white/90 border-slate-200 text-slate-700 hover:bg-white'
-                    }`}
+                  className={`flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-[var(--r-md)] border px-3 py-2 text-[13px] backdrop-blur-md transition-colors ${
+                    isSelected
+                      ? 'border-[var(--brand)] bg-[var(--brand)] font-semibold text-white'
+                      : 'border-[var(--line)] bg-[var(--card)]/90 text-[var(--ink-soft)] hover:bg-[var(--card)]'
+                  }`}
                 >
                   {r.recommended && (
-                    <span className={`text-[9px] px-1 py-0.2 rounded font-extrabold ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'
-                      }`}>
+                    <span className={`rounded-[var(--r-sm)] px-1.5 py-0.5 text-[11px] font-semibold ${
+                      isSelected ? 'bg-white/20 text-white' : 'bg-[var(--brand-tint)] text-[var(--brand-ink)]'
+                    }`}>
                       추천
                     </span>
                   )}
                   {r.route_type === 'walk' && (
-                    <span className={`flex items-center gap-0.5 text-[9px] px-1 py-0.2 rounded font-extrabold ${isSelected ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
-                      }`}>
-                      <Footprints className="w-2.5 h-2.5" />도보
+                    <span className={`flex items-center gap-0.5 rounded-[var(--r-sm)] px-1.5 py-0.5 text-[11px] font-semibold ${
+                      isSelected ? 'bg-white/20 text-white' : 'bg-[var(--warn-tint)] text-[var(--warn)]'
+                    }`}>
+                      <Footprints className="h-3 w-3" />도보
                     </span>
                   )}
-                  <span>{r.total_minutes}분</span>
-                  <span className={`text-[10px] ${isSelected ? 'text-emerald-100' : 'text-slate-400'}`}>
-                    (부하 {r.exposure_load})
+                  <span className="font-semibold">{r.total_minutes}분</span>
+                  <span className={`text-[12px] ${isSelected ? 'text-white/80' : 'text-[var(--muted)]'}`}>
+                    야외 {r.outdoor_minutes}분
                   </span>
                 </button>
               );
@@ -704,7 +713,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
           <div className={`p-4 rounded-2xl border shadow-xl flex items-center gap-2.5 text-xs font-bold ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'
             }`}>
             <RefreshCw className="w-4 h-4 text-emerald-500 animate-spin" />
-            <span>최적의 대중교통 웰니스 경로 계산 중...</span>
+            <span>경로를 찾는 중</span>
           </div>
         </div>
       )}
@@ -747,35 +756,31 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
 
           {/* Sheet Main Header */}
           <div className="px-4 pb-2.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 shrink-0">
-            <div>
-              <div className="flex items-center gap-1.5 mb-0.5">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
                 {selectedRoute.recommended && (
-                  <span className="bg-emerald-500 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full">
+                  <span className="rounded-full bg-[var(--brand)] px-2 py-0.5 text-[11px] font-semibold text-white">
                     추천
                   </span>
                 )}
-                <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  {gradeLabel[selectedRoute.prediction_grade] || '실시간 예측'}
+                <span className="text-[11px] text-[var(--muted)]">
+                  {gradeLabel[selectedRoute.prediction_grade] || '실시간'}
                 </span>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-xl sm:text-2xl font-black text-emerald-500">
-                  {selectedRoute.total_minutes}분
-                </span>
-                <span className={`text-xs font-semibold ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[22px] font-semibold leading-none">{selectedRoute.total_minutes}분</span>
+                <span className="text-[13px] text-[var(--muted)]">
                   환승 {selectedRoute.transfers}회 · 실내 {Math.round(selectedRoute.indoor_ratio * 100)}%
                 </span>
               </div>
             </div>
 
-            {/* Exposure Score Badge */}
-            <div className="text-right">
-              <span className={`text-[10px] block ${isDarkMode ? 'text-slate-400' : 'text-slate-400'}`}>
-                신체 노출 부하
+            <div className="shrink-0 text-right">
+              <span className={`block text-[15px] font-semibold leading-none ${exposureLevel(selectedRoute.exposure_load).tone}`}>
+                {exposureLevel(selectedRoute.exposure_load).label}
               </span>
-              <span className={`text-lg sm:text-xl font-black ${selectedRoute.exposure_load <= 40 ? 'text-emerald-500' : 'text-amber-500'
-                }`}>
-                {selectedRoute.exposure_load}점
+              <span className="mt-1 block text-[11px] text-[var(--muted)]">
+                야외 {selectedRoute.outdoor_minutes}분 · {selectedRoute.exposure_load}점
               </span>
             </div>
           </div>
@@ -784,16 +789,14 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {/* 데모 모드 가상 환경 지표 안내 스트립 */}
             {isDemoActive && (
-              <div className={`p-2.5 rounded-2xl border text-xs flex items-center justify-between font-bold ${
-                weather === 'uv_high'
-                  ? 'bg-rose-950/40 border-rose-800/60 text-rose-200'
-                  : 'bg-amber-950/30 border-amber-800/50 text-amber-200'
-              }`}>
-                <div className="flex items-center gap-1.5 text-[11px]">
-                  {weather === 'uv_high' ? <Flame className="w-3.5 h-3.5 text-rose-400" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
-                  <span>{weather === 'uv_high' ? '가상 날씨: 폭염·자외선 극심 경보' : '가상 날씨: 온화하고 쾌적한 맑음'}</span>
-                </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-md bg-black/40 text-white font-mono">
+              <div className="flex items-center justify-between rounded-[var(--r-md)] border border-dashed border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2 text-[12px]">
+                <span className="flex items-center gap-1.5 text-[var(--ink-soft)]">
+                  {weather === 'uv_high'
+                    ? <Flame className="h-3.5 w-3.5 text-[var(--danger)]" />
+                    : <Sun className="h-3.5 w-3.5 text-[var(--warn)]" />}
+                  데모 날씨
+                </span>
+                <span className="font-semibold">
                   {weather === 'uv_high' ? 'UV 9 · 체감 35℃' : 'UV 2 · 체감 23℃'}
                 </span>
               </div>
@@ -801,68 +804,58 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
 
             {/* 출발시각 넛지 배너 — 실시간 버스 대기가 길 때만 */}
             {selectedRoute.depart_nudge && (
-              <div className={`p-3 rounded-2xl border text-xs leading-relaxed transition-colors ${isDarkMode ? 'bg-sky-950/30 border-sky-900/50 text-sky-200' : 'bg-sky-50/70 border-sky-200 text-sky-900'
-                }`}>
-                <div className="flex items-center gap-1 font-bold mb-1 text-[11px]">
-                  <Clock className="w-3.5 h-3.5 text-sky-500" />
-                  <span>출발시각 팁 · {selectedRoute.depart_nudge.delay_minutes}분 늦게</span>
+              <div className="rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--bg)] p-3">
+                <div className="mb-1 flex items-center gap-1.5 text-[12px] font-semibold">
+                  <Clock className="h-3.5 w-3.5 text-[var(--muted)]" />
+                  {selectedRoute.depart_nudge.delay_minutes}분 늦게 나가기
                 </div>
-                <p className="text-[11px] font-medium">{selectedRoute.depart_nudge.text}</p>
+                <p className="text-[13px] leading-relaxed text-[var(--ink-soft)]">{selectedRoute.depart_nudge.text}</p>
               </div>
             )}
 
             {/* LLM Coaching Banner */}
             {selectedRoute.llm_comment && (
-              <div className={`p-3 rounded-2xl border text-xs leading-relaxed transition-colors ${isDarkMode ? 'bg-emerald-950/30 border-emerald-900/50 text-emerald-200' : 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
-                }`}>
-                <div className="flex items-center gap-1 font-bold mb-1 text-[11px]">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>맞춤형 웰니스 코칭</span>
-                </div>
-                <p className="text-[11px] font-medium">{selectedRoute.llm_comment}</p>
+              <div className="rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--brand-tint)] p-3">
+                <p className="flex gap-2 text-[13px] leading-relaxed text-[var(--brand-ink)]">
+                  <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  {selectedRoute.llm_comment}
+                </p>
               </div>
             )}
 
             {/* Timeline Segment Flow */}
             <div className="space-y-1.5">
-              <h4 className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                구간별 상세 이동 경로
-              </h4>
+              <h4 className="text-[12px] font-semibold text-[var(--muted)]">구간</h4>
 
               <div className="space-y-2 pt-1">
                 {selectedRoute.segments.map((seg, idx) => (
                   <div
                     key={seg.seq || idx}
-                    className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${seg.outdoor
-                      ? isDarkMode
-                        ? 'border-amber-800/50 bg-amber-950/20'
-                        : 'border-amber-200 bg-amber-50/50'
-                      : isDarkMode
-                        ? 'border-slate-800 bg-slate-800/40'
-                        : 'border-slate-100 bg-slate-50'
-                      }`}
+                    className={`flex items-center justify-between rounded-[var(--r-sm)] border px-3 py-2.5 ${
+                      seg.outdoor
+                        ? 'border-[var(--warn)]/40 bg-[var(--warn-tint)]'
+                        : 'border-[var(--line)]'
+                    }`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800' : 'bg-white shadow-2xs'
-                        }`}>
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--r-sm)] border border-[var(--line)] bg-[var(--card)]">
                         {getSegmentIcon(seg.type, seg.outdoor)}
                       </div>
                       <div className="min-w-0">
-                        <span className={`font-bold block truncate ${isDarkMode ? 'text-slate-200' : 'text-slate-800'
-                          }`}>
-                          {seg.line || seg.route_name || (seg.outdoor ? '야외 보행' : '실내 보행/환승')}
+                        <span className="block truncate text-[14px] font-semibold">
+                          {seg.line || seg.route_name || (seg.outdoor ? '도보' : '실내 환승')}
                         </span>
-                        <span className="text-[10px] text-slate-400 block truncate">
-                          {seg.station || seg.from?.name || (seg.outdoor ? '직사광선 노출 주의' : '쾌적 실내 구간')}
+                        <span className="block truncate text-[12px] text-[var(--muted)]">
+                          {seg.station || seg.from?.name || (seg.outdoor ? '햇빛 노출' : '실내')}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="font-bold block">{seg.minutes}분</span>
-                      <span className={`text-[10px] ${seg.outdoor ? 'text-amber-500 font-semibold' : 'text-emerald-500'}`}>
-                        {seg.outdoor ? `야외 ${seg.exposure_minutes}분` : '실내 100%'}
-                      </span>
+                      <span className="block text-[14px] font-semibold">{seg.minutes}분</span>
+                      {seg.outdoor && (
+                        <span className="text-[12px] text-[var(--warn)]">야외 {seg.exposure_minutes}분</span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -881,10 +874,10 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
           <button
             id="btn-confirm-route"
             onClick={handleStartTrip}
-            className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-950/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[var(--r-md)] bg-[var(--brand)] py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[var(--brand-strong)] active:scale-[0.99]"
           >
-            <Navigation className="w-4 h-4" />
-            <span>실시간 안심 이동 안내 시작하기</span>
+            <Navigation className="h-4 w-4" />
+            이 경로로 이동
           </button>
         </div>
       )}
