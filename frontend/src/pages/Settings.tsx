@@ -22,6 +22,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useSession } from '../store/session';
+import { useRouteQuery } from '../store/route';
 import { api } from '../api/client';
 import { startKakaoLogin } from '../lib/kakaoAuth';
 import { useCanInstall, promptInstall, isStandalone } from '../lib/pwaInstall';
@@ -83,6 +84,7 @@ export default function Settings() {
   const setPreset = useSession((s) => s.setPreset);
   const token = useSession((s) => s.token);
   const logout = useSession((s) => s.logout);
+  const startDemoSession = useRouteQuery((s) => s.startDemoSession);
   const isGuest = !token;
 
   const canInstall = useCanInstall();
@@ -90,12 +92,32 @@ export default function Settings() {
 
   const [activeInfoModal, setActiveInfoModal] = useState<SettingsInfoType | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [profileClickCount, setProfileClickCount] = useState<number>(0);
+  const isDemoMode = profileClickCount >= 5;
 
   // Dark Mode State
   const [isDarkMode, setIsDarkMode] = useState<boolean>(getSystemDarkModePreference);
   const [hasManualDarkModeToggle, setHasManualDarkModeToggle] = useState<boolean>(() => {
     return typeof window !== 'undefined' && localStorage.getItem('theme_dark_mode') !== null;
   });
+
+  const handleProfileClick = () => {
+    setProfileClickCount((prev) => {
+      const next = prev + 1;
+      if (next === 5) {
+        showToast('🚀 데모 시연 모드가 활성화되었습니다.');
+      }
+      return next;
+    });
+  };
+
+  const handleStartDemo = () => {
+    startDemoSession();
+    showToast('🚀 데모 시연 모드로 진입합니다.');
+    setTimeout(() => {
+      nav('/');
+    }, 250);
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
@@ -248,9 +270,13 @@ export default function Settings() {
           {isGuest ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
-                }`}>
+                <div 
+                  onClick={handleProfileClick}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer select-none active:scale-95 transition-transform ${
+                    isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
+                  }`}
+                  title="프로필"
+                >
                   <User className="w-5 h-5" />
                 </div>
                 <div>
@@ -268,19 +294,34 @@ export default function Settings() {
                 </div>
               </div>
 
-              <button
-                id="btn-settings-kakao-login"
-                onClick={handleKakaoLogin}
-                style={{ backgroundColor: '#FEE500', color: '#191919' }}
-                className="h-9 px-3.5 inline-flex items-center justify-center font-bold text-xs rounded-xl shadow-xs hover:brightness-95 active:scale-95 transition-all cursor-pointer shrink-0"
-              >
-                카카오 연동
-              </button>
+              {isDemoMode ? (
+                <button
+                  id="btn-settings-demo-mode"
+                  onClick={handleStartDemo}
+                  className="h-9 px-3.5 inline-flex items-center justify-center gap-1.5 font-bold text-xs rounded-xl shadow-xs bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white transition-all cursor-pointer shrink-0"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>데모 시연</span>
+                </button>
+              ) : (
+                <button
+                  id="btn-settings-kakao-login"
+                  onClick={handleKakaoLogin}
+                  style={{ backgroundColor: '#FEE500', color: '#191919' }}
+                  className="h-9 px-3.5 inline-flex items-center justify-center font-bold text-xs rounded-xl shadow-xs hover:brightness-95 active:scale-95 transition-all cursor-pointer shrink-0"
+                >
+                  카카오 연동
+                </button>
+              )}
             </div>
           ) : (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-900 font-bold text-sm">
+                <div 
+                  onClick={handleProfileClick}
+                  className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-900 font-bold text-sm cursor-pointer select-none active:scale-95 transition-transform"
+                  title="프로필"
+                >
                   K
                 </div>
                 <div>
@@ -297,6 +338,16 @@ export default function Settings() {
               </div>
 
               <div className="flex items-center gap-1.5">
+                {isDemoMode && (
+                  <button
+                    id="btn-settings-demo-mode-auth"
+                    onClick={handleStartDemo}
+                    className="h-9 px-3 inline-flex items-center justify-center gap-1 font-bold text-xs rounded-xl shadow-xs bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white transition-all cursor-pointer shrink-0"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>데모 시연</span>
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   className={`h-9 px-3 inline-flex items-center justify-center gap-1 border font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer ${

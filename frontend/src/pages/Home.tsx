@@ -25,6 +25,8 @@ export default function Home() {
   const toPlace = useRouteQuery((s) => s.to);
   const setPlace = useRouteQuery((s) => s.setPlace);
   const addRecent = useRouteQuery((s) => s.addRecent);
+  const isDemoActive = useRouteQuery((s) => s.isDemoActive);
+  const exitDemoSession = useRouteQuery((s) => s.exitDemoSession);
 
   const [center, setCenter] = useState(DEFAULT);
   const [locationName, setLocationName] = useState('서울시 강남구');
@@ -32,7 +34,25 @@ export default function Home() {
   const [searchRouteState, setSearchRouteState] = useState<{
     origin: string;
     destination: string;
-  } | null>(null);
+  } | null>(() => {
+    if (isDemoActive) {
+      return {
+        origin: fromPlace?.name || '동탄역',
+        destination: toPlace?.name || '강남역',
+      };
+    }
+    return null;
+  });
+
+  // 데모 모드 진입 감지
+  useEffect(() => {
+    if (isDemoActive) {
+      setSearchRouteState({
+        origin: fromPlace?.name || '동탄역',
+        destination: toPlace?.name || '강남역',
+      });
+    }
+  }, [isDemoActive, fromPlace?.name, toPlace?.name]);
 
   // Dark Mode State
   const [isDarkMode, setIsDarkMode] = useState<boolean>(getSystemDarkModePreference);
@@ -101,6 +121,9 @@ export default function Home() {
   };
 
   const handleBackToSearch = () => {
+    if (isDemoActive) {
+      exitDemoSession();
+    }
     setSearchRouteState(null);
   };
 

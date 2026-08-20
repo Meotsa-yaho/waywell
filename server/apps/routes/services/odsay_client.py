@@ -93,23 +93,39 @@ def _parse_path(path: dict, origin: list[float] | None = None, dest: list[float]
 
         elif tt == 2:  # 버스: 대기(야외) + 탑승(실내)
             seq += 1
-            seg_api.append({"seq": seq, "type": "bus_wait", "minutes": EST_BUS_WAIT, "outdoor": True,
-                            "exposure_minutes": EST_BUS_WAIT, "station": sp.get("startName"), "realtime": False})
+            bw_seg = {"seq": seq, "type": "bus_wait", "minutes": EST_BUS_WAIT, "outdoor": True,
+                      "exposure_minutes": EST_BUS_WAIT, "station": sp.get("startName"), "realtime": False}
+            if start:
+                bw_seg["lat"] = start[0]
+                bw_seg["lng"] = start[1]
+            seg_api.append(bw_seg)
             seg_engine.append({"outdoor": True, "minutes": EST_BUS_WAIT, "kind": "bus_wait"})
             if start:  # 실시간 보정 대상: 승차 정류소 좌표 + 노선번호
                 bus_waits.append({"api": len(seg_api) - 1, "engine": len(seg_engine) - 1,
                                   "lat": start[0], "lng": start[1], "bus_no": _lane_name(sp)})
             seq += 1
+            bus_from = {"name": sp.get("startName")}
+            bus_to = {"name": sp.get("endName")}
+            if start:
+                bus_from["lat"], bus_from["lng"] = start[0], start[1]
+            if end:
+                bus_to["lat"], bus_to["lng"] = end[0], end[1]
             seg_api.append({"seq": seq, "type": "bus", "route_name": _lane_name(sp), "minutes": st,
                             "outdoor": False, "exposure_minutes": 0,
-                            "from": {"name": sp.get("startName")}, "to": {"name": sp.get("endName")}})
+                            "from": bus_from, "to": bus_to})
             seg_engine.append({"outdoor": False, "minutes": st, "kind": "bus"})
 
         elif tt == 1:  # 지하철: 탑승(실내)
             seq += 1
+            sub_from = {"name": sp.get("startName")}
+            sub_to = {"name": sp.get("endName")}
+            if start:
+                sub_from["lat"], sub_from["lng"] = start[0], start[1]
+            if end:
+                sub_to["lat"], sub_to["lng"] = end[0], end[1]
             seg_api.append({"seq": seq, "type": "subway", "line": _lane_name(sp), "minutes": st,
                             "outdoor": False, "exposure_minutes": 0,
-                            "from": {"name": sp.get("startName")}, "to": {"name": sp.get("endName")}})
+                            "from": sub_from, "to": sub_to})
             seg_engine.append({"outdoor": False, "minutes": st, "kind": "subway"})
 
     transfers = max(0, info.get("busTransitCount", 0) + info.get("subwayTransitCount", 0) - 1)

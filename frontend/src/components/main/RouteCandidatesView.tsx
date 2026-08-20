@@ -14,7 +14,9 @@ import {
   Building,
   Clock,
   Crosshair,
-  X
+  X,
+  Sun,
+  Flame,
 } from 'lucide-react';
 import KakaoMap from '../KakaoMap';
 import { api } from '../../api/client';
@@ -52,6 +54,10 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
   const toPlace = useRouteQuery((s) => s.to);
   const setPlace = useRouteQuery((s) => s.setPlace);
   const addRecent = useRouteQuery((s) => s.addRecent);
+  const isDemoActive = useRouteQuery((s) => s.isDemoActive);
+  const weather = useRouteQuery((s) => s.weather);
+  const setWeather = useRouteQuery((s) => s.setWeather);
+  const exitDemoSession = useRouteQuery((s) => s.exitDemoSession);
   const preset = useSession((s) => s.preset);
 
   // Editable origin and destination states
@@ -112,7 +118,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
   const toLat = toPlace?.lat ?? 37.4979;
   const toLng = toPlace?.lng ?? 127.0276;
 
-  const fetchRoutes = (fromCoord: string, toCoord: string, fromName: string, toName: string) => {
+  const fetchRoutes = (fromCoord: string, toCoord: string, fromName: string, toName: string, targetWeather = weather) => {
     const reqId = ++reqIdRef.current;
     setLoading(true);
     setError(null);
@@ -123,6 +129,7 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
       to_name: toName,
       geometry: '1',
       preset,
+      demo_weather: isDemoActive ? (targetWeather === 'uv_high' ? 'uv_high' : 'clear') : undefined,
     })
       .then((res) => {
         if (reqId !== reqIdRef.current) return; // 오래된 응답 무시
@@ -146,8 +153,8 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
   useEffect(() => {
     const fromParam = `${fromLat},${fromLng}`;
     const toParam = `${toLat},${toLng}`;
-    fetchRoutes(fromParam, toParam, origin, destination);
-  }, [fromLat, fromLng, toLat, toLng, preset]);
+    fetchRoutes(fromParam, toParam, origin, destination, weather);
+  }, [fromLat, fromLng, toLat, toLng, preset, weather, isDemoActive]);
 
   // Debounced Place Search for Origin
   useEffect(() => {
@@ -249,6 +256,21 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
     setOriginSuggestions([]);
     setDestSuggestions([]);
     onShowToast('출발지와 도착지를 바꿨습니다.');
+  };
+
+  const handleToggleWeather = (target: 'mild' | 'uv_high') => {
+    if (weather === target) return;
+    setWeather(target);
+    if (target === 'uv_high') {
+      onShowToast('🔥 폭염·자외선 경보 적용! 실내·지하철 위주 경로가 1순위 추천으로 역전됩니다.');
+    } else {
+      onShowToast('☀️ 쾌적한 날씨 적용! 최단 시간 이동 경로가 1순위 추천으로 복귀합니다.');
+    }
+  };
+
+  const handleExitDemo = () => {
+    exitDemoSession();
+    onShowToast('데모 시연 모드를 종료했습니다.');
   };
 
   const selectedRoute = useMemo(() => {
@@ -387,6 +409,64 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
 
       {/* 2. Floating Top Header & Route Inputs (Two-line Editable) */}
       <div className="relative z-20 p-3 sm:p-4 pointer-events-none space-y-2">
+        {/* Demo Mode Floating Controller */}
+        {isDemoActive && (
+          <div className="pointer-events-auto rounded-2xl p-2.5 sm:p-3 border shadow-xl backdrop-blur-md bg-gradient-to-r from-slate-900/95 via-indigo-950/95 to-slate-900/95 border-indigo-500/50 text-white space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                </span>
+                <span className="text-xs font-extrabold text-indigo-200 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  킬러 장면 시연 모드
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleExitDemo}
+                className="text-[11px] font-semibold text-slate-400 hover:text-white px-2 py-0.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                데모 종료
+              </button>
+            </div>
+
+            <p className="text-[11px] text-slate-300">
+              날씨를 변경하면 동일한 구간에서 <strong className="text-amber-300 font-bold">1위 추천 경로</strong>가 실시간으로 교체됩니다.
+            </p>
+
+            {/* Weather Toggle Buttons */}
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/40 rounded-xl border border-white/10">
+              <button
+                type="button"
+                onClick={() => handleToggleWeather('mild')}
+                className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  weather === 'mild'
+                    ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
+                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Sun className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">☀️ 쾌적 (최속 우선)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleToggleWeather('uv_high')}
+                className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  weather === 'uv_high'
+                    ? 'bg-rose-500 text-white shadow-md scale-[1.02]'
+                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">🔥 폭염 (실내·지하철)</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Back Button & Header Summary */}
         <div className="flex items-center justify-between">
           <button
@@ -696,6 +776,23 @@ export const RouteCandidatesView: React.FC<RouteCandidatesViewProps> = ({
 
           {/* Sheet Scrollable Body */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* 데모 모드 가상 환경 지표 안내 스트립 */}
+            {isDemoActive && (
+              <div className={`p-2.5 rounded-2xl border text-xs flex items-center justify-between font-bold ${
+                weather === 'uv_high'
+                  ? 'bg-rose-950/40 border-rose-800/60 text-rose-200'
+                  : 'bg-amber-950/30 border-amber-800/50 text-amber-200'
+              }`}>
+                <div className="flex items-center gap-1.5 text-[11px]">
+                  {weather === 'uv_high' ? <Flame className="w-3.5 h-3.5 text-rose-400" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+                  <span>{weather === 'uv_high' ? '가상 날씨: 폭염·자외선 극심 경보' : '가상 날씨: 온화하고 쾌적한 맑음'}</span>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-md bg-black/40 text-white font-mono">
+                  {weather === 'uv_high' ? 'UV 9 · 체감 35℃' : 'UV 2 · 체감 23℃'}
+                </span>
+              </div>
+            )}
+
             {/* 출발시각 넛지 배너 — 실시간 버스 대기가 길 때만 */}
             {selectedRoute.depart_nudge && (
               <div className={`p-3 rounded-2xl border text-xs leading-relaxed transition-colors ${isDarkMode ? 'bg-sky-950/30 border-sky-900/50 text-sky-200' : 'bg-sky-50/70 border-sky-200 text-sky-900'

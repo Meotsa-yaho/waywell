@@ -68,15 +68,25 @@ def _parse_itinerary(it: dict) -> dict:
             coords = _coords(leg.get("passShape", {}).get("linestring", ""))
             polyline += coords
             seq += 1
-            seg_api.append({"seq": seq, "type": "bus_wait", "minutes": EST_BUS_WAIT, "outdoor": True,
-                            "exposure_minutes": EST_BUS_WAIT, "station": start.get("name"), "realtime": False})
+            bw_seg = {"seq": seq, "type": "bus_wait", "minutes": EST_BUS_WAIT, "outdoor": True,
+                      "exposure_minutes": EST_BUS_WAIT, "station": start.get("name"), "realtime": False}
+            if start.get("lat") and start.get("lon"):
+                bw_seg["lat"] = float(start["lat"])
+                bw_seg["lng"] = float(start["lon"])
+            seg_api.append(bw_seg)
             seg_engine.append({"outdoor": True, "minutes": EST_BUS_WAIT, "kind": "bus_wait"})
             if start.get("lat"):
                 bus_waits.append({"api": len(seg_api) - 1, "engine": len(seg_engine) - 1,
-                                  "lat": start["lat"], "lng": start["lon"], "bus_no": bus_no})
+                                  "lat": float(start["lat"]), "lng": float(start["lon"]), "bus_no": bus_no})
             seq += 1
+            bus_from = {"name": start.get("name")}
+            bus_to = {"name": end.get("name")}
+            if start.get("lat") and start.get("lon"):
+                bus_from["lat"], bus_from["lng"] = float(start["lat"]), float(start["lon"])
+            if end.get("lat") and end.get("lon"):
+                bus_to["lat"], bus_to["lng"] = float(end["lat"]), float(end["lon"])
             seg_api.append({"seq": seq, "type": "bus", "route_name": bus_no, "minutes": st, "outdoor": False,
-                            "exposure_minutes": 0, "from": {"name": start.get("name")}, "to": {"name": end.get("name")}})
+                            "exposure_minutes": 0, "from": bus_from, "to": bus_to})
             seg_engine.append({"outdoor": False, "minutes": st, "kind": "bus"})
             if coords:
                 path_segments.append({"type": "bus", "outdoor": False, "coords": coords})
@@ -85,8 +95,14 @@ def _parse_itinerary(it: dict) -> dict:
             coords = _coords(leg.get("passShape", {}).get("linestring", ""))
             polyline += coords
             seq += 1
+            sub_from = {"name": start.get("name")}
+            sub_to = {"name": end.get("name")}
+            if start.get("lat") and start.get("lon"):
+                sub_from["lat"], sub_from["lng"] = float(start["lat"]), float(start["lon"])
+            if end.get("lat") and end.get("lon"):
+                sub_to["lat"], sub_to["lng"] = float(end["lat"]), float(end["lon"])
             seg_api.append({"seq": seq, "type": "subway", "line": leg.get("route"), "minutes": st, "outdoor": False,
-                            "exposure_minutes": 0, "from": {"name": start.get("name")}, "to": {"name": end.get("name")}})
+                            "exposure_minutes": 0, "from": sub_from, "to": sub_to})
             seg_engine.append({"outdoor": False, "minutes": st, "kind": "subway"})
             if coords:
                 path_segments.append({"type": "subway", "outdoor": False, "coords": coords})
