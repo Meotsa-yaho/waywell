@@ -55,7 +55,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\.testgogo\.site\/api\/.*/,
+            // 프론트와 API가 같은 오리진(Nginx가 /api 프록시)이라 도메인을 박으면 매칭되지 않는다.
+            // 실제로 api.testgogo.site 로 고정돼 있어 E-02 'API network-first'가 동작하지 않았다.
+            urlPattern: /^https?:\/\/[^/]+\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
